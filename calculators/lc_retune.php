@@ -174,7 +174,6 @@ function lc_retune_formatCapacitance(float $farad): string
         .mode-options { display: flex; flex-wrap: wrap; gap: 12px 24px; }
         .mode-options label { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
         .mode-options input { width: 17px; height: 17px; margin: 0; accent-color: #245c88; }
-        
         .field { min-width: 0; }
         select, input, button { font: inherit; }
         .value-row { display: grid; grid-template-columns: minmax(0, 1fr) 112px; gap: 8px; }
@@ -260,18 +259,14 @@ function lc_retune_formatCapacitance(float $farad): string
         </div>
     </section>
 
-    <?php if ($error !== '' || $result !== null): ?>
-        <section class="panel results-panel">
-            <?php if ($error !== ''): ?><div class="error" id="calculation-error" role="alert"><?= lc_retune_h($error) ?></div><?php endif; ?>
-            <?php if ($result !== null): ?>
-                <div class="result" id="calculation-result" aria-live="polite">
-                    <h2 class="result-heading"><?= lc_retune_h($result['main_label']) ?></h2>
-                    <div class="result-value"><?= lc_retune_h($result['main_value']) ?></div>
-                    <p class="secondary-result"><strong><?= lc_retune_h($result['secondary_label']) ?>:</strong> <?= lc_retune_h($result['secondary_value']) ?></p>
-                    <p class="formula">Использованные формулы: <?= lc_retune_h($result['formula']) ?>; <?= lc_retune_h($result['secondary_formula']) ?>.</p>
-                </div>
-            <?php endif; ?>
-        </section>
+    <?php if ($error !== ''): ?><div class="error" id="calculation-error" role="alert"><?= lc_retune_h($error) ?></div><?php endif; ?>
+    <?php if ($result !== null): ?>
+        <div class="result" id="calculation-result" aria-live="polite">
+            <h2 class="result-heading"><?= lc_retune_h($result['main_label']) ?></h2>
+            <div class="result-value"><?= lc_retune_h($result['main_value']) ?></div>
+            <p class="secondary-result"><strong><?= lc_retune_h($result['secondary_label']) ?>:</strong> <?= lc_retune_h($result['secondary_value']) ?></p>
+            <p class="formula">Использованные формулы: <?= lc_retune_h($result['formula']) ?>; <?= lc_retune_h($result['secondary_formula']) ?>.</p>
+        </div>
     <?php endif; ?>
 
     <section class="panel">
