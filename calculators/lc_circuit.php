@@ -212,7 +212,6 @@ if ($result !== null) {
         .form-column { min-width: 0; }
         .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: end; }
         .note { padding: 12px 14px; border-left: 4px solid #3c7ca7; background: #f2f7fb; border-radius: 5px; line-height: 1.45; }
-        
         .field { min-width: 0; }
         .field-label { display: block; font-weight: 700; margin-bottom: 6px; }
         select, input, button { font: inherit; }
@@ -300,17 +299,13 @@ if ($result !== null) {
         </div>
     </section>
 
-    <?php if ($error !== '' || $result !== null): ?>
-        <section class="panel results-panel">
-            <?php if ($error !== ''): ?><div class="error" id="calculation-error" role="alert"><?= lc_h($error) ?></div><?php endif; ?>
-            <?php if ($result !== null): ?>
-                <div class="result" id="calculation-result" aria-live="polite">
-                    <h2 class="result-heading"><?= lc_h($result['label']) ?></h2>
-                    <div class="result-value"><?= lc_h($result['formatted']) ?></div>
-                    <p class="formula">Использованная формула: <?= lc_h($formulaText) ?>.</p>
-                </div>
-            <?php endif; ?>
-        </section>
+    <?php if ($error !== ''): ?><div class="error" id="calculation-error" role="alert"><?= lc_h($error) ?></div><?php endif; ?>
+    <?php if ($result !== null): ?>
+        <div class="result" id="calculation-result" aria-live="polite">
+            <h2 class="result-heading"><?= lc_h($result['label']) ?></h2>
+            <div class="result-value"><?= lc_h($result['formatted']) ?></div>
+            <p class="formula">Использованная формула: <?= lc_h($formulaText) ?>.</p>
+        </div>
     <?php endif; ?>
 
     <section class="panel">
