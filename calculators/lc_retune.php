@@ -162,21 +162,26 @@ function lc_retune_formatCapacitance(float $farad): string
         p { line-height: 1.5; }
         .subtle { color: #5f6368; }
         .back-link { display: inline-block; margin-top: 4px; color: #244f76; font-weight: 700; text-decoration: none; }
-        .back-link:hover, .clear-link:hover { text-decoration: underline; }
-        .diagram { display: block; width: 100%; height: auto; margin: 16px 0; border: 1px solid #d7dce1; border-radius: 8px; background: #fff; }
+        .back-link:hover { text-decoration: underline; }
+        .diagram { display: block; width: 100%; height: auto; margin: 0 0 14px; border: 1px solid #d7dce1; border-radius: 8px; background: #fff; }
+        .top-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: stretch; margin-top: 18px; }
+        .diagram-column { min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+        .form-column { min-width: 0; }
+        .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: end; }
         .note { padding: 12px 14px; border-left: 4px solid #3c7ca7; background: #f2f7fb; border-radius: 5px; line-height: 1.45; }
         .mode-field { margin: 0 0 17px; padding: 0; border: 0; }
         .field-label, .mode-field legend { display: block; font-weight: 700; margin-bottom: 8px; }
         .mode-options { display: flex; flex-wrap: wrap; gap: 12px 24px; }
         .mode-options label { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
         .mode-options input { width: 17px; height: 17px; margin: 0; accent-color: #245c88; }
-        .form-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: end; }
+        
         .field { min-width: 0; }
         select, input, button { font: inherit; }
         .value-row { display: grid; grid-template-columns: minmax(0, 1fr) 112px; gap: 8px; }
         .value-input, .unit-select { width: 100%; min-width: 0; border: 1px solid #b8c0c8; border-radius: 6px; padding: 10px; background: #fff; }
         .value-input:focus, .unit-select:focus { outline: 3px solid #c5e2f8; border-color: #3976a8; }
-        .action-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 17px; }
+        .action-row { display: flex; flex-direction: column; align-items: stretch; gap: 10px; margin-top: 17px; }
+        .action-row button, .action-row .clear-button { width: 100%; }
         button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; border: 0; border-radius: 6px; padding: 11px 16px; color: #fff; background: #245c88; font-weight: 700; line-height: 1.25; cursor: pointer; }
         button:hover { background: #19476c; }
         button:focus-visible, a:focus-visible { outline: 3px solid #89bde5; outline-offset: 3px; }
@@ -187,9 +192,10 @@ function lc_retune_formatCapacitance(float $farad): string
         .formula { margin: 10px 0 0; color: #4d5b52; font-size: .95rem; line-height: 1.65; }
         .error { margin-top: 16px; padding: 12px; border: 1px solid #e4b7b7; border-radius: 8px; background: #fff5f5; color: #8b2323; line-height: 1.45; }
         .stale-hint { display: none; margin-top: 12px; color: #7a5200; font-size: .93rem; }
-        .clear-link { color: #244f76; }
-        @media (max-width: 680px) { body { padding: 10px; } .panel { padding: 15px; } .form-grid { grid-template-columns: minmax(0, 1fr); } .diagram { margin: 12px 0; } }
-        @media print { body { padding: 0; background: #fff; } .panel { border-color: #aaa; break-inside: avoid; } .back-link, button, .clear-link, .stale-hint { display: none !important; } .result { border-color: #999; background: #fff; } }
+        .clear-button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; border: 1px solid #b8c0c8; border-radius: 6px; padding: 10px 16px; color: #244f76; background: #fff; font-weight: 700; line-height: 1.25; text-decoration: none; }
+        .clear-button:hover { background: #f4f6f8; text-decoration: none; }
+        @media (max-width: 680px) { body { padding: 10px; } .panel { padding: 15px; } .top-layout { grid-template-columns: minmax(0, 1fr); } .diagram { margin: 0 0 12px; } }
+        @media print { body { padding: 0; background: #fff; } .panel { border-color: #aaa; break-inside: avoid; } .back-link, button, .clear-button, .stale-hint { display: none !important; } .result { border-color: #999; background: #fff; } }
     </style>
 </head>
 <body>
@@ -198,65 +204,75 @@ function lc_retune_formatCapacitance(float $farad): string
         <h1>Перестройка LC-контура по частоте</h1>
         <p class="subtle">Рассчитывает новую ёмкость или индуктивность контура при переходе на другую резонансную частоту, сохраняя второй параметр неизменным.</p>
         <a class="back-link" href="index.php">← К списку калькуляторов</a>
-        <img class="diagram" src="images/lc-circuit.svg" alt="Схематичный LC-контур с катушкой L и конденсатором C" width="760" height="240">
-        <div class="note"><strong>Примечание:</strong> в расчёте указанная ёмкость считается полной эквивалентной ёмкостью контура. Потери катушки, добротность и паразитные параметры не учитываются.</div>
+
+        <div class="top-layout">
+            <div class="diagram-column">
+                <img class="diagram" src="images/lc-circuit.svg" alt="Схематичный LC-контур с катушкой L и конденсатором C" width="760" height="240">
+                <div class="note"><strong>Примечание:</strong> в расчёте указанная ёмкость считается полной эквивалентной ёмкостью контура. Потери катушки, добротность и паразитные параметры не учитываются.</div>
+            </div>
+
+            <div class="form-column">
+                <h2>Исходные данные</h2>
+                <form id="retune-form" method="post" action="">
+                    <fieldset class="mode-field mode-options">
+                        <legend>Что пересчитываем?</legend>
+                        <label><input type="radio" name="mode" value="capacitance"<?= $mode === 'capacitance' ? ' checked' : '' ?>> Пересчитать ёмкость</label>
+                        <label><input type="radio" name="mode" value="inductance"<?= $mode === 'inductance' ? ' checked' : '' ?>> Пересчитать индуктивность</label>
+                    </fieldset>
+
+                    <div class="form-grid">
+                        <div class="field">
+                            <label class="field-label" for="old_frequency">Старая резонансная частота f₁</label>
+                            <div class="value-row">
+                                <input class="value-input" id="old_frequency" name="old_frequency" type="text" inputmode="decimal" autocomplete="off" value="<?= lc_retune_h($oldFrequencyRaw) ?>" required>
+                                <select class="unit-select" id="old_frequency_unit" name="old_frequency_unit" aria-label="Единица старой частоты">
+                                    <?php foreach ($units['frequency'] as $unit => $label): ?><option value="<?= lc_retune_h($unit) ?>"<?= lc_retune_selected($oldFrequencyUnit, $unit) ?>><?= lc_retune_h($label) ?></option><?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="field-label" for="old_parameter" id="parameter-label"><?= $mode === 'capacitance' ? 'Старая ёмкость контура C₁' : 'Старая индуктивность катушки L₁' ?></label>
+                            <div class="value-row">
+                                <input class="value-input" id="old_parameter" name="old_parameter" type="text" inputmode="decimal" autocomplete="off" value="<?= lc_retune_h($parameterRaw) ?>" required>
+                                <select class="unit-select" id="old_parameter_unit" name="old_parameter_unit" data-type="<?= lc_retune_h($parameterType) ?>" aria-label="Единица старого параметра">
+                                    <?php foreach ($units[$parameterType] as $unit => $label): ?><option value="<?= lc_retune_h($unit) ?>"<?= lc_retune_selected($parameterUnit, $unit) ?>><?= lc_retune_h($label) ?></option><?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="field-label" for="new_frequency">Новая резонансная частота f₂</label>
+                            <div class="value-row">
+                                <input class="value-input" id="new_frequency" name="new_frequency" type="text" inputmode="decimal" autocomplete="off" value="<?= lc_retune_h($newFrequencyRaw) ?>" required>
+                                <select class="unit-select" id="new_frequency_unit" name="new_frequency_unit" aria-label="Единица новой частоты">
+                                    <?php foreach ($units['frequency'] as $unit => $label): ?><option value="<?= lc_retune_h($unit) ?>"<?= lc_retune_selected($newFrequencyUnit, $unit) ?>><?= lc_retune_h($label) ?></option><?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-row">
+                        <button type="submit" name="calculate" value="1">Рассчитать</button>
+                        <a class="clear-button" href="lc_retune.php">Очистить результаты</a>
+                    </div>
+                    <div class="stale-hint" id="stale-hint">Исходные данные изменены. Нажми «Рассчитать», чтобы обновить результат.</div>
+                </form>
+            </div>
+        </div>
     </section>
 
-    <section class="panel">
-        <h2>Исходные данные</h2>
-        <form id="retune-form" method="post" action="">
-            <fieldset class="mode-field mode-options">
-                <legend>Что пересчитываем?</legend>
-                <label><input type="radio" name="mode" value="capacitance"<?= $mode === 'capacitance' ? ' checked' : '' ?>> Пересчитать ёмкость</label>
-                <label><input type="radio" name="mode" value="inductance"<?= $mode === 'inductance' ? ' checked' : '' ?>> Пересчитать индуктивность</label>
-            </fieldset>
-
-            <div class="form-grid">
-                <div class="field">
-                    <label class="field-label" for="old_frequency">Старая резонансная частота f₁</label>
-                    <div class="value-row">
-                        <input class="value-input" id="old_frequency" name="old_frequency" type="text" inputmode="decimal" autocomplete="off" value="<?= lc_retune_h($oldFrequencyRaw) ?>" required>
-                        <select class="unit-select" id="old_frequency_unit" name="old_frequency_unit" aria-label="Единица старой частоты">
-                            <?php foreach ($units['frequency'] as $unit => $label): ?><option value="<?= lc_retune_h($unit) ?>"<?= lc_retune_selected($oldFrequencyUnit, $unit) ?>><?= lc_retune_h($label) ?></option><?php endforeach; ?>
-                        </select>
-                    </div>
+    <?php if ($error !== '' || $result !== null): ?>
+        <section class="panel results-panel">
+            <?php if ($error !== ''): ?><div class="error" id="calculation-error" role="alert"><?= lc_retune_h($error) ?></div><?php endif; ?>
+            <?php if ($result !== null): ?>
+                <div class="result" id="calculation-result" aria-live="polite">
+                    <h2 class="result-heading"><?= lc_retune_h($result['main_label']) ?></h2>
+                    <div class="result-value"><?= lc_retune_h($result['main_value']) ?></div>
+                    <p class="secondary-result"><strong><?= lc_retune_h($result['secondary_label']) ?>:</strong> <?= lc_retune_h($result['secondary_value']) ?></p>
+                    <p class="formula">Использованные формулы: <?= lc_retune_h($result['formula']) ?>; <?= lc_retune_h($result['secondary_formula']) ?>.</p>
                 </div>
-                <div class="field">
-                    <label class="field-label" for="old_parameter" id="parameter-label"><?= $mode === 'capacitance' ? 'Старая ёмкость контура C₁' : 'Старая индуктивность катушки L₁' ?></label>
-                    <div class="value-row">
-                        <input class="value-input" id="old_parameter" name="old_parameter" type="text" inputmode="decimal" autocomplete="off" value="<?= lc_retune_h($parameterRaw) ?>" required>
-                        <select class="unit-select" id="old_parameter_unit" name="old_parameter_unit" data-type="<?= lc_retune_h($parameterType) ?>" aria-label="Единица старого параметра">
-                            <?php foreach ($units[$parameterType] as $unit => $label): ?><option value="<?= lc_retune_h($unit) ?>"<?= lc_retune_selected($parameterUnit, $unit) ?>><?= lc_retune_h($label) ?></option><?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-                <div class="field">
-                    <label class="field-label" for="new_frequency">Новая резонансная частота f₂</label>
-                    <div class="value-row">
-                        <input class="value-input" id="new_frequency" name="new_frequency" type="text" inputmode="decimal" autocomplete="off" value="<?= lc_retune_h($newFrequencyRaw) ?>" required>
-                        <select class="unit-select" id="new_frequency_unit" name="new_frequency_unit" aria-label="Единица новой частоты">
-                            <?php foreach ($units['frequency'] as $unit => $label): ?><option value="<?= lc_retune_h($unit) ?>"<?= lc_retune_selected($newFrequencyUnit, $unit) ?>><?= lc_retune_h($label) ?></option><?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="action-row">
-                <button type="submit" name="calculate" value="1">Рассчитать</button>
-                <a class="clear-link" href="lc_retune.php">Очистить результат</a>
-            </div>
-            <div class="stale-hint" id="stale-hint">Исходные данные изменены. Нажми «Рассчитать», чтобы обновить результат.</div>
-        </form>
-        <?php if ($error !== ''): ?><div class="error" id="calculation-error" role="alert"><?= lc_retune_h($error) ?></div><?php endif; ?>
-        <?php if ($result !== null): ?>
-            <div class="result" id="calculation-result" aria-live="polite">
-                <h2 class="result-heading"><?= lc_retune_h($result['main_label']) ?></h2>
-                <div class="result-value"><?= lc_retune_h($result['main_value']) ?></div>
-                <p class="secondary-result"><strong><?= lc_retune_h($result['secondary_label']) ?>:</strong> <?= lc_retune_h($result['secondary_value']) ?></p>
-                <p class="formula">Использованные формулы: <?= lc_retune_h($result['formula']) ?>; <?= lc_retune_h($result['secondary_formula']) ?>.</p>
-            </div>
-        <?php endif; ?>
-    </section>
+            <?php endif; ?>
+        </section>
+    <?php endif; ?>
 
     <section class="panel">
         <h2>Формулы расчёта</h2>
