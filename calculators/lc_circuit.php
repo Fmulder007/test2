@@ -205,10 +205,14 @@ if ($result !== null) {
         p { line-height: 1.5; }
         .subtle { color: #5f6368; }
         .back-link { display: inline-block; margin-top: 4px; color: #244f76; font-weight: 700; text-decoration: none; }
-        .back-link:hover, .clear-link:hover { text-decoration: underline; }
-        .diagram { display: block; width: 100%; height: auto; margin: 16px 0; border: 1px solid #d7dce1; border-radius: 8px; background: #fff; }
+        .back-link:hover { text-decoration: underline; }
+        .diagram { display: block; width: 100%; height: auto; margin: 0 0 14px; border: 1px solid #d7dce1; border-radius: 8px; background: #fff; }
+        .top-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: stretch; margin-top: 18px; }
+        .diagram-column { min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+        .form-column { min-width: 0; }
+        .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: end; }
         .note { padding: 12px 14px; border-left: 4px solid #3c7ca7; background: #f2f7fb; border-radius: 5px; line-height: 1.45; }
-        .form-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: end; }
+        
         .field { min-width: 0; }
         .field-label { display: block; font-weight: 700; margin-bottom: 6px; }
         select, input, button { font: inherit; }
@@ -216,7 +220,8 @@ if ($result !== null) {
         .value-input, .unit-select, .mode-select { width: 100%; min-width: 0; border: 1px solid #b8c0c8; border-radius: 6px; padding: 10px; background: #fff; }
         .value-input:focus, .unit-select:focus, .mode-select:focus { outline: 3px solid #c5e2f8; border-color: #3976a8; }
         .mode-field { margin-bottom: 15px; }
-        .action-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 17px; }
+        .action-row { display: flex; flex-direction: column; align-items: stretch; gap: 10px; margin-top: 17px; }
+        .action-row button, .action-row .clear-button { width: 100%; }
         button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; border: 0; border-radius: 6px; padding: 11px 16px; color: #fff; background: #245c88; font-weight: 700; line-height: 1.25; cursor: pointer; }
         button:hover { background: #19476c; }
         button:focus-visible, a:focus-visible { outline: 3px solid #89bde5; outline-offset: 3px; }
@@ -227,9 +232,10 @@ if ($result !== null) {
         .error { margin-top: 16px; padding: 12px; border: 1px solid #e4b7b7; border-radius: 8px; background: #fff5f5; color: #8b2323; line-height: 1.45; }
         .stale-hint { display: none; margin-top: 12px; color: #7a5200; font-size: .93rem; }
         .small { font-size: .9rem; }
-        .clear-link { color: #244f76; }
-        @media (max-width: 680px) { body { padding: 10px; } .panel { padding: 15px; } .form-grid { grid-template-columns: minmax(0, 1fr); } .diagram { margin: 12px 0; } }
-        @media print { body { padding: 0; background: #fff; } .panel { border-color: #aaa; break-inside: avoid; } .no-print, .back-link, button, .clear-link, .stale-hint { display: none !important; } .result { border-color: #999; background: #fff; } }
+        .clear-button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; border: 1px solid #b8c0c8; border-radius: 6px; padding: 10px 16px; color: #244f76; background: #fff; font-weight: 700; line-height: 1.25; text-decoration: none; }
+        .clear-button:hover { background: #f4f6f8; text-decoration: none; }
+        @media (max-width: 680px) { body { padding: 10px; } .panel { padding: 15px; } .top-layout { grid-template-columns: minmax(0, 1fr); } .diagram { margin: 0 0 12px; } }
+        @media print { body { padding: 0; background: #fff; } .panel { border-color: #aaa; break-inside: avoid; } .no-print, .back-link, button, .clear-button, .stale-hint { display: none !important; } .result { border-color: #999; background: #fff; } }
     </style>
 </head>
 <body>
@@ -238,64 +244,74 @@ if ($result !== null) {
         <h1>Калькулятор LC-контура</h1>
         <p class="subtle">Рассчитывает резонансную частоту идеального LC-контура, нужную индуктивность или ёмкость, а также реактивное сопротивление на заданной частоте.</p>
         <a class="back-link" href="index.php">← К списку калькуляторов</a>
-        <img class="diagram" src="images/lc-circuit.svg" alt="Схематичный LC-контур с катушкой L и конденсатором C" width="760" height="240">
-        <div class="note"><strong>Примечание:</strong> расчёт идеальный. Потери катушки, добротность, паразитные ёмкости, сопротивление источника и нагрузка не учитываются.</div>
+
+        <div class="top-layout">
+            <div class="diagram-column">
+                <img class="diagram" src="images/lc-circuit.svg" alt="Схематичный LC-контур с катушкой L и конденсатором C" width="760" height="240">
+                <div class="note"><strong>Примечание:</strong> расчёт идеальный. Потери катушки, добротность, паразитные ёмкости, сопротивление источника и нагрузка не учитываются.</div>
+            </div>
+
+            <div class="form-column">
+                <h2>Что рассчитать?</h2>
+                <form id="lc-form" method="post" action="">
+                    <div class="mode-field">
+                        <label class="field-label" for="mode">Режим расчёта</label>
+                        <select class="mode-select" id="mode" name="mode">
+                            <option value="frequency"<?= lc_selected($mode, 'frequency') ?>>Резонансную частоту по L и C</option>
+                            <option value="inductance"<?= lc_selected($mode, 'inductance') ?>>Индуктивность по частоте и ёмкости</option>
+                            <option value="capacitance"<?= lc_selected($mode, 'capacitance') ?>>Ёмкость по частоте и индуктивности</option>
+                            <option value="reactance"<?= lc_selected($mode, 'reactance') ?>>Реактивное сопротивление на заданной частоте</option>
+                        </select>
+                    </div>
+                    <div class="mode-field" id="reactance-kind-row"<?= $mode === 'reactance' ? '' : ' style="display:none"' ?>>
+                        <label class="field-label" for="reactance_type">Какой элемент рассчитываем?</label>
+                        <select class="mode-select" id="reactance_type" name="reactance_type">
+                            <option value="coil"<?= lc_selected($reactanceType, 'coil') ?>>Катушка индуктивности — Xₗ</option>
+                            <option value="capacitor"<?= lc_selected($reactanceType, 'capacitor') ?>>Конденсатор — X꜀</option>
+                        </select>
+                    </div>
+                    <div class="form-grid">
+                        <div class="field">
+                            <label class="field-label" for="a_value" id="a-label"><?= lc_h($aLabel) ?></label>
+                            <div class="value-row">
+                                <input class="value-input" id="a_value" name="a_value" type="text" inputmode="decimal" autocomplete="off" value="<?= lc_h($aRaw) ?>" required>
+                                <select class="unit-select" id="a_unit" name="a_unit" data-type="<?= lc_h($typeA) ?>" aria-label="Единица первого значения">
+                                    <?php foreach ($lcUnits[$typeA] as $unit => $unitLabel): ?><option value="<?= lc_h($unit) ?>"<?= lc_selected($aUnit, $unit) ?>><?= lc_h($unitLabel) ?></option><?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="field-label" for="b_value" id="b-label"><?= lc_h($bLabel) ?></label>
+                            <div class="value-row">
+                                <input class="value-input" id="b_value" name="b_value" type="text" inputmode="decimal" autocomplete="off" value="<?= lc_h($bRaw) ?>" required>
+                                <select class="unit-select" id="b_unit" name="b_unit" data-type="<?= lc_h($typeB) ?>" aria-label="Единица второго значения">
+                                    <?php foreach ($lcUnits[$typeB] as $unit => $unitLabel): ?><option value="<?= lc_h($unit) ?>"<?= lc_selected($bUnit, $unit) ?>><?= lc_h($unitLabel) ?></option><?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="action-row">
+                        <button type="submit" name="calculate" value="1">Рассчитать</button>
+                        <a class="clear-button" href="lc_circuit.php">Очистить результаты</a>
+                    </div>
+                    <div class="stale-hint" id="stale-hint">Исходные данные изменены. Нажми «Рассчитать», чтобы обновить результат.</div>
+                </form>
+            </div>
+        </div>
     </section>
 
-    <section class="panel">
-        <h2>Что рассчитать?</h2>
-        <form id="lc-form" method="post" action="">
-            <div class="mode-field">
-                <label class="field-label" for="mode">Режим расчёта</label>
-                <select class="mode-select" id="mode" name="mode">
-                    <option value="frequency"<?= lc_selected($mode, 'frequency') ?>>Резонансную частоту по L и C</option>
-                    <option value="inductance"<?= lc_selected($mode, 'inductance') ?>>Индуктивность по частоте и ёмкости</option>
-                    <option value="capacitance"<?= lc_selected($mode, 'capacitance') ?>>Ёмкость по частоте и индуктивности</option>
-                    <option value="reactance"<?= lc_selected($mode, 'reactance') ?>>Реактивное сопротивление на заданной частоте</option>
-                </select>
-            </div>
-            <div class="mode-field" id="reactance-kind-row"<?= $mode === 'reactance' ? '' : ' style="display:none"' ?>>
-                <label class="field-label" for="reactance_type">Какой элемент рассчитываем?</label>
-                <select class="mode-select" id="reactance_type" name="reactance_type">
-                    <option value="coil"<?= lc_selected($reactanceType, 'coil') ?>>Катушка индуктивности — Xₗ</option>
-                    <option value="capacitor"<?= lc_selected($reactanceType, 'capacitor') ?>>Конденсатор — X꜀</option>
-                </select>
-            </div>
-            <div class="form-grid">
-                <div class="field">
-                    <label class="field-label" for="a_value" id="a-label"><?= lc_h($aLabel) ?></label>
-                    <div class="value-row">
-                        <input class="value-input" id="a_value" name="a_value" type="text" inputmode="decimal" autocomplete="off" value="<?= lc_h($aRaw) ?>" required>
-                        <select class="unit-select" id="a_unit" name="a_unit" data-type="<?= lc_h($typeA) ?>" aria-label="Единица первого значения">
-                            <?php foreach ($lcUnits[$typeA] as $unit => $unitLabel): ?><option value="<?= lc_h($unit) ?>"<?= lc_selected($aUnit, $unit) ?>><?= lc_h($unitLabel) ?></option><?php endforeach; ?>
-                        </select>
-                    </div>
+    <?php if ($error !== '' || $result !== null): ?>
+        <section class="panel results-panel">
+            <?php if ($error !== ''): ?><div class="error" id="calculation-error" role="alert"><?= lc_h($error) ?></div><?php endif; ?>
+            <?php if ($result !== null): ?>
+                <div class="result" id="calculation-result" aria-live="polite">
+                    <h2 class="result-heading"><?= lc_h($result['label']) ?></h2>
+                    <div class="result-value"><?= lc_h($result['formatted']) ?></div>
+                    <p class="formula">Использованная формула: <?= lc_h($formulaText) ?>.</p>
                 </div>
-                <div class="field">
-                    <label class="field-label" for="b_value" id="b-label"><?= lc_h($bLabel) ?></label>
-                    <div class="value-row">
-                        <input class="value-input" id="b_value" name="b_value" type="text" inputmode="decimal" autocomplete="off" value="<?= lc_h($bRaw) ?>" required>
-                        <select class="unit-select" id="b_unit" name="b_unit" data-type="<?= lc_h($typeB) ?>" aria-label="Единица второго значения">
-                            <?php foreach ($lcUnits[$typeB] as $unit => $unitLabel): ?><option value="<?= lc_h($unit) ?>"<?= lc_selected($bUnit, $unit) ?>><?= lc_h($unitLabel) ?></option><?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="action-row">
-                <button type="submit" name="calculate" value="1">Рассчитать</button>
-                <a class="clear-link" href="lc_circuit.php">Очистить результат</a>
-            </div>
-            <div class="stale-hint" id="stale-hint">Исходные данные изменены. Нажми «Рассчитать», чтобы обновить результат.</div>
-        </form>
-        <?php if ($error !== ''): ?><div class="error" id="calculation-error" role="alert"><?= lc_h($error) ?></div><?php endif; ?>
-        <?php if ($result !== null): ?>
-            <div class="result" id="calculation-result" aria-live="polite">
-                <h2 class="result-heading"><?= lc_h($result['label']) ?></h2>
-                <div class="result-value"><?= lc_h($result['formatted']) ?></div>
-                <p class="formula">Использованная формула: <?= lc_h($formulaText) ?>.</p>
-            </div>
-        <?php endif; ?>
-    </section>
+            <?php endif; ?>
+        </section>
+    <?php endif; ?>
 
     <section class="panel">
         <h2>Формулы расчёта</h2>
