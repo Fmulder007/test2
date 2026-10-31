@@ -641,6 +641,8 @@ $cutoffHelp = $response === 'butter'
         .action-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 18px; }
         button { display: inline-flex; align-items: center; justify-content: center; min-height: 43px; border: 0; border-radius: 6px; padding: 11px 17px; color: #fff; background: #245c88; font-weight: 700; line-height: 1.25; cursor: pointer; }
         button:hover { background: #19476c; }
+        .export-cct-button { background: #28623f; }
+        .export-cct-button:hover { background: #1f4e32; }
         .clear-link { color: #244f76; }
         .error { margin-top: 15px; padding: 12px; border: 1px solid #e4b7b7; border-radius: 8px; background: #fff5f5; color: #8b2323; line-height: 1.45; }
         .stale-hint { display: none; margin-top: 12px; color: #7a5200; font-size: .93rem; }
@@ -873,7 +875,7 @@ $cutoffHelp = $response === 'butter'
                 <input type="hidden" name="manual_values_json" value="<?= lpf_h($manualValuesJson) ?>">
                 <input type="hidden" name="client_timestamp" value="">
                 <div class="action-row">
-                    <button type="submit">Скачать схему для RFSim99 (.cct)</button>
+                    <button class="export-cct-button" type="submit">Скачать схему для RFSim99 (.cct)</button>
                 </div>
             </form>
         <?php endif; ?>
