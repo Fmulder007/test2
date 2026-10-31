@@ -822,6 +822,8 @@ $parExportAvailable = ($parResult !== null
         .chart-placeholder[hidden], .response-canvas[hidden] { display: none; }
         .chart-stats { margin: 7px 1px 0; color: #69727b; font-size: .8rem; line-height: 1.4; }
         .export-action { margin-top: 13px; max-width: 360px; }
+        .export-action button { background: #28623f; }
+        .export-action button:hover { background: #1f4e32; }
         .footer-note { margin: 2px 2px 0; color: #69727b; font-size: .84rem; line-height: 1.45; }
         @media (max-width: 760px) {
             body { padding: 10px; }
