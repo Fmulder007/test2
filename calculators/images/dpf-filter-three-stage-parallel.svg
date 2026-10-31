@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="340" viewBox="0 0 1000 340" role="img" aria-labelledby="title desc">
+  <title id="title">Трёхзвенный полосовой LC-фильтр с параллельными концевыми звеньями</title>
+  <desc id="desc">Три одинаковые последовательные катушки L1, два последовательных конденсатора C2, центральный последовательный конденсатор C3, два внутренних шунтирующих конденсатора C4 и два концевых шунтирующих конденсатора C1.</desc>
+  <defs>
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M20 0H0V20" fill="none" stroke="#edf0f2" stroke-width="1"/>
+    </pattern>
+    <style>
+      .wire{fill:none;stroke:#239b45;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+      .component{fill:none;stroke:#c51d24;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+      .node{fill:#c51d24}
+      .label{font-family:Arial,Helvetica,sans-serif;font-size:34px;fill:#193e9b;text-anchor:middle}
+      .port{font-family:Arial,Helvetica,sans-serif;font-size:25px;fill:#30343a;text-anchor:middle}
+      .ground{fill:none;stroke:#202326;stroke-width:3.5;stroke-linecap:round}
+    </style>
+  </defs>
+  <rect width="1000" height="340" fill="#fff"/>
+  <rect width="1000" height="340" fill="url(#grid)"/>
+
+  <!-- Сигнальная шина и последовательные элементы -->
+  <path class="wire" d="M24 92H104 M128 92H196 M276 92H322 M402 92H466 M534 92H724 M804 92H872 M896 92H976"/>
+
+  <!-- Концевые последовательные конденсаторы C2 -->
+  <path class="component" d="M104 70V114 M128 70V114 M872 70V114 M896 70V114"/>
+  <text class="label" x="116" y="48">C2</text>
+  <text class="label" x="884" y="48">C2</text>
+
+  <!-- Три одинаковые последовательные катушки L1 -->
+  <path class="component" d="M196 92
+    c0 -27 18 -27 18 0 c0 -27 18 -27 18 0 c0 -27 18 -27 18 0 c0 -27 18 -27 18 0"/>
+  <path class="component" d="M322 92
+    c0 -27 18 -27 18 0 c0 -27 18 -27 18 0 c0 -27 18 -27 18 0 c0 -27 18 -27 18 0"/>
+  <path class="component" d="M724 92
+    c0 -27 18 -27 18 0 c0 -27 18 -27 18 0 c0 -27 18 -27 18 0 c0 -27 18 -27 18 0"/>
+  <text class="label" x="232" y="42">L1</text>
+  <text class="label" x="358" y="42">L1</text>
+  <text class="label" x="760" y="42">L1</text>
+
+  <!-- Центральный последовательный конденсатор C3 -->
+  <path class="component" d="M490 70V114 M514 70V114"/>
+  <path class="wire" d="M466 92H490 M514 92H534"/>
+  <text class="label" x="502" y="48">C3</text>
+
+  <!-- Узлы и концевые/внутренние шунтирующие конденсаторы -->
+  <path class="wire" d="M64 92V156 M300 92V156 M700 92V156 M936 92V156"/>
+  <circle class="node" cx="64" cy="92" r="8"/>
+  <circle class="node" cx="300" cy="92" r="8"/>
+  <circle class="node" cx="700" cy="92" r="8"/>
+  <circle class="node" cx="936" cy="92" r="8"/>
+
+  <!-- C1 слева и справа -->
+  <path class="component" d="M42 156H86 M42 180H86"/>
+  <path class="wire" d="M64 156V156 M64 180V220"/>
+  <text class="label" x="118" y="177">C1</text>
+  <path class="component" d="M914 156H958 M914 180H958"/>
+  <path class="wire" d="M936 156V156 M936 180V220"/>
+  <text class="label" x="882" y="177">C1</text>
+
+  <!-- C4 в двух внутренних узлах -->
+  <path class="component" d="M278 156H322 M278 180H322 M678 156H722 M678 180H722"/>
+  <path class="wire" d="M300 156V156 M300 180V220 M700 156V156 M700 180V220"/>
+  <text class="label" x="350" y="177">C4</text>
+  <text class="label" x="750" y="177">C4</text>
+
+  <!-- Земля -->
+  <g class="ground">
+    <path d="M64 220V240 M42 240H86 M49 249H79 M56 258H72"/>
+    <path d="M300 220V240 M278 240H322 M285 249H315 M292 258H308"/>
+    <path d="M700 220V240 M678 240H722 M685 249H715 M692 258H708"/>
+    <path d="M936 220V240 M914 240H958 M921 249H951 M928 258H944"/>
+  </g>
+  <text class="port" x="70" y="315">Вход</text>
+  <text class="port" x="930" y="315">Выход</text>
+</svg>

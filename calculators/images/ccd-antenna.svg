@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 260" role="img" aria-labelledby="title desc">
+  <title id="title">Упрощённая схема CCD-антенны</title>
+  <desc id="desc">Проволочные плечи диполя с несколькими последовательными конденсаторами и центральным питанием.</desc>
+  <rect width="760" height="260" rx="14" fill="#f6f9fb"/>
+  <g fill="none" stroke="#294b63" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M45 92 H104 M116 77 V107 M128 77 V107 M128 92 H185 M197 77 V107 M209 77 V107 M209 92 H266 M278 77 V107 M290 77 V107 M290 92 H337"/>
+    <path d="M423 92 H470 M482 77 V107 M494 77 V107 M494 92 H551 M563 77 V107 M575 77 V107 M575 92 H632 M644 77 V107 M656 77 V107 M656 92 H715"/>
+    <rect x="337" y="77" width="86" height="30" rx="5" fill="#d9e6ee" stroke-width="2.5"/>
+    <path d="M380 107 V148" stroke-width="4"/>
+    <path d="M365 148 H395 M370 155 H390" stroke-width="2.5"/>
+  </g>
+  <g fill="#294b63" font-family="Arial,Helvetica,sans-serif" font-size="15" text-anchor="middle">
+    <text x="80" y="59">Провод</text>
+    <text x="380" y="66">Точка питания</text>
+    <text x="680" y="59">Провод</text>
+    <text x="172" y="127" font-size="12">C</text>
+    <text x="254" y="127" font-size="12">C</text>
+    <text x="530" y="127" font-size="12">C</text>
+    <text x="612" y="127" font-size="12">C</text>
+    <text x="380" y="178" font-size="13">фидер</text>
+  </g>
+  <path d="M34 220 H726" stroke="#d2dde5" stroke-width="1.5"/>
+  <g fill="#536b7b" font-family="Arial,Helvetica,sans-serif" font-size="13" text-anchor="middle">
+    <text x="380" y="245">Секции провода соединены через последовательные конденсаторы</text>
+  </g>
+</svg>

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="300" viewBox="0 0 360 300" role="img" aria-labelledby="title desc">
+  <title id="title">Микрополосковая линия</title>
+  <desc id="desc">Поперечное сечение: дорожка W на диэлектрике с относительной проницаемостью εr, расстояние H до нижней плоскости земли и толщина меди T.</desc>
+  <defs>
+    <marker id="dimArrow" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto-start-reverse"><path d="M0 0 L7 3.5 L0 7 Z" fill="#52616d"/></marker>
+  </defs>
+  <rect width="360" height="300" rx="10" fill="#fff"/>
+  <g stroke-linejoin="round">
+    <rect x="50" y="100" width="260" height="122" fill="#e7edf1" stroke="#526576" stroke-width="2"/>
+    <rect x="50" y="222" width="260" height="17" fill="#b4c2ce" stroke="#526576" stroke-width="2"/>
+    <rect x="132" y="83" width="96" height="17" fill="#d59a43" stroke="#8f6020" stroke-width="1.8"/>
+  </g>
+  <g fill="none" stroke="#52616d" stroke-width="1.6" stroke-linecap="round">
+    <path d="M132 65 V80 M228 65 V80 M132 61 H228" marker-start="url(#dimArrow)" marker-end="url(#dimArrow)"/>
+    <path d="M320 100 V222" marker-start="url(#dimArrow)" marker-end="url(#dimArrow)"/>
+    <path d="M228 83 H248 M228 100 H248 M241 83 V100" marker-start="url(#dimArrow)" marker-end="url(#dimArrow)"/>
+    <path d="M310 100 H324 M310 222 H324" stroke-dasharray="3 4"/>
+  </g>
+  <g fill="#263747" font-family="Arial,Helvetica,sans-serif" text-anchor="middle">
+    <text x="180" y="48" font-size="17" font-weight="700">W</text>
+    <text x="334" y="166" font-size="17" font-weight="700">H</text>
+    <text x="253" y="96" font-size="15" font-weight="700">T</text>
+    <text x="180" y="165" font-size="18" font-weight="700">εr</text>
+    <text x="180" y="264" font-size="16">Плоскость земли</text>
+  </g>
+</svg>

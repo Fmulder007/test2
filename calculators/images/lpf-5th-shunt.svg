@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with "sPlan" (http://www.abacom-online.de) -->
+
+<svg
+   version="1.1"
+   width="911"
+   height="375"
+   id="svg26"
+   sodipodi:docname="lpf-5th-shunt.svg"
+   inkscape:version="1.4.4 (dcaf3e7, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview26"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="1.3785089"
+     inkscape:cx="532.09666"
+     inkscape:cy="179.17911"
+     inkscape:window-width="1920"
+     inkscape:window-height="976"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg26" />
+  <title
+     id="title1">sPlan</title>
+  <defs
+     id="defs1">
+    <linearGradient
+       id="swatch28"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop28" />
+    </linearGradient>
+    <style
+       type="text/css"
+       id="style1"><![CDATA[
+polyline {stroke-linecap:round; stroke-linejoin:round}
+polygon {stroke-linecap:round; stroke-linejoin:round}
+path {stroke-linecap:round; stroke-linejoin:round}
+circle {stroke-linecap:round; stroke-linejoin:round}
+]]></style>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch28"
+       id="linearGradient28"
+       x1="791.55078"
+       y1="171.03613"
+       x2="873.41992"
+       y2="171.03613"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch28"
+       id="linearGradient29"
+       x1="41.550781"
+       y1="171.03613"
+       x2="102.98047"
+       y2="171.03613"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch28"
+       id="linearGradient44"
+       x1="590.40755"
+       y1="175.85417"
+       x2="615.84505"
+       y2="175.85417"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch28"
+       id="linearGradient49"
+       x1="280.40755"
+       y1="175.85417"
+       x2="303.97461"
+       y2="175.85417"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch28"
+       id="linearGradient54"
+       x1="575.62891"
+       y1="52.414704"
+       x2="628.4812"
+       y2="52.414704"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch28"
+       id="linearGradient59"
+       x1="795.62891"
+       y1="235.8929"
+       x2="823.44596"
+       y2="235.8929"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch28"
+       id="linearGradient64"
+       x1="485.62891"
+       y1="235.88737"
+       x2="513.27995"
+       y2="235.88737"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch28"
+       id="linearGradient69"
+       x1="175.62891"
+       y1="235.88737"
+       x2="200.3138"
+       y2="235.88737"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:2.01404621;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+     d="m 123.0777,215.50788 h 40 v 10 h -40 v -10"
+     id="path1" />
+  <polyline
+     points="140.00 205.00 140.00 235.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline1"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:3;stroke-dasharray:none;stroke-opacity:1"
+     transform="translate(3.0777027,-19.492117)" />
+  <polyline
+     points="140.00 265.00 140.00 295.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline2"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:3;stroke-dasharray:none;stroke-opacity:1"
+     transform="translate(3.0777027,-19.492117)" />
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:2.01404621;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+     d="m 123.0777,235.50788 h 40 v 10 h -40 v -10"
+     id="path2" />
+  <text
+     x="178.0777"
+     y="224.50789"
+     font-family="ARIAL"
+     font-size="22.6667px"
+     font-weight="normal"
+     font-style="normal"
+     fill="rgb(0,0,0)"
+     id="text2"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:1.00701809;stroke-dasharray:none;stroke-opacity:1">C1</text>
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:2.01404621;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+     d="m 433.0777,215.50788 h 40 v 10 h -40 v -10"
+     id="path3" />
+  <polyline
+     points="450.00 205.00 450.00 235.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline3"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:3;stroke-dasharray:none;stroke-opacity:1"
+     transform="translate(3.0777027,-19.492117)" />
+  <polyline
+     points="450.00 265.00 450.00 295.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline4"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:3;stroke-dasharray:none;stroke-opacity:1"
+     transform="translate(3.0777027,-19.492117)" />
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:2.01404621;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+     d="m 433.0777,235.50788 h 40 v 10 h -40 v -10"
+     id="path4" />
+  <text
+     x="488.0777"
+     y="224.50789"
+     font-family="ARIAL"
+     font-size="22.6667px"
+     font-weight="normal"
+     font-style="normal"
+     fill="rgb(0,0,0)"
+     id="text4"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:1.00701809;stroke-dasharray:none;stroke-opacity:1">C2</text>
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:2.01404621;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+     d="m 743.0777,215.50788 h 40 v 10 h -40 v -10"
+     id="path5" />
+  <polyline
+     points="760.00 205.00 760.00 235.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline5"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:3;stroke-dasharray:none;stroke-opacity:1"
+     transform="translate(3.0777027,-19.492117)" />
+  <polyline
+     points="760.00 265.00 760.00 295.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline6"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:3;stroke-dasharray:none;stroke-opacity:1"
+     transform="translate(3.0777027,-19.492117)" />
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:2.01404621;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+     d="m 743.0777,235.50788 h 40 v 10 h -40 v -10"
+     id="path6" />
+  <text
+     x="798.0777"
+     y="224.50789"
+     font-family="ARIAL"
+     font-size="22.6667px"
+     font-weight="normal"
+     font-style="normal"
+     fill="rgb(0,0,0)"
+     id="text6"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:1.00701809;stroke-dasharray:none;stroke-opacity:1">C3</text>
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="fill:#c25b24;fill-opacity:1;stroke:#c25b24;stroke-width:2.01404621;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+     d="m 623.0777,65.507883 v 39.999997 h -10 V 65.507883 h 10"
+     id="path7" />
+  <polyline
+     points="650.00 105.00 620.00 105.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline7"
+     style="fill:#c25b24;fill-opacity:1;stroke:#c25b24;stroke-width:2.01404621;stroke-dasharray:none;stroke-opacity:1"
+     transform="translate(3.0777027,-19.492117)" />
+  <polyline
+     points="590.00 105.00 560.00 105.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline8"
+     style="fill:#c25b24;fill-opacity:1;stroke:#c25b24;stroke-width:2.01404621;stroke-dasharray:none;stroke-opacity:1"
+     transform="translate(3.0777027,-19.492117)" />
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="fill:#c25b24;fill-opacity:1;stroke:#c25b24;stroke-width:2.01404621;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+     d="m 603.0777,65.507883 v 39.999997 h -10 V 65.507883 h 10"
+     id="path8" />
+  <text
+     x="578.0777"
+     y="39.507881"
+     font-family="ARIAL"
+     font-size="22.6667px"
+     font-weight="normal"
+     font-style="normal"
+     fill="#000000"
+     id="text8"
+     style="fill:#c25b24;fill-opacity:1;stroke:#c25b24;stroke-width:1.00701809;stroke-dasharray:none;stroke-opacity:1">Сдоп</text>
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d="m 273.0777,185.50788 q 0,0 -0.1,-0.98 -0.09,-0.97 -0.38,-1.91 -0.28,-0.94 -0.74,-1.8 -0.47,-0.87 -1.09,-1.62 -0.62,-0.76 -1.38,-1.38 -0.75,-0.62 -1.62,-1.09 -0.86,-0.46 -1.8,-0.74 -0.94,-0.29 -1.91,-0.38 -0.98,-0.1 -1.96,0 -0.97,0.09 -1.91,0.38 -0.94,0.28 -1.8,0.74 -0.87,0.47 -1.62,1.09 -0.76,0.62 -1.38,1.38 -0.62,0.75 -1.09,1.62 -0.46,0.86 -0.74,1.8 -0.29,0.94 -0.38,1.91 -0.1,0.98 -0.1,0.98 v 0"
+     id="path9"
+     style="fill:none;fill-opacity:1;stroke:#006680;stroke-width:3;stroke-dasharray:none;stroke-opacity:1" />
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d="m 293.0777,185.50788 q 0,0 -0.1,-0.98 -0.09,-0.97 -0.38,-1.91 -0.28,-0.94 -0.74,-1.8 -0.47,-0.87 -1.09,-1.62 -0.62,-0.76 -1.38,-1.38 -0.75,-0.62 -1.62,-1.09 -0.86,-0.46 -1.8,-0.74 -0.94,-0.29 -1.91,-0.38 -0.98,-0.1 -1.96,0 -0.97,0.09 -1.91,0.38 -0.94,0.28 -1.8,0.74 -0.87,0.47 -1.62,1.09 -0.76,0.62 -1.38,1.38 -0.62,0.75 -1.09,1.62 -0.46,0.86 -0.74,1.8 -0.29,0.94 -0.38,1.91 -0.1,0.98 -0.1,0.98 v 0"
+     id="path10"
+     style="fill:none;fill-opacity:1;stroke:#006680;stroke-width:3;stroke-dasharray:none;stroke-opacity:1" />
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d="m 313.0777,185.50788 q 0,0 -0.1,-0.98 -0.09,-0.97 -0.38,-1.91 -0.28,-0.94 -0.74,-1.8 -0.47,-0.87 -1.09,-1.62 -0.62,-0.76 -1.38,-1.38 -0.75,-0.62 -1.62,-1.09 -0.86,-0.46 -1.8,-0.74 -0.94,-0.29 -1.91,-0.38 -0.98,-0.1 -1.96,0 -0.97,0.09 -1.91,0.38 -0.94,0.28 -1.8,0.74 -0.87,0.47 -1.62,1.09 -0.76,0.62 -1.38,1.38 -0.62,0.75 -1.09,1.62 -0.46,0.86 -0.74,1.8 -0.29,0.94 -0.38,1.91 -0.1,0.98 -0.1,0.98 v 0"
+     id="path11"
+     style="fill:none;fill-opacity:1;stroke:#006680;stroke-width:3;stroke-dasharray:none;stroke-opacity:1" />
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d="m 333.0777,185.50788 q 0,0 -0.1,-0.98 -0.09,-0.97 -0.38,-1.91 -0.28,-0.94 -0.74,-1.8 -0.47,-0.87 -1.09,-1.62 -0.62,-0.76 -1.38,-1.38 -0.75,-0.62 -1.62,-1.09 -0.86,-0.46 -1.8,-0.74 -0.94,-0.29 -1.91,-0.38 -0.98,-0.1 -1.96,0 -0.97,0.09 -1.91,0.38 -0.94,0.28 -1.8,0.74 -0.87,0.47 -1.62,1.09 -0.76,0.62 -1.38,1.38 -0.62,0.75 -1.09,1.62 -0.46,0.86 -0.74,1.8 -0.29,0.94 -0.38,1.91 -0.1,0.98 -0.1,0.98 v 0"
+     id="path12"
+     style="fill:none;fill-opacity:1;stroke:#006680;stroke-width:3;stroke-dasharray:none;stroke-opacity:1" />
+  <text
+     x="283.0777"
+     y="164.50789"
+     font-family="Arial"
+     font-size="22.6667px"
+     font-weight="normal"
+     font-style="italic"
+     fill="rgb(0,0,0)"
+     id="text12"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:1.00701809;stroke-dasharray:none;stroke-opacity:1">L1</text>
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d="m 593.0777,185.50788 q 0,0 -0.1,-0.98 -0.09,-0.97 -0.38,-1.91 -0.28,-0.94 -0.74,-1.8 -0.47,-0.87 -1.09,-1.62 -0.62,-0.76 -1.38,-1.38 -0.75,-0.62 -1.62,-1.09 -0.86,-0.46 -1.8,-0.74 -0.94,-0.29 -1.91,-0.38 -0.98,-0.1 -1.96,0 -0.97,0.09 -1.91,0.38 -0.94,0.28 -1.8,0.74 -0.87,0.47 -1.62,1.09 -0.76,0.62 -1.38,1.38 -0.62,0.75 -1.09,1.62 -0.46,0.86 -0.74,1.8 -0.29,0.94 -0.38,1.91 -0.1,0.98 -0.1,0.98 v 0"
+     id="path13"
+     style="fill:none;fill-opacity:1;stroke:#006680;stroke-width:3;stroke-dasharray:none;stroke-opacity:1" />
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d="m 613.0777,185.50788 q 0,0 -0.1,-0.98 -0.09,-0.97 -0.38,-1.91 -0.28,-0.94 -0.74,-1.8 -0.47,-0.87 -1.09,-1.62 -0.62,-0.76 -1.38,-1.38 -0.75,-0.62 -1.62,-1.09 -0.86,-0.46 -1.8,-0.74 -0.94,-0.29 -1.91,-0.38 -0.98,-0.1 -1.96,0 -0.97,0.09 -1.91,0.38 -0.94,0.28 -1.8,0.74 -0.87,0.47 -1.62,1.09 -0.76,0.62 -1.38,1.38 -0.62,0.75 -1.09,1.62 -0.46,0.86 -0.74,1.8 -0.29,0.94 -0.38,1.91 -0.1,0.98 -0.1,0.98 v 0"
+     id="path14"
+     style="fill:none;fill-opacity:1;stroke:#006680;stroke-width:3;stroke-dasharray:none;stroke-opacity:1" />
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d="m 633.0777,185.50788 q 0,0 -0.1,-0.98 -0.09,-0.97 -0.38,-1.91 -0.28,-0.94 -0.74,-1.8 -0.47,-0.87 -1.09,-1.62 -0.62,-0.76 -1.38,-1.38 -0.75,-0.62 -1.62,-1.09 -0.86,-0.46 -1.8,-0.74 -0.94,-0.29 -1.91,-0.38 -0.98,-0.1 -1.96,0 -0.97,0.09 -1.91,0.38 -0.94,0.28 -1.8,0.74 -0.87,0.47 -1.62,1.09 -0.76,0.62 -1.38,1.38 -0.62,0.75 -1.09,1.62 -0.46,0.86 -0.74,1.8 -0.29,0.94 -0.38,1.91 -0.1,0.98 -0.1,0.98 v 0"
+     id="path15"
+     style="fill:none;fill-opacity:1;stroke:#006680;stroke-width:3;stroke-dasharray:none;stroke-opacity:1" />
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d="m 653.0777,185.50788 q 0,0 -0.1,-0.98 -0.09,-0.97 -0.38,-1.91 -0.28,-0.94 -0.74,-1.8 -0.47,-0.87 -1.09,-1.62 -0.62,-0.76 -1.38,-1.38 -0.75,-0.62 -1.62,-1.09 -0.86,-0.46 -1.8,-0.74 -0.94,-0.29 -1.91,-0.38 -0.98,-0.1 -1.96,0 -0.97,0.09 -1.91,0.38 -0.94,0.28 -1.8,0.74 -0.87,0.47 -1.62,1.09 -0.76,0.62 -1.38,1.38 -0.62,0.75 -1.09,1.62 -0.46,0.86 -0.74,1.8 -0.29,0.94 -0.38,1.91 -0.1,0.98 -0.1,0.98 v 0"
+     id="path16"
+     style="fill:none;fill-opacity:1;stroke:#006680;stroke-width:3;stroke-dasharray:none;stroke-opacity:1" />
+  <text
+     x="593.0777"
+     y="164.50789"
+     font-family="Arial"
+     font-size="22.6667px"
+     font-weight="normal"
+     font-style="italic"
+     fill="rgb(0,0,0)"
+     id="text16"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:1.00701809;stroke-dasharray:none;stroke-opacity:1">L2</text>
+  <polyline
+     points="50.00 205.00 250.00 205.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline16"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:3.003;stroke-dasharray:none;stroke-opacity:1"
+     transform="translate(3.0777027,-19.492117)" />
+  <polyline
+     points="330.00 205.00 570.00 205.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline17"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:3.003;stroke-dasharray:none;stroke-opacity:1"
+     transform="translate(3.0777027,-19.492117)" />
+  <polyline
+     points="650.00 205.00 850.00 205.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline18"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:3.003;stroke-dasharray:none;stroke-opacity:1"
+     transform="translate(3.0777027,-19.492117)" />
+  <polyline
+     points="560.00 105.00 450.00 105.00 450.00 205.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     stroke-dasharray="4,8"
+     id="polyline19"
+     style="fill:none;fill-opacity:1;stroke:#c25b24;stroke-width:2.01404621;stroke-dasharray:4.0280824, 8.0561648;stroke-dashoffset:0;stroke-opacity:1"
+     transform="translate(3.0777027,-19.492117)" />
+  <polyline
+     points="650.00 105.00 760.00 105.00 760.00 205.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     stroke-dasharray="4,8"
+     id="polyline20"
+     style="fill:none;fill-opacity:1;stroke:#c25b24;stroke-width:3;stroke-dasharray:5.99998522, 11.99997045;stroke-dashoffset:0;stroke-opacity:1"
+     transform="translate(3.0777027,-19.492117)" />
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:2.01404621;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+     d="m 123.0777,305.50788 h 40 v 10 h -40 v -10"
+     id="path20" />
+  <polyline
+     points="140.00 295.00 140.00 325.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline21"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:3;stroke-dasharray:none;stroke-opacity:1"
+     transform="translate(3.0777027,-19.492117)" />
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:2.01404621;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+     d="m 433.0777,305.50788 h 40 v 10 h -40 v -10"
+     id="path21" />
+  <polyline
+     points="450.00 295.00 450.00 325.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline22"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:3;stroke-dasharray:none;stroke-opacity:1"
+     transform="translate(3.0777027,-19.492117)" />
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:2.01404621;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+     d="m 743.0777,305.50788 h 40 v 10 h -40 v -10"
+     id="path22" />
+  <polyline
+     points="760.00 295.00 760.00 325.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline23"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:3;stroke-dasharray:none;stroke-opacity:1"
+     transform="translate(3.0777027,-19.492117)" />
+  <circle
+     cx="143.0777"
+     cy="185.50789"
+     r="6"
+     fill="rgb(0,0,0)"
+     stroke="none"
+     stroke-width="2"
+     id="circle23"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:2.01606024;stroke-dasharray:none;stroke-opacity:1" />
+  <circle
+     cx="453.0777"
+     cy="185.50789"
+     r="6"
+     fill="rgb(0,0,0)"
+     stroke="none"
+     stroke-width="2"
+     id="circle24"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:2.01606024;stroke-dasharray:none;stroke-opacity:1" />
+  <circle
+     cx="763.0777"
+     cy="185.50789"
+     r="6"
+     fill="rgb(0,0,0)"
+     stroke="none"
+     stroke-width="2"
+     id="circle25"
+     style="fill:#006680;fill-opacity:1;stroke:#006680;stroke-width:3.003;stroke-dasharray:none;stroke-opacity:1" />
+  <text
+     x="43.077702"
+     y="159.50789"
+     font-family="Arial"
+     font-size="28px"
+     font-weight="normal"
+     font-style="normal"
+     fill="#ff0000"
+     id="text25"
+     style="fill:#c25b24;fill-opacity:1;stroke:#c25b24;stroke-width:1.00701809;stroke-dasharray:none;stroke-opacity:1"><tspan
+       sodipodi:role="line"
+       id="tspan27"
+       x="43.077702"
+       y="159.50789"
+       style="fill:#c25b24;fill-opacity:1;stroke:#c25b24;stroke-width:1.00701809;stroke-dasharray:none;stroke-opacity:1">Вход</tspan></text>
+  <text
+     x="793.0777"
+     y="159.50789"
+     font-family="Arial"
+     font-size="28px"
+     font-weight="normal"
+     font-style="normal"
+     fill="#ff0000"
+     id="text26"
+     style="fill:#c25b24;fill-opacity:1;stroke:#c25b24;stroke-width:1.00701809;stroke-dasharray:none;stroke-opacity:1">Выход</text>
+</svg>

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="title desc">
+  <title id="title">ФНЧ Баттерворта третьего порядка с подавлением второй гармоники</title>
+  <desc id="desc">Две последовательные катушки L1 и L2, шунтирующий конденсатор C1 и дополнительный конденсатор Cдоп, подключённый параллельно L2.</desc>
+  <rect width="760" height="330" fill="#fff"/>
+  <g stroke="#34495e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M34 98 H79 M155 98 H205 M293 98 H700"/>
+    <path d="M155 98 V150 M155 190 V225 M135 225 H175 M143 234 H167 M150 243 H160"/>
+    <path d="M205 98 V170 H232 M265 170 H293 V98"/>
+    <path d="M232 158 V182 M265 158 V182"/>
+  </g>
+  <g stroke="#245c88" stroke-width="3" fill="none" stroke-linecap="round">
+    <path d="M79 98 c0 -20 15 -20 15 0 c0 -20 15 -20 15 0 c0 -20 15 -20 15 0 c0 -20 15 -20 15 0 c0 -20 15 -20 16 0"/>
+    <path d="M205 98 c0 -20 15 -20 15 0 c0 -20 15 -20 15 0 c0 -20 15 -20 15 0 c0 -20 15 -20 15 0 c0 -20 15 -20 28 0"/>
+  </g>
+  <g stroke="#34495e" stroke-width="3" fill="none">
+    <path d="M143 150 H167 M143 190 H167"/>
+  </g>
+  <g fill="#245c88" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700">
+    <text x="97" y="66">L1</text>
+    <text x="226" y="66">L2</text>
+    <text x="178" y="177">C1</text>
+    <text x="249" y="207" text-anchor="middle">Cдоп</text>
+  </g>
+  <g fill="#202124" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700">
+    <text x="31" y="76">Вход</text>
+    <text x="700" y="76" text-anchor="end">Выход</text>
+  </g>
+  <g fill="#5f6368" font-family="Arial, Helvetica, sans-serif" font-size="15">
+    <text x="380" y="288" text-anchor="middle">Cдоп подключён параллельно L2</text>
+    <text x="380" y="310" text-anchor="middle">Параллельный резонанс настроен на 2Fc</text>
+  </g>
+  <circle cx="155" cy="98" r="4.5" fill="#245c88"/>
+  <circle cx="205" cy="98" r="4.5" fill="#245c88"/>
+  <circle cx="293" cy="98" r="4.5" fill="#245c88"/>
+</svg>

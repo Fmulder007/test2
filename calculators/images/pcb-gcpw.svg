@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="300" viewBox="0 0 360 300" role="img" aria-labelledby="title desc">
+  <title id="title">Копланарная линия с землёй снизу</title>
+  <desc id="desc">Поперечное сечение GCPW: центральная сигнальная дорожка W, боковые земляные полигоны с зазором S с каждой стороны, диэлектрик и нижняя плоскость земли на расстоянии H.</desc>
+  <defs>
+    <marker id="dimArrow" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto-start-reverse"><path d="M0 0 L7 3.5 L0 7 Z" fill="#52616d"/></marker>
+  </defs>
+  <rect width="360" height="300" rx="10" fill="#fff"/>
+  <g stroke-linejoin="round">
+    <rect x="42" y="102" width="276" height="119" fill="#e7edf1" stroke="#526576" stroke-width="2"/>
+    <rect x="42" y="221" width="276" height="17" fill="#b4c2ce" stroke="#526576" stroke-width="2"/>
+    <rect x="42" y="86" width="87" height="16" fill="#b4c2ce" stroke="#526576" stroke-width="1.8"/>
+    <rect x="231" y="86" width="87" height="16" fill="#b4c2ce" stroke="#526576" stroke-width="1.8"/>
+    <rect x="161" y="86" width="38" height="16" fill="#d59a43" stroke="#8f6020" stroke-width="1.8"/>
+    <path d="M73 102 V221 M287 102 V221" stroke="#8f6020" stroke-width="7"/>
+    <path d="M73 102 V221 M287 102 V221" stroke="#d59a43" stroke-width="3"/>
+  </g>
+  <g fill="none" stroke="#52616d" stroke-width="1.5" stroke-linecap="round">
+    <path d="M161 66 V82 M199 66 V82 M161 62 H199" marker-start="url(#dimArrow)" marker-end="url(#dimArrow)"/>
+    <path d="M129 68 V83 M161 68 V83 M129 72 H161" marker-start="url(#dimArrow)" marker-end="url(#dimArrow)"/>
+    <path d="M199 68 V83 M231 68 V83 M199 72 H231" marker-start="url(#dimArrow)" marker-end="url(#dimArrow)"/>
+    <path d="M329 102 V221" marker-start="url(#dimArrow)" marker-end="url(#dimArrow)"/>
+    <path d="M199 86 H216 M199 102 H216 M209 86 V102" marker-start="url(#dimArrow)" marker-end="url(#dimArrow)"/>
+    <path d="M318 102 H333 M318 221 H333" stroke-dasharray="3 4"/>
+  </g>
+  <g fill="#263747" font-family="Arial,Helvetica,sans-serif" text-anchor="middle">
+    <text x="180" y="49" font-size="17" font-weight="700">W</text>
+    <text x="145" y="62" font-size="14" font-weight="700">S</text>
+    <text x="215" y="62" font-size="14" font-weight="700">S</text>
+    <text x="341" y="165" font-size="17" font-weight="700">H</text>
+    <text x="223" y="99" font-size="14" font-weight="700">T</text>
+    <text x="180" y="164" font-size="18" font-weight="700">εr</text>
+    <text x="180" y="266" font-size="15">Земля снизу + боковые земли</text>
+  </g>
+</svg>

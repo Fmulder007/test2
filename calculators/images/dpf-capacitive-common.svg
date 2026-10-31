@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 480" role="img" aria-labelledby="title desc">
+  <title id="title">Двухконтурный ДПФ с ёмкостными делителями и общей нижней точкой катушек</title>
+  <desc id="desc">Входной и выходной ёмкостные делители подключены к горячим точкам двух катушек. Нижние выводы катушек объединены и заземлены через конденсатор C5.</desc>
+  <defs>
+    <style>
+      .wire{fill:none;stroke:#202124;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+      .part{fill:#fff;stroke:#202124;stroke-width:3}
+      .node{fill:#202124}
+      .label{font: bold 22px Arial,Helvetica,sans-serif;fill:#202124}
+      .small{font: 17px Arial,Helvetica,sans-serif;fill:#4e5962}
+    </style>
+  </defs>
+  <rect x="1" y="1" width="758" height="478" rx="10" fill="#fff" stroke="#d7dce1" stroke-width="2"/>
+
+  <!-- Входной отвод -->
+  <text x="42" y="56" class="label">Вход</text>
+  <text x="42" y="81" class="small">Rвх</text>
+  <path class="wire" d="M42 125 H125"/>
+  <circle class="node" cx="125" cy="125" r="5"/>
+  <path class="wire" d="M125 125 V175"/>
+  <path class="wire" d="M108 175 H142 M108 189 H142"/>
+  <path class="wire" d="M125 189 V410"/>
+  <text x="56" y="184" class="label">C2</text>
+  <path class="wire" d="M125 125 H181"/>
+  <path class="wire" d="M181 106 V144 M199 106 V144"/>
+  <path class="wire" d="M199 125 H310"/>
+  <text x="174" y="89" class="label">C1</text>
+  <circle class="node" cx="310" cy="125" r="5"/>
+
+  <!-- Первый контур -->
+  <text x="280" y="75" class="label">L1</text>
+  <path class="wire" d="M310 125 V180"/>
+  <path class="wire" d="M310 180 c-24 0 -24 34 0 34 c24 0 24 34 0 34 c-24 0 -24 34 0 34 c24 0 24 34 0 34"/>
+  <path class="wire" d="M310 316 V365 H390"/>
+  <circle class="node" cx="310" cy="365" r="5"/>
+
+  <!-- Второй контур -->
+  <path class="wire" d="M500 125 V180"/>
+  <circle class="node" cx="500" cy="125" r="5"/>
+  <text x="470" y="75" class="label">L2</text>
+  <path class="wire" d="M500 180 c-24 0 -24 34 0 34 c24 0 24 34 0 34 c-24 0 -24 34 0 34 c24 0 24 34 0 34"/>
+  <path class="wire" d="M500 316 V365 H390"/>
+  <circle class="node" cx="500" cy="365" r="5"/>
+
+  <!-- Общая точка и C5 -->
+  <path class="wire" d="M390 365 V390"/>
+  <path class="wire" d="M373 390 H407 M373 405 H407"/>
+  <path class="wire" d="M390 405 V425"/>
+  <path class="wire" d="M365 425 H415 M375 436 H405 M385 447 H395"/>
+  <text x="423" y="405" class="label">C5</text>
+  <text x="423" y="432" class="small">общая точка</text>
+
+  <!-- Выходной отвод -->
+  <path class="wire" d="M500 125 H546"/>
+  <path class="wire" d="M546 106 V144 M564 106 V144"/>
+  <path class="wire" d="M564 125 H630"/>
+  <text x="535" y="89" class="label">C3</text>
+  <circle class="node" cx="630" cy="125" r="5"/>
+  <path class="wire" d="M630 125 V175"/>
+  <path class="wire" d="M613 175 H647 M613 189 H647"/>
+  <path class="wire" d="M630 189 V410"/>
+  <text x="653" y="184" class="label">C4</text>
+  <path class="wire" d="M630 125 H718"/>
+  <text x="674" y="56" class="label">Выход</text>
+  <text x="676" y="81" class="small">Rвых</text>
+
+  <!-- Общая земля для делителей и C5 -->
+  <path class="wire" d="M125 410 H170 M630 410 H610 M390 425 V410 H610"/>
+  <path class="wire" d="M170 410 H610"/>
+  <path class="wire" d="M365 425 H415"/>
+  <path class="wire" d="M365 425 H415"/>
+  <path class="wire" d="M365 425 H415"/>
+  <text x="42" y="447" class="small">Общий провод</text>
+</svg>

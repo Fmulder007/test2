@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="300" viewBox="0 0 360 300" role="img" aria-labelledby="title desc">
+  <title id="title">Симметричная полосковая линия</title>
+  <desc id="desc">Поперечное сечение: сигнальная дорожка W расположена по центру между верхней и нижней плоскостями земли; B — полное расстояние между внутренними поверхностями плоскостей, T — толщина меди.</desc>
+  <defs>
+    <marker id="dimArrow" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto-start-reverse"><path d="M0 0 L7 3.5 L0 7 Z" fill="#52616d"/></marker>
+  </defs>
+  <rect width="360" height="300" rx="10" fill="#fff"/>
+  <g stroke-linejoin="round">
+    <rect x="50" y="67" width="260" height="171" fill="#e7edf1" stroke="#526576" stroke-width="2"/>
+    <rect x="50" y="52" width="260" height="15" fill="#b4c2ce" stroke="#526576" stroke-width="2"/>
+    <rect x="50" y="238" width="260" height="15" fill="#b4c2ce" stroke="#526576" stroke-width="2"/>
+    <rect x="132" y="142" width="96" height="16" fill="#d59a43" stroke="#8f6020" stroke-width="1.8"/>
+  </g>
+  <g fill="none" stroke="#52616d" stroke-width="1.6" stroke-linecap="round">
+    <path d="M132 121 V139 M228 121 V139 M132 117 H228" marker-start="url(#dimArrow)" marker-end="url(#dimArrow)"/>
+    <path d="M326 67 V238" marker-start="url(#dimArrow)" marker-end="url(#dimArrow)"/>
+    <path d="M228 142 H248 M228 158 H248 M241 142 V158" marker-start="url(#dimArrow)" marker-end="url(#dimArrow)"/>
+    <path d="M310 67 H330 M310 238 H330" stroke-dasharray="3 4"/>
+  </g>
+  <g fill="#263747" font-family="Arial,Helvetica,sans-serif" text-anchor="middle">
+    <text x="180" y="105" font-size="17" font-weight="700">W</text>
+    <text x="340" y="156" font-size="17" font-weight="700">B</text>
+    <text x="253" y="154" font-size="15" font-weight="700">T</text>
+    <text x="180" y="95" font-size="13">εr</text>
+    <text x="180" y="284" font-size="15">Дорожка по центру</text>
+  </g>
+</svg>

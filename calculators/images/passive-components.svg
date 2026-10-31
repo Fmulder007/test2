@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 260" role="img" aria-labelledby="title desc">
+  <title id="title">Резисторы и конденсаторы</title>
+  <desc id="desc">Слева показаны два параллельных резистора, справа — два последовательных конденсатора.</desc>
+  <rect width="760" height="260" rx="14" fill="#fff"/>
+  <g fill="none" stroke="#263746" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M45 68 H315 M45 164 H315 M115 68 V86 M115 146 V164 M245 68 V86 M245 146 V164"/>
+    <path d="M115 86 l-10 8 20 9 -20 9 20 9 -10 9 M245 86 l-10 8 20 9 -20 9 20 9 -10 9"/>
+    <path d="M430 116 H485 M502 75 V157 M523 75 V157 M523 116 H592 M609 75 V157 M630 75 V157 M630 116 H715"/>
+  </g>
+  <g fill="#263746" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" text-anchor="middle">
+    <text x="115" y="48">R₁</text><text x="245" y="48">R₂</text><text x="180" y="207" font-weight="400">Резисторы параллельно</text>
+    <text x="512" y="51">C₁</text><text x="619" y="51">C₂</text><text x="570" y="207" font-weight="400">Конденсаторы последовательно</text>
+  </g>
+  <g fill="#3c7ca7"><circle cx="45" cy="68" r="5"/><circle cx="315" cy="164" r="5"/><circle cx="430" cy="116" r="5"/><circle cx="715" cy="116" r="5"/></g>
+</svg>

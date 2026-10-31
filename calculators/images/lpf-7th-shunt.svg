@@ -1,0 +1,513 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with "sPlan" (http://www.abacom-online.de) -->
+
+<svg
+   version="1.1"
+   width="1211"
+   height="375"
+   id="svg32"
+   sodipodi:docname="lpf-7th-shunt.svg"
+   inkscape:version="1.4.4 (dcaf3e7, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview32"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="1.0370121"
+     inkscape:cx="630.17587"
+     inkscape:cy="244.93446"
+     inkscape:window-width="1920"
+     inkscape:window-height="976"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg32" />
+  <title
+     id="title1">sPlan</title>
+  <defs
+     id="defs1">
+    <style
+       type="text/css"
+       id="style1"><![CDATA[
+polyline {stroke-linecap:round; stroke-linejoin:round}
+polygon {stroke-linecap:round; stroke-linejoin:round}
+path {stroke-linecap:round; stroke-linejoin:round}
+circle {stroke-linecap:round; stroke-linejoin:round}
+]]></style>
+  </defs>
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="stroke-linecap:square;stroke-linejoin:miter;fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1"
+     d=" M 120 235 L 160 235 160 245 120 245 120 235"
+     id="path1" />
+  <polyline
+     points="140.00 205.00 140.00 235.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline1"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <polyline
+     points="140.00 265.00 140.00 295.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline2"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="stroke-linecap:square;stroke-linejoin:miter;fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1"
+     d=" M 120 255 L 160 255 160 265 120 265 120 255"
+     id="path2" />
+  <text
+     x="175.00"
+     y="244.00"
+     font-family="ARIAL"
+     font-size="17pt"
+     font-weight="normal"
+     font-style="normal"
+     fill="rgb(0,0,0)"
+     transform=" rotate(0.000) scale(1.000,1.000)"
+     id="text2"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1">C1</text>
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="stroke-linecap:square;stroke-linejoin:miter;fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1"
+     d=" M 430 235 L 470 235 470 245 430 245 430 235"
+     id="path3" />
+  <polyline
+     points="450.00 205.00 450.00 235.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline3"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <polyline
+     points="450.00 265.00 450.00 295.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline4"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="stroke-linecap:square;stroke-linejoin:miter;fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1"
+     d=" M 430 255 L 470 255 470 265 430 265 430 255"
+     id="path4" />
+  <text
+     x="485.00"
+     y="244.00"
+     font-family="ARIAL"
+     font-size="17pt"
+     font-weight="normal"
+     font-style="normal"
+     fill="rgb(0,0,0)"
+     transform=" rotate(0.000) scale(1.000,1.000)"
+     id="text4"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1">C2</text>
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="stroke-linecap:square;stroke-linejoin:miter;fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1"
+     d=" M 740 235 L 780 235 780 245 740 245 740 235"
+     id="path5" />
+  <polyline
+     points="760.00 205.00 760.00 235.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline5"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <polyline
+     points="760.00 265.00 760.00 295.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline6"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="stroke-linecap:square;stroke-linejoin:miter;fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1"
+     d=" M 740 255 L 780 255 780 265 740 265 740 255"
+     id="path6" />
+  <text
+     x="795.00"
+     y="244.00"
+     font-family="ARIAL"
+     font-size="17pt"
+     font-weight="normal"
+     font-style="normal"
+     fill="rgb(0,0,0)"
+     transform=" rotate(0.000) scale(1.000,1.000)"
+     id="text6"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1">C3</text>
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="stroke-linecap:square;stroke-linejoin:miter;fill:#c25b24;fill-opacity:1;stroke:#c25b24;stroke-opacity:1"
+     d=" M 620 85 L 620 125 610 125 610 85 620 85"
+     id="path7" />
+  <polyline
+     points="650.00 105.00 620.00 105.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline7"
+     style="fill:#c25b24;fill-opacity:1;stroke:#c25b24;stroke-opacity:1" />
+  <polyline
+     points="590.00 105.00 560.00 105.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline8"
+     style="stroke-width:3;stroke-dasharray:none;stroke:#c25b24;stroke-opacity:1;fill:#c25b24;fill-opacity:1" />
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="stroke-linecap:square;stroke-linejoin:miter;fill:#c25b24;fill-opacity:1;stroke:#c25b24;stroke-opacity:1"
+     d=" M 600 85 L 600 125 590 125 590 85 600 85"
+     id="path8" />
+  <text
+     x="575"
+     y="59"
+     font-family="ARIAL"
+     font-size="22.6667px"
+     font-weight="normal"
+     font-style="normal"
+     fill="#000000"
+     id="text8"
+     style="fill:#c25b24;fill-opacity:1;stroke:#c25b24;stroke-opacity:1">Сдоп</text>
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d=" M 270.00 205.00 Q 270.00 205.00 269.90 204.02 Q 269.81 203.05 269.52 202.11 Q 269.24 201.17 268.78 200.31 Q 268.31 199.44 267.69 198.69 Q 267.07 197.93 266.31 197.31 Q 265.56 196.69 264.69 196.22 Q 263.83 195.76 262.89 195.48 Q 261.95 195.19 260.98 195.10 Q 260.00 195.00 259.02 195.10 Q 258.05 195.19 257.11 195.48 Q 256.17 195.76 255.31 196.22 Q 254.44 196.69 253.69 197.31 Q 252.93 197.93 252.31 198.69 Q 251.69 199.44 251.22 200.31 Q 250.76 201.17 250.48 202.11 Q 250.19 203.05 250.10 204.02 Q 250.00 205.00 250.00 205.00 L 250.00 205.00"
+     id="path9"
+     style="stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d=" M 290.00 205.00 Q 290.00 205.00 289.90 204.02 Q 289.81 203.05 289.52 202.11 Q 289.24 201.17 288.78 200.31 Q 288.31 199.44 287.69 198.69 Q 287.07 197.93 286.31 197.31 Q 285.56 196.69 284.69 196.22 Q 283.83 195.76 282.89 195.48 Q 281.95 195.19 280.98 195.10 Q 280.00 195.00 279.02 195.10 Q 278.05 195.19 277.11 195.48 Q 276.17 195.76 275.31 196.22 Q 274.44 196.69 273.69 197.31 Q 272.93 197.93 272.31 198.69 Q 271.69 199.44 271.22 200.31 Q 270.76 201.17 270.48 202.11 Q 270.19 203.05 270.10 204.02 Q 270.00 205.00 270.00 205.00 L 270.00 205.00"
+     id="path10"
+     style="stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d=" M 310.00 205.00 Q 310.00 205.00 309.90 204.02 Q 309.81 203.05 309.52 202.11 Q 309.24 201.17 308.78 200.31 Q 308.31 199.44 307.69 198.69 Q 307.07 197.93 306.31 197.31 Q 305.56 196.69 304.69 196.22 Q 303.83 195.76 302.89 195.48 Q 301.95 195.19 300.98 195.10 Q 300.00 195.00 299.02 195.10 Q 298.05 195.19 297.11 195.48 Q 296.17 195.76 295.31 196.22 Q 294.44 196.69 293.69 197.31 Q 292.93 197.93 292.31 198.69 Q 291.69 199.44 291.22 200.31 Q 290.76 201.17 290.48 202.11 Q 290.19 203.05 290.10 204.02 Q 290.00 205.00 290.00 205.00 L 290.00 205.00"
+     id="path11"
+     style="stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d=" M 330.00 205.00 Q 330.00 205.00 329.90 204.02 Q 329.81 203.05 329.52 202.11 Q 329.24 201.17 328.78 200.31 Q 328.31 199.44 327.69 198.69 Q 327.07 197.93 326.31 197.31 Q 325.56 196.69 324.69 196.22 Q 323.83 195.76 322.89 195.48 Q 321.95 195.19 320.98 195.10 Q 320.00 195.00 319.02 195.10 Q 318.05 195.19 317.11 195.48 Q 316.17 195.76 315.31 196.22 Q 314.44 196.69 313.69 197.31 Q 312.93 197.93 312.31 198.69 Q 311.69 199.44 311.22 200.31 Q 310.76 201.17 310.48 202.11 Q 310.19 203.05 310.10 204.02 Q 310.00 205.00 310.00 205.00 L 310.00 205.00"
+     id="path12"
+     style="stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <text
+     x="280.00"
+     y="184.00"
+     font-family="Arial"
+     font-size="17pt"
+     font-weight="normal"
+     font-style="italic"
+     fill="rgb(0,0,0)"
+     transform=" rotate(0.000) scale(1.000,1.000)"
+     id="text12"
+     style="stroke:#245c88;stroke-opacity:1;fill:#245c88;fill-opacity:1">L1</text>
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d=" M 590.00 205.00 Q 590.00 205.00 589.90 204.02 Q 589.81 203.05 589.52 202.11 Q 589.24 201.17 588.78 200.31 Q 588.31 199.44 587.69 198.69 Q 587.07 197.93 586.31 197.31 Q 585.56 196.69 584.69 196.22 Q 583.83 195.76 582.89 195.48 Q 581.95 195.19 580.98 195.10 Q 580.00 195.00 579.02 195.10 Q 578.05 195.19 577.11 195.48 Q 576.17 195.76 575.31 196.22 Q 574.44 196.69 573.69 197.31 Q 572.93 197.93 572.31 198.69 Q 571.69 199.44 571.22 200.31 Q 570.76 201.17 570.48 202.11 Q 570.19 203.05 570.10 204.02 Q 570.00 205.00 570.00 205.00 L 570.00 205.00"
+     id="path13"
+     style="stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d=" M 610.00 205.00 Q 610.00 205.00 609.90 204.02 Q 609.81 203.05 609.52 202.11 Q 609.24 201.17 608.78 200.31 Q 608.31 199.44 607.69 198.69 Q 607.07 197.93 606.31 197.31 Q 605.56 196.69 604.69 196.22 Q 603.83 195.76 602.89 195.48 Q 601.95 195.19 600.98 195.10 Q 600.00 195.00 599.02 195.10 Q 598.05 195.19 597.11 195.48 Q 596.17 195.76 595.31 196.22 Q 594.44 196.69 593.69 197.31 Q 592.93 197.93 592.31 198.69 Q 591.69 199.44 591.22 200.31 Q 590.76 201.17 590.48 202.11 Q 590.19 203.05 590.10 204.02 Q 590.00 205.00 590.00 205.00 L 590.00 205.00"
+     id="path14"
+     style="stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d=" M 630.00 205.00 Q 630.00 205.00 629.90 204.02 Q 629.81 203.05 629.52 202.11 Q 629.24 201.17 628.78 200.31 Q 628.31 199.44 627.69 198.69 Q 627.07 197.93 626.31 197.31 Q 625.56 196.69 624.69 196.22 Q 623.83 195.76 622.89 195.48 Q 621.95 195.19 620.98 195.10 Q 620.00 195.00 619.02 195.10 Q 618.05 195.19 617.11 195.48 Q 616.17 195.76 615.31 196.22 Q 614.44 196.69 613.69 197.31 Q 612.93 197.93 612.31 198.69 Q 611.69 199.44 611.22 200.31 Q 610.76 201.17 610.48 202.11 Q 610.19 203.05 610.10 204.02 Q 610.00 205.00 610.00 205.00 L 610.00 205.00"
+     id="path15"
+     style="stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d=" M 650.00 205.00 Q 650.00 205.00 649.90 204.02 Q 649.81 203.05 649.52 202.11 Q 649.24 201.17 648.78 200.31 Q 648.31 199.44 647.69 198.69 Q 647.07 197.93 646.31 197.31 Q 645.56 196.69 644.69 196.22 Q 643.83 195.76 642.89 195.48 Q 641.95 195.19 640.98 195.10 Q 640.00 195.00 639.02 195.10 Q 638.05 195.19 637.11 195.48 Q 636.17 195.76 635.31 196.22 Q 634.44 196.69 633.69 197.31 Q 632.93 197.93 632.31 198.69 Q 631.69 199.44 631.22 200.31 Q 630.76 201.17 630.48 202.11 Q 630.19 203.05 630.10 204.02 Q 630.00 205.00 630.00 205.00 L 630.00 205.00"
+     id="path16"
+     style="stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <text
+     x="590.00"
+     y="184.00"
+     font-family="Arial"
+     font-size="17pt"
+     font-weight="normal"
+     font-style="italic"
+     fill="rgb(0,0,0)"
+     transform=" rotate(0.000) scale(1.000,1.000)"
+     id="text16"
+     style="stroke:#245c88;stroke-opacity:1;fill:#245c88;fill-opacity:1">L2</text>
+  <polyline
+     points="50.00 205.00 250.00 205.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline16"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <polyline
+     points="330.00 205.00 570.00 205.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline17"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <polyline
+     points="560.00 105.00 450.00 105.00 450.00 205.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     stroke-dasharray="4,8"
+     id="polyline18"
+     style="fill:none;fill-opacity:1;stroke:#c25b24;stroke-opacity:1" />
+  <polyline
+     points="650.00 105.00 760.00 105.00 760.00 205.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     stroke-dasharray="4,8"
+     id="polyline19"
+     style="fill:none;fill-opacity:1;stroke:#c25b24;stroke-opacity:1" />
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="stroke-linecap:square;stroke-linejoin:miter;fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1"
+     d=" M 120 325 L 160 325 160 335 120 335 120 325"
+     id="path19" />
+  <polyline
+     points="140.00 295.00 140.00 325.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline20"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="stroke-linecap:square;stroke-linejoin:miter;fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1"
+     d=" M 430 325 L 470 325 470 335 430 335 430 325"
+     id="path20" />
+  <polyline
+     points="450.00 295.00 450.00 325.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline21"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="stroke-linecap:square;stroke-linejoin:miter;fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1"
+     d=" M 740 325 L 780 325 780 335 740 335 740 325"
+     id="path21" />
+  <polyline
+     points="760.00 295.00 760.00 325.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline22"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <circle
+     cx="140"
+     cy="205"
+     r="6"
+     fill="rgb(0,0,0)"
+     stroke="none"
+     stroke-width="2"
+     id="circle22"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1" />
+  <circle
+     cx="450"
+     cy="205"
+     r="6"
+     fill="rgb(0,0,0)"
+     stroke="none"
+     stroke-width="2"
+     id="circle23"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1" />
+  <circle
+     cx="760"
+     cy="205"
+     r="6"
+     fill="rgb(0,0,0)"
+     stroke="none"
+     stroke-width="2"
+     id="circle24"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1" />
+  <text
+     x="40"
+     y="179"
+     font-family="Arial"
+     font-size="28px"
+     font-weight="normal"
+     font-style="normal"
+     fill="#ff0000"
+     id="text24"
+     style="fill:#c25b24;fill-opacity:1;stroke:#c25b24;stroke-opacity:1">Вход</text>
+  <text
+     x="1090"
+     y="189"
+     font-family="Arial"
+     font-size="28px"
+     font-weight="normal"
+     font-style="normal"
+     fill="#ff0000"
+     id="text25"
+     style="fill:#c25b24;fill-opacity:1;stroke:#c25b24;stroke-opacity:1">Выход</text>
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d=" M 890.00 205.00 Q 890.00 205.00 889.90 204.02 Q 889.81 203.05 889.52 202.11 Q 889.24 201.17 888.78 200.31 Q 888.31 199.44 887.69 198.69 Q 887.07 197.93 886.31 197.31 Q 885.56 196.69 884.69 196.22 Q 883.83 195.76 882.89 195.48 Q 881.95 195.19 880.98 195.10 Q 880.00 195.00 879.02 195.10 Q 878.05 195.19 877.11 195.48 Q 876.17 195.76 875.31 196.22 Q 874.44 196.69 873.69 197.31 Q 872.93 197.93 872.31 198.69 Q 871.69 199.44 871.22 200.31 Q 870.76 201.17 870.48 202.11 Q 870.19 203.05 870.10 204.02 Q 870.00 205.00 870.00 205.00 L 870.00 205.00"
+     id="path25"
+     style="stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d=" M 910.00 205.00 Q 910.00 205.00 909.90 204.02 Q 909.81 203.05 909.52 202.11 Q 909.24 201.17 908.78 200.31 Q 908.31 199.44 907.69 198.69 Q 907.07 197.93 906.31 197.31 Q 905.56 196.69 904.69 196.22 Q 903.83 195.76 902.89 195.48 Q 901.95 195.19 900.98 195.10 Q 900.00 195.00 899.02 195.10 Q 898.05 195.19 897.11 195.48 Q 896.17 195.76 895.31 196.22 Q 894.44 196.69 893.69 197.31 Q 892.93 197.93 892.31 198.69 Q 891.69 199.44 891.22 200.31 Q 890.76 201.17 890.48 202.11 Q 890.19 203.05 890.10 204.02 Q 890.00 205.00 890.00 205.00 L 890.00 205.00"
+     id="path26"
+     style="stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d=" M 930.00 205.00 Q 930.00 205.00 929.90 204.02 Q 929.81 203.05 929.52 202.11 Q 929.24 201.17 928.78 200.31 Q 928.31 199.44 927.69 198.69 Q 927.07 197.93 926.31 197.31 Q 925.56 196.69 924.69 196.22 Q 923.83 195.76 922.89 195.48 Q 921.95 195.19 920.98 195.10 Q 920.00 195.00 919.02 195.10 Q 918.05 195.19 917.11 195.48 Q 916.17 195.76 915.31 196.22 Q 914.44 196.69 913.69 197.31 Q 912.93 197.93 912.31 198.69 Q 911.69 199.44 911.22 200.31 Q 910.76 201.17 910.48 202.11 Q 910.19 203.05 910.10 204.02 Q 910.00 205.00 910.00 205.00 L 910.00 205.00"
+     id="path27"
+     style="stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <path
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     d=" M 950.00 205.00 Q 950.00 205.00 949.90 204.02 Q 949.81 203.05 949.52 202.11 Q 949.24 201.17 948.78 200.31 Q 948.31 199.44 947.69 198.69 Q 947.07 197.93 946.31 197.31 Q 945.56 196.69 944.69 196.22 Q 943.83 195.76 942.89 195.48 Q 941.95 195.19 940.98 195.10 Q 940.00 195.00 939.02 195.10 Q 938.05 195.19 937.11 195.48 Q 936.17 195.76 935.31 196.22 Q 934.44 196.69 933.69 197.31 Q 932.93 197.93 932.31 198.69 Q 931.69 199.44 931.22 200.31 Q 930.76 201.17 930.48 202.11 Q 930.19 203.05 930.10 204.02 Q 930.00 205.00 930.00 205.00 L 930.00 205.00"
+     id="path28"
+     style="stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <text
+     x="900.00"
+     y="184.00"
+     font-family="Arial"
+     font-size="17pt"
+     font-weight="normal"
+     font-style="italic"
+     fill="rgb(0,0,0)"
+     transform=" rotate(0.000) scale(1.000,1.000)"
+     id="text28"
+     style="stroke:#245c88;stroke-opacity:1;fill:#245c88;fill-opacity:1">L3</text>
+  <polyline
+     points="950.00 205.00 1170.00 205.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline28"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <polyline
+     points="650.00 205.00 870.00 205.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline29"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="stroke-linecap:square;stroke-linejoin:miter;fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1"
+     d=" M 1030 235 L 1070 235 1070 245 1030 245 1030 235"
+     id="path29" />
+  <polyline
+     points="1050.00 205.00 1050.00 235.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline30"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <polyline
+     points="1050.00 265.00 1050.00 295.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline31"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="stroke-linecap:square;stroke-linejoin:miter;fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1"
+     d=" M 1030 255 L 1070 255 1070 265 1030 265 1030 255"
+     id="path31" />
+  <text
+     x="1085.00"
+     y="244.00"
+     font-family="ARIAL"
+     font-size="17pt"
+     font-weight="normal"
+     font-style="normal"
+     fill="rgb(0,0,0)"
+     transform=" rotate(0.000) scale(1.000,1.000)"
+     id="text31"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1">C4</text>
+  <path
+     fill="rgb(0,0,0)"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     style="stroke-linecap:square;stroke-linejoin:miter;fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1"
+     d=" M 1030 325 L 1070 325 1070 335 1030 335 1030 325"
+     id="path32" />
+  <polyline
+     points="1050.00 295.00 1050.00 325.00"
+     fill="none"
+     stroke="rgb(0,0,0)"
+     stroke-width="2"
+     id="polyline32"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1;stroke-width:3;stroke-dasharray:none" />
+  <circle
+     cx="1050"
+     cy="205"
+     r="6"
+     fill="rgb(0,0,0)"
+     stroke="none"
+     stroke-width="2"
+     id="circle32"
+     style="fill:#245c88;fill-opacity:1;stroke:#245c88;stroke-opacity:1" />
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 260" role="img" aria-labelledby="title desc">
+  <title id="title">Параллельное соединение двух резисторов</title>
+  <desc id="desc">Два резистора R1 и R2 соединены между общей верхней и нижней шинами.</desc>
+  <rect width="640" height="260" rx="14" fill="#fff"/>
+  <g fill="none" stroke="#263746" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M90 70 H550 M90 190 H550"/>
+    <path d="M190 70 V92 M190 148 V190 M450 70 V92 M450 148 V190"/>
+    <path d="M90 70 V190 M550 70 V190" stroke-width="3" opacity=".45"/>
+    <path d="M190 92 l-12 7 24 10 -24 10 24 10 -12 9 M450 92 l-12 7 24 10 -24 10 24 10 -12 9"/>
+  </g>
+  <g fill="#263746" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" text-anchor="middle">
+    <text x="190" y="49">R₁</text><text x="450" y="49">R₂</text>
+    <text x="320" y="235" font-size="21" font-weight="400">Rобщ меньше каждого резистора</text>
+  </g>
+  <g fill="#3c7ca7"><circle cx="90" cy="70" r="6"/><circle cx="550" cy="70" r="6"/><circle cx="90" cy="190" r="6"/><circle cx="550" cy="190" r="6"/></g>
+</svg>

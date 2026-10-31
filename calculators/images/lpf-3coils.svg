@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-labelledby="title desc">
+  <title id="title">ФНЧ Баттерворта пятого порядка с подавлением второй гармоники</title>
+  <desc id="desc">Три последовательные катушки L1, L2, L3, два шунтирующих конденсатора C1 и C2, а также Cдоп, подключённый параллельно L2.</desc>
+  <rect width="760" height="330" fill="#fff"/>
+  <g stroke="#34495e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M24 98 H45 M125 98 H150 M150 98 H190 M270 98 H305 M305 98 H365 M445 98 H735"/>
+    <path d="M150 98 V145 M150 185 V222 M130 222 H170 M138 231 H162 M145 240 H155"/>
+    <path d="M305 98 V145 M305 185 V222 M285 222 H325 M293 231 H317 M300 240 H310"/>
+    <path d="M190 98 V165 H220 M244 165 H270 V98"/>
+    <path d="M220 153 V177 M244 153 V177"/>
+  </g>
+  <g stroke="#245c88" stroke-width="3" fill="none" stroke-linecap="round">
+    <path d="M45 98 c0 -20 16 -20 16 0 c0 -20 16 -20 16 0 c0 -20 16 -20 16 0 c0 -20 16 -20 16 0 c0 -20 16 -20 16 0"/>
+    <path d="M190 98 c0 -20 16 -20 16 0 c0 -20 16 -20 16 0 c0 -20 16 -20 16 0 c0 -20 16 -20 16 0 c0 -20 16 -20 16 0"/>
+    <path d="M365 98 c0 -20 16 -20 16 0 c0 -20 16 -20 16 0 c0 -20 16 -20 16 0 c0 -20 16 -20 16 0 c0 -20 16 -20 16 0"/>
+  </g>
+  <g stroke="#34495e" stroke-width="3" fill="none">
+    <path d="M138 145 H162 M138 185 H162 M293 145 H317 M293 185 H317"/>
+  </g>
+  <g fill="#245c88" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700">
+    <text x="70" y="66">L1</text>
+    <text x="211" y="66">L2</text>
+    <text x="386" y="66">L3</text>
+    <text x="164" y="177">C1</text>
+    <text x="319" y="177">C2</text>
+    <text x="232" y="202" text-anchor="middle">Cдоп</text>
+  </g>
+  <g fill="#202124" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700">
+    <text x="24" y="76">Вход</text>
+    <text x="735" y="76" text-anchor="end">Выход</text>
+  </g>
+  <g fill="#5f6368" font-family="Arial, Helvetica, sans-serif" font-size="15">
+    <text x="380" y="288" text-anchor="middle">Cдоп подключён параллельно средней катушке L2</text>
+    <text x="380" y="310" text-anchor="middle">Параллельный резонанс настроен на 2Fc</text>
+  </g>
+  <circle cx="150" cy="98" r="4.5" fill="#245c88"/>
+  <circle cx="190" cy="98" r="4.5" fill="#245c88"/>
+  <circle cx="270" cy="98" r="4.5" fill="#245c88"/>
+  <circle cx="305" cy="98" r="4.5" fill="#245c88"/>
+</svg>

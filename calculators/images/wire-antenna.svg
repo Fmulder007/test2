@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 260" role="img" aria-labelledby="title desc">
+  <title id="title">Схемы проволочных антенн</title>
+  <desc id="desc">Полуволновой диполь с центральным питанием и условные изображения Inverted Vee, вертикала и рамки.</desc>
+  <rect width="760" height="260" rx="14" fill="#f6f9fb"/>
+  <g fill="none" stroke="#294b63" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M48 83 H352 M408 83 H712" stroke-width="5"/>
+    <rect x="352" y="69" width="56" height="28" rx="5" fill="#d9e6ee" stroke-width="2"/>
+    <path d="M380 97 V132" stroke-width="4"/>
+    <path d="M368 132 H392 M372 138 H388" stroke-width="2"/>
+    <path d="M120 72 V94 M640 72 V94" stroke-width="1.5" stroke-dasharray="3 4" opacity=".55"/>
+  </g>
+  <g fill="#294b63" font-family="Arial,Helvetica,sans-serif" font-size="16" text-anchor="middle">
+    <text x="202" y="57">¼ λ</text><text x="558" y="57">¼ λ</text>
+    <text x="380" y="158" font-size="13">питание</text>
+  </g>
+  <path d="M28 178 H732" stroke="#d2dde5" stroke-width="1.5"/>
+  <g fill="none" stroke="#5d7c91" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M70 225 L105 195 L140 225"/>
+    <path d="M248 192 V225 M248 192 L224 207 M248 192 L272 207 M248 225 L226 237 M248 225 L270 237"/>
+    <rect x="390" y="197" width="42" height="35" rx="2"/>
+    <path d="M530 225 L562 195 L594 225 M562 195 V235" stroke-dasharray="4 3"/>
+  </g>
+  <g fill="#536b7b" font-family="Arial,Helvetica,sans-serif" font-size="12" text-anchor="middle">
+    <text x="105" y="251">Inverted Vee</text>
+    <text x="248" y="251">Вертикал</text>
+    <text x="411" y="251">Рамка</text>
+    <text x="562" y="251">EFHW / варианты</text>
+  </g>
+</svg>
