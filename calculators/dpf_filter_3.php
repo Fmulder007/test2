@@ -381,6 +381,175 @@ function dpf3_build_sequential_cct(
 }
 
 
+
+/**
+ * Создаёт CCT для параллельной топологии из неизменяемого шаблона.
+ * Меняются только номиналы компонентов по координатам, Zo портов и Xax min/max.
+ */
+function dpf3_build_parallel_cct(
+    array $result,
+    float $resistance,
+    float $frequencyMHz,
+    float $bandwidthKHz
+): string {
+    $templatePath = __DIR__ . '/templates/BPF3_PAR.cct';
+    if (!is_file($templatePath) || !is_readable($templatePath)) {
+        throw new RuntimeException('Не найден шаблон /calculators/templates/BPF3_PAR.cct или нет доступа на чтение.');
+    }
+
+    $template = file_get_contents($templatePath);
+    if (!is_string($template) || $template === '') {
+        throw new RuntimeException('Не удалось прочитать шаблон BPF3_PAR.cct.');
+    }
+
+    $componentMap = [
+        '100,170' => ['key' => 'c1', 'ctype' => '2', 'scale' => 1e-12],
+        '690,170' => ['key' => 'c1', 'ctype' => '2', 'scale' => 1e-12],
+        '170,130' => ['key' => 'c2', 'ctype' => '2', 'scale' => 1e-12],
+        '630,130' => ['key' => 'c2', 'ctype' => '2', 'scale' => 1e-12],
+        '440,130' => ['key' => 'c3', 'ctype' => '2', 'scale' => 1e-12],
+        '300,170' => ['key' => 'c4', 'ctype' => '2', 'scale' => 1e-12],
+        '490,170' => ['key' => 'c4', 'ctype' => '2', 'scale' => 1e-12],
+        '250,130' => ['key' => 'l1', 'ctype' => '3', 'scale' => 1e-6],
+        '370,130' => ['key' => 'l1', 'ctype' => '3', 'scale' => 1e-6],
+        '550,130' => ['key' => 'l1', 'ctype' => '3', 'scale' => 1e-6],
+    ];
+    $componentCounts = array_fill_keys(['c1', 'c2', 'c3', 'c4', 'l1'], 0);
+    $expectedCounts = ['c1' => 2, 'c2' => 2, 'c3' => 1, 'c4' => 2, 'l1' => 3];
+
+    $drawdatPosition = strpos($template, 'drawdat{');
+    if ($drawdatPosition === false) {
+        throw new RuntimeException('В шаблоне не найден блок drawdat.');
+    }
+    $prefix = substr($template, 0, $drawdatPosition);
+    $drawdat = substr($template, $drawdatPosition);
+
+    // Границы частотного окна задаются симметрично относительно центральной частоты.
+    $minHz = ($frequencyMHz - 2.5 * ($bandwidthKHz / 1000.0)) * 1e6;
+    $maxHz = ($frequencyMHz + 2.5 * ($bandwidthKHz / 1000.0)) * 1e6;
+    if (!is_finite($minHz) || !is_finite($maxHz) || $minHz <= 0.0 || $maxHz <= $minHz) {
+        throw new RuntimeException('Для заданных параметров получился недопустимый диапазон отображения АЧХ.');
+    }
+
+    $xaxCount = 0;
+    $prefix = preg_replace_callback(
+        '/Xax\{([\s\S]*?)(\r?\n)\}/',
+        static function (array $match) use ($minHz, $maxHz, &$xaxCount): string {
+            $block = $match[1];
+            $eol = $match[2];
+            foreach (['max' => $maxHz, 'min' => $minHz] as $field => $value) {
+                $count = 0;
+                $block = preg_replace_callback(
+                    '/^(' . preg_quote($field, '/') . '=\s*)[^\r\n]*/m',
+                    static fn(array $line): string => $line[1] . dpf3_cct_scientific($value),
+                    $block,
+                    1,
+                    $count
+                );
+                if (!is_string($block) || $count !== 1) {
+                    throw new RuntimeException('В блоке Xax не удалось однозначно заменить параметр ' . $field . '.');
+                }
+            }
+            $xaxCount++;
+            return 'Xax{' . $block . $eol . '}';
+        },
+        $prefix,
+        -1,
+        $xaxMatches
+    );
+    if (!is_string($prefix) || $xaxMatches !== 1 || $xaxCount !== 1) {
+        throw new RuntimeException('В шаблоне должен находиться ровно один блок Xax.');
+    }
+
+    $drawdat = preg_replace_callback(
+        '/component\{([\s\S]*?)(\r?\n)\}/',
+        static function (array $match) use (&$componentCounts, $componentMap, $result): string {
+            $block = $match[1];
+            $eol = $match[2];
+
+            if (!preg_match('/^ctype=(\d+)\s*$/m', $block, $ctypeMatch)
+                || !preg_match('/^position\.x=(\d+)\s*$/m', $block, $xMatch)
+                || !preg_match('/^position\.y=(\d+)\s*$/m', $block, $yMatch)) {
+                return $match[0];
+            }
+
+            $coordinate = $xMatch[1] . ',' . $yMatch[1];
+            if (!isset($componentMap[$coordinate])) {
+                return $match[0];
+            }
+
+            $mapping = $componentMap[$coordinate];
+            if ($ctypeMatch[1] !== $mapping['ctype']) {
+                throw new RuntimeException('Тип компонента в координатах ' . $coordinate . ' не совпадает с согласованным шаблоном.');
+            }
+
+            $key = $mapping['key'];
+            $value = $result[$key] ?? null;
+            if (!is_numeric($value) || !is_finite((float) $value) || (float) $value <= 0.0) {
+                throw new RuntimeException('Для элемента ' . strtoupper($key) . ' нет положительного конечного номинала.');
+            }
+            $nominalSi = (float) $value * $mapping['scale'];
+            $nominalText = dpf3_cct_scientific($nominalSi);
+
+            $updated = preg_replace_callback(
+                '/(value\[1\]=\{nom=\s*)[^;]+/',
+                static fn(array $nominalMatch): string => $nominalMatch[1] . $nominalText,
+                $block,
+                1,
+                $nominalCount
+            );
+            if (!is_string($updated) || $nominalCount !== 1) {
+                throw new RuntimeException('Не удалось заменить номинал компонента в координатах ' . $coordinate . '.');
+            }
+
+            $componentCounts[$key]++;
+            return 'component{' . $updated . $eol . '}';
+        },
+        $drawdat,
+        -1,
+        $componentMatches
+    );
+    if (!is_string($drawdat) || $componentMatches < 1) {
+        throw new RuntimeException('Не удалось обработать компоненты в блоке drawdat.');
+    }
+    foreach ($expectedCounts as $key => $expected) {
+        if ($componentCounts[$key] !== $expected) {
+            throw new RuntimeException('В шаблоне найдено неожиданное количество компонентов ' . strtoupper($key) . '.');
+        }
+    }
+
+    $portCounts = ['1' => 0, '2' => 0];
+    $drawdat = preg_replace_callback(
+        '/P([12])\{([\s\S]*?)(\r?\n)\}/',
+        static function (array $match) use (&$portCounts, $resistance): string {
+            $port = $match[1];
+            $block = $match[2];
+            $eol = $match[3];
+            $updated = preg_replace_callback(
+                '/(^Zo=\s*)[^\r\n]*/m',
+                static fn(array $zoMatch): string => $zoMatch[1] . dpf3_cct_scientific($resistance),
+                $block,
+                1,
+                $zoCount
+            );
+            if (!is_string($updated) || $zoCount !== 1) {
+                throw new RuntimeException('Не удалось изменить импеданс порта P' . $port . '.');
+            }
+            $portCounts[$port]++;
+            return 'P' . $port . '{' . $updated . $eol . '}';
+        },
+        $drawdat,
+        -1,
+        $portMatches
+    );
+    if (!is_string($drawdat) || $portMatches !== 2 || $portCounts !== ['1' => 1, '2' => 1]) {
+        throw new RuntimeException('В шаблоне должны находиться ровно по одному порту P1 и P2.');
+    }
+
+    return $prefix . $drawdat;
+}
+
+
 // Два независимых набора исходных данных.
 $seqResistanceRaw = trim((string) ($_POST['seq_resistance'] ?? '50'));
 $seqFrequencyRaw = trim((string) ($_POST['seq_frequency'] ?? '7.1'));
@@ -499,6 +668,63 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && $exportAction === 'seque
     exit;
 }
 
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && $exportAction === 'parallel') {
+    $exportResistance = dpf3_number($parResistanceRaw);
+    $exportFrequency = dpf3_number($parFrequencyRaw);
+    $exportBandwidth = dpf3_number($parBandwidthRaw);
+    $exportL1 = dpf3_number($parL1Raw);
+    $timestamp = trim((string) ($_POST['par_export_timestamp'] ?? ''));
+
+    if ($exportResistance === null || $exportFrequency === null || $exportBandwidth === null || $exportL1 === null) {
+        http_response_code(400);
+        exit('Невозможно экспортировать схему: проверьте входные параметры параллельной топологии.');
+    }
+    if (!preg_match('/^\d{8}_\d{6}$/', $timestamp)) {
+        http_response_code(400);
+        exit('Не удалось получить местные дату и время компьютера. Повторите скачивание с включённым JavaScript.');
+    }
+
+    $exportResult = dpf3_calculate_parallel($exportResistance, $exportFrequency, $exportBandwidth, $exportL1);
+    if (!empty($exportResult['coefficient_undefined'])
+        || !empty($exportResult['negative'])
+        || !empty($exportResult['undefined'])
+        || !isset($exportResult['l1'], $exportResult['c1'], $exportResult['c2'], $exportResult['c3'], $exportResult['c4'])
+        || !is_finite((float) $exportResult['l1'])
+        || !is_finite((float) $exportResult['c1'])
+        || !is_finite((float) $exportResult['c2'])
+        || !is_finite((float) $exportResult['c3'])
+        || !is_finite((float) $exportResult['c4'])
+        || (float) $exportResult['l1'] <= 0.0
+        || (float) $exportResult['c1'] <= 0.0
+        || (float) $exportResult['c2'] <= 0.0
+        || (float) $exportResult['c3'] <= 0.0
+        || (float) $exportResult['c4'] <= 0.0) {
+        http_response_code(400);
+        exit('Экспорт отменён: расчёт содержит отрицательные или неопределённые номиналы.');
+    }
+
+    try {
+        $cctContent = dpf3_build_parallel_cct(
+            $exportResult,
+            $exportResistance,
+            $exportFrequency,
+            $exportBandwidth
+        );
+    } catch (Throwable $exception) {
+        http_response_code(500);
+        exit('Не удалось сформировать CCT: ' . $exception->getMessage());
+    }
+
+    $downloadName = 'BPF3_PAR_' . $timestamp . '.cct';
+    header('Content-Type: application/octet-stream');
+    header('Content-Disposition: attachment; filename="' . $downloadName . '"');
+    header('Content-Length: ' . strlen($cctContent));
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    echo $cctContent;
+    exit;
+}
+
 $seqStateJson = dpf3_state_json($seqResult);
 $parStateJson = dpf3_state_json($parResult);
 $seqExportAvailable = ($seqResult !== null
@@ -511,6 +737,22 @@ $seqExportAvailable = ($seqResult !== null
     && (float) $seqResult['c2'] > 0.0
     && (float) $seqResult['c3'] > 0.0
     && ((((float) $seqResult['f1'] + (float) $seqResult['f2']) / 2.0) - 2.5 * ((float) $seqResult['f2'] - (float) $seqResult['f1'])) > 0.0);
+$parFrequencyForExport = dpf3_number($parFrequencyRaw);
+$parBandwidthForExport = dpf3_number($parBandwidthRaw);
+$parExportAvailable = ($parResult !== null
+    && $parError === ''
+    && empty($parResult['negative'])
+    && empty($parResult['undefined'])
+    && empty($parResult['coefficient_undefined'])
+    && isset($parResult['l1'], $parResult['c1'], $parResult['c2'], $parResult['c3'], $parResult['c4'])
+    && (float) $parResult['l1'] > 0.0
+    && (float) $parResult['c1'] > 0.0
+    && (float) $parResult['c2'] > 0.0
+    && (float) $parResult['c3'] > 0.0
+    && (float) $parResult['c4'] > 0.0
+    && $parFrequencyForExport !== null
+    && $parBandwidthForExport !== null
+    && ($parFrequencyForExport - 2.5 * ($parBandwidthForExport / 1000.0)) > 0.0);
 ?>
 <!doctype html>
 <html lang="ru">
@@ -611,6 +853,7 @@ $seqExportAvailable = ($seqResult !== null
         <input type="hidden" id="seq_error_state" name="seq_error_state" value="<?= dpf3_h($seqError) ?>">
         <input type="hidden" id="par_error_state" name="par_error_state" value="<?= dpf3_h($parError) ?>">
         <input type="hidden" id="seq_export_timestamp" name="seq_export_timestamp" value="">
+        <input type="hidden" id="par_export_timestamp" name="par_export_timestamp" value="">
 
         <section class="panel topology-card" id="sequential-block">
             <h2 class="topology-heading">Вариант № 1 — последовательная топология</h2>
@@ -786,6 +1029,11 @@ $seqExportAvailable = ($seqResult !== null
                     <div class="chart-placeholder" id="par-chart-placeholder">Выполните расчёт параллельной топологии, чтобы построить АЧХ.</div>
                 </div>
                 <p class="chart-stats" id="par-chart-stats" aria-live="polite"></p>
+                <?php if ($parExportAvailable): ?>
+                    <div class="export-action">
+                        <button type="submit" name="export" value="parallel" id="par-export-button" formnovalidate>Скачать схему для RFSim99 (.cct)</button>
+                    </div>
+                <?php endif; ?>
             </div>
         </section>
     </form>
@@ -805,6 +1053,22 @@ $seqExportAvailable = ($seqResult !== null
             const now = new Date();
             const pad = value => String(value).padStart(2, '0');
             exportTimestamp.value = String(now.getFullYear())
+                + pad(now.getMonth() + 1)
+                + pad(now.getDate())
+                + '_'
+                + pad(now.getHours())
+                + pad(now.getMinutes())
+                + pad(now.getSeconds());
+        });
+    }
+
+    const parallelExportButton = document.getElementById('par-export-button');
+    const parallelExportTimestamp = document.getElementById('par_export_timestamp');
+    if (parallelExportButton && parallelExportTimestamp) {
+        parallelExportButton.addEventListener('click', () => {
+            const now = new Date();
+            const pad = value => String(value).padStart(2, '0');
+            parallelExportTimestamp.value = String(now.getFullYear())
                 + pad(now.getMonth() + 1)
                 + pad(now.getDate())
                 + '_'
@@ -1041,6 +1305,7 @@ $seqExportAvailable = ($seqResult !== null
         if (state) state.value = '';
         if (errorState) errorState.value = '';
         if (group === 'sequential' && exportButton) exportButton.closest('.export-action')?.remove();
+        if (group === 'parallel' && parallelExportButton) parallelExportButton.closest('.export-action')?.remove();
 
         document.querySelectorAll(`[data-result-group="${group}"]`).forEach(output => {
             output.textContent = '—';
