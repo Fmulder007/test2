@@ -641,6 +641,12 @@ if ($isDownloadRequest) {
         dpc_cct_download_error(400, $error !== '' ? $error : 'Не удалось выполнить расчёт для формирования CCT.');
     }
 
+    $clientTimestamp = trim((string) ($_POST['client_timestamp'] ?? ''));
+    if (!preg_match('/^\\d{8}_\\d{6}$/', $clientTimestamp)) {
+        dpc_cct_download_error(400, 'Не удалось получить местные дату и время компьютера. Повторите скачивание.');
+    }
+    $downloadFilename = 'BPF2_' . $clientTimestamp . '.cct';
+
     // dpf_capacitive.php расположен в /calculators/, шаблоны — templates/.
     $templatePath = __DIR__ . '/templates/bpf2.cct';
     if (!is_file($templatePath) || !is_readable($templatePath)) {
@@ -668,7 +674,7 @@ if ($isDownloadRequest) {
 
     header('Content-Type: application/octet-stream');
     header('Content-Description: File Transfer');
-    header('Content-Disposition: attachment; filename="bpf2.cct"');
+    header('Content-Disposition: attachment; filename="' . $downloadFilename . '"');
     header('Content-Length: ' . strlen($cct));
     header('Cache-Control: no-store, no-cache, must-revalidate');
     header('Pragma: no-cache');
@@ -839,6 +845,7 @@ if ($isDownloadRequest) {
                 <input type="hidden" name="bandwidth" value="<?= dpc_h($values['bandwidth']) ?>">
                 <input type="hidden" name="rin" value="<?= dpc_h($values['rin']) ?>">
                 <input type="hidden" name="rout" value="<?= dpc_h($values['rout']) ?>">
+                <input type="hidden" name="client_timestamp" value="">
                 <div class="download-row">
                     <button class="download-button" type="submit">Скачать схему для RFSim99 (.cct)</button>
                 </div>
@@ -846,5 +853,27 @@ if ($isDownloadRequest) {
         </section>
     <?php endif; ?>
 </main>
+<script>
+(() => {
+    const form = document.querySelector('.download-form');
+    if (!form) return;
+
+    const timestampInput = form.querySelector('input[name="client_timestamp"]');
+    if (!timestampInput) return;
+
+    form.addEventListener('submit', () => {
+        // Имя файла использует локальные часы компьютера пользователя.
+        const now = new Date();
+        const pad = value => String(value).padStart(2, '0');
+        timestampInput.value = String(now.getFullYear()).padStart(4, '0')
+            + pad(now.getMonth() + 1)
+            + pad(now.getDate())
+            + '_'
+            + pad(now.getHours())
+            + pad(now.getMinutes())
+            + pad(now.getSeconds());
+    });
+})();
+</script>
 </body>
 </html>
