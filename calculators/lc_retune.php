@@ -327,6 +327,20 @@ function lc_retune_formatCapacitance(float $farad): string
             control.addEventListener('change', markOutdated);
         });
     }
+
+    // После отправки формы прокручиваем страницу к результату или ошибке.
+    // Фокус на блок не переводим: поэтому рамка фокуса вокруг результата не появляется.
+    // Два кадра ожидания дают браузеру завершить восстановление страницы и отрисовку.
+    const shouldScrollToResult = <?= ($isSubmitted && $result !== null) ? 'true' : 'false' ?>;
+    const shouldScrollToError = <?= ($isSubmitted && $error !== '') ? 'true' : 'false' ?>;
+    const scrollTarget = shouldScrollToResult
+        ? result
+        : (shouldScrollToError ? error : null);
+    if (scrollTarget) {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            scrollTarget.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }));
+    }
 })();
 </script>
 </body>
