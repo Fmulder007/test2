@@ -354,6 +354,20 @@ $voltageTypeLabels = [
         if (error) error.hidden = true;
         if (hint) hint.style.display = 'block';
     }
+
+    // После отправки формы прокручиваем страницу к результату или ошибке.
+    // Фокус на блок не переводим: поэтому рамка фокуса вокруг результата не появляется.
+    // Два кадра ожидания дают браузеру завершить восстановление страницы и отрисовку.
+    const shouldScrollToResult = <?= ($isSubmitted && $result !== null) ? 'true' : 'false' ?>;
+    const shouldScrollToError = <?= ($isSubmitted && $error !== '') ? 'true' : 'false' ?>;
+    const scrollTarget = shouldScrollToResult
+        ? result
+        : (shouldScrollToError ? error : null);
+    if (scrollTarget) {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            scrollTarget.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }));
+    }
 })();
 </script>
 </body>
