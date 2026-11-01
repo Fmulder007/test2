@@ -41,7 +41,8 @@ function displaySystem(text,type='info'){
     mobileStatusToastTimer=window.setTimeout(()=>{toast.classList.add('hidden');mobileStatusToastTimer=null;},4200);
   }else toast.classList.add('hidden');
 }
-function updateSearchClearButton(){const button=$('search-clear');if(!button)return;const visible=!!((searchInput?.value||'').trim()||searchState||pinnedOnlySearch);button.classList.toggle('hidden',!visible);button.disabled=!visible;}
+function updateModeTitleCursor(){const label=$('mode-title');if(!label)return;label.style.cursor=(mode!=='chat'||!!currentDate||!!searchState||pinnedOnlySearch)?'pointer':'';}
+function updateSearchClearButton(){const button=$('search-clear');if(button){const visible=!!((searchInput?.value||'').trim()||searchState||pinnedOnlySearch);button.classList.toggle('hidden',!visible);button.disabled=!visible;}updateModeTitleCursor();}
 function clearSearchState(clearInput=false){if(searchState||pinnedOnlySearch)searchRequestSerial++;searchState=null;pinnedOnlySearch=false;if(clearInput&&searchInput){searchInput.value='';searchInput.placeholder=mode==='journal'?'Поиск по журналу…':'Поиск по истории…';}updateSearchClearButton();}
 function setModeTitle(text){
   const label=$('mode-title');if(!label)return;
@@ -337,6 +338,7 @@ function showModes(){
   if(inJournal){setModeTitle('Журнал Админа');}
   else if(inAdminSection){setModeTitle(adminPageTitle());}
   else{setModeTitle(currentDate?'История':'Чат');}
+  updateModeTitleCursor();
   // Keep the composer visible in all viewing modes; only RO/BAN hide it.
   updateComposerAccess();
   syncTopSearchContext({clearOnChange:true});
