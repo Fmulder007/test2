@@ -4,8 +4,8 @@ declare(strict_types=1);
 /**
  * Округляет границы частотного окна для RFSim99 до удобных значений.
  *
- * Шаг выбирается из ряда 1, 2, 5 × 10^n так, чтобы до округления
- * на ширине окна помещалось примерно 20 делений.
+ * Шаг выбирается как ближайший к ширине окна / 20 из ряда
+ * 1, 2, 5 × 10^n. После округления остаётся примерно 13–25 делений.
  * Нижняя граница округляется вниз, верхняя — вверх.
  *
  * Если задана minimumAllowedHz, округлённая нижняя граница не может
@@ -41,11 +41,11 @@ function cct_frequency_axis_bounds(
     }
 
     $normalizedStep = $targetStep / $magnitude;
-    if ($normalizedStep <= 1.0) {
+    if ($normalizedStep <= 1.5) {
         $stepFactor = 1.0;
-    } elseif ($normalizedStep <= 2.0) {
+    } elseif ($normalizedStep <= 3.5) {
         $stepFactor = 2.0;
-    } elseif ($normalizedStep <= 5.0) {
+    } elseif ($normalizedStep <= 7.5) {
         $stepFactor = 5.0;
     } else {
         $stepFactor = 10.0;
