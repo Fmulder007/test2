@@ -233,6 +233,16 @@ function pc_unitOptions(string $selected, array $options): string
         .error { margin-top: 16px; padding: 12px; border: 1px solid #e4b7b7; border-radius: 8px; background: #fff5f5; color: #8b2323; line-height: 1.45; }
         .notes { font-size: .9rem; }
         .clear-link { color: #244f76; white-space: nowrap; }
+        .compact-mode, .fields > div { display: grid; grid-template-columns: minmax(145px, .9fr) minmax(0, 1.1fr); align-items: center; gap: 10px; }
+        .compact-mode { margin-bottom: 8px; }
+        .mode-label, .field-label { margin: 0; }
+        .mode-select { margin: 0; min-height: 39px; }
+        .fields { gap: 8px; }
+        .value-row { grid-template-columns: minmax(0, 1fr) 86px; gap: 6px; }
+        .value-input, .unit-select { min-height: 39px; }
+        @media (max-width: 760px) {
+            .compact-mode, .fields > div { grid-template-columns: minmax(120px, .85fr) minmax(0, 1.15fr); gap: 8px; }
+        }
         @media (max-width: 760px) {
             body { padding: 10px; }
             .panel { padding: 15px; }
@@ -266,11 +276,13 @@ function pc_unitOptions(string $selected, array $options): string
                         <img class="diagram" src="images/parallel-resistors.svg" alt="Схема двух резисторов R1 и R2, соединённых параллельно" width="640" height="260">
                     </div>
                     <div class="form-column">
-                <label class="mode-label" for="r_mode">Что рассчитать</label>
-                <select class="mode-select" id="r_mode" name="r_mode">
+                <div class="compact-mode">
+                    <label class="mode-label" for="r_mode">Что рассчитать</label>
+                    <select class="mode-select" id="r_mode" name="r_mode">
                     <option value="total"<?= $rMode === 'total' ? ' selected' : '' ?>>Общее сопротивление по R₁ и R₂</option>
                     <option value="unknown"<?= $rMode === 'unknown' ? ' selected' : '' ?>>Неизвестный R₂ по Rобщ и R₁</option>
-                </select>
+                    </select>
+                </div>
                 <div class="fields">
                     <div>
                         <label class="field-label" id="r_a_label" for="r_a"><?= $rMode === 'total' ? 'Сопротивление R₁' : 'Общее сопротивление Rобщ' ?></label>
@@ -311,11 +323,13 @@ function pc_unitOptions(string $selected, array $options): string
                         <img class="diagram" src="images/series-capacitors.svg" alt="Схема двух конденсаторов C1 и C2, соединённых последовательно" width="640" height="260">
                     </div>
                     <div class="form-column">
-                <label class="mode-label" for="c_mode">Что рассчитать</label>
-                <select class="mode-select" id="c_mode" name="c_mode">
+                <div class="compact-mode">
+                    <label class="mode-label" for="c_mode">Что рассчитать</label>
+                    <select class="mode-select" id="c_mode" name="c_mode">
                     <option value="total"<?= $cMode === 'total' ? ' selected' : '' ?>>Общую ёмкость по C₁ и C₂</option>
                     <option value="unknown"<?= $cMode === 'unknown' ? ' selected' : '' ?>>Неизвестный C₂ по Cобщ и C₁</option>
-                </select>
+                    </select>
+                </div>
                 <div class="fields">
                     <div>
                         <label class="field-label" id="c_a_label" for="c_a"><?= $cMode === 'total' ? 'Ёмкость C₁' : 'Общая ёмкость Cобщ' ?></label>
