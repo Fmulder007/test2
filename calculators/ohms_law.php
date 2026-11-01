@@ -205,7 +205,10 @@ $formatters = ['u' => 'oh_formatVoltage', 'i' => 'oh_formatCurrent', 'r' => 'oh_
         .back-link:hover, .clear-link:hover { text-decoration: underline; }
         .diagram { display: block; width: 100%; height: auto; margin: 16px 0; border: 1px solid #d7dce1; border-radius: 8px; background: #fff; }
         .note { padding: 12px 14px; border-left: 4px solid #3c7ca7; background: #f2f7fb; border-radius: 5px; line-height: 1.45; }
-        .form-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: end; }
+        .calculator-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+         .diagram-column, .form-column { min-width: 0; }
+         .diagram { margin: 0 0 14px; }
+         .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: end; }
         .field { min-width: 0; }
         .field-label { display: block; font-weight: 700; margin-bottom: 6px; }
         select, input, button { font: inherit; }
@@ -229,7 +232,7 @@ $formatters = ['u' => 'oh_formatVoltage', 'i' => 'oh_formatCurrent', 'r' => 'oh_
         .stale-hint { display: none; margin-top: 12px; color: #7a5200; font-size: .93rem; }
         .small { font-size: .9rem; }
         .clear-link { color: #244f76; }
-        @media (max-width: 680px) { body { padding: 10px; } .panel { padding: 15px; } .form-grid { grid-template-columns: minmax(0, 1fr); } .results-grid { grid-template-columns: minmax(0, 1fr); } .diagram { margin: 12px 0; } }
+        @media (max-width: 680px) { body { padding: 10px; } .panel { padding: 15px; } .calculator-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; } .results-grid { grid-template-columns: minmax(0, 1fr); } .diagram { margin: 0 0 12px; } }
         @media print { body { padding: 0; background: #fff; } .panel { border-color: #aaa; break-inside: avoid; } .no-print, .back-link, button, .clear-link, .stale-hint { display: none !important; } .result { border-color: #999; background: #fff; } }
     </style>
 </head>
@@ -239,13 +242,17 @@ $formatters = ['u' => 'oh_formatVoltage', 'i' => 'oh_formatCurrent', 'r' => 'oh_
         <h1>Универсальный калькулятор U / I / R / P</h1>
         <p class="subtle">Выбери любые две известные величины из напряжения, тока, сопротивления и мощности — калькулятор найдёт две остальные. Подходит для расчётов резистивных цепей постоянного тока.</p>
         <a class="back-link" href="index.php">← К списку калькуляторов</a>
-        <img class="diagram" src="images/ohms-law.svg" alt="Схема резистивной цепи с напряжением U, током I, сопротивлением R и мощностью P" width="760" height="240">
-        <div class="note"><strong>Область применения:</strong> формулы рассчитаны на резистивную цепь. Для ВЧ- или другой переменнотоковой цепи с реактивной нагрузкой нужны дополнительные данные об импедансе и фазе.</div>
     </section>
 
     <section class="panel">
-        <h2>Исходные данные</h2>
-        <form id="ohm-form" method="post" action="">
+        <div class="calculator-layout">
+            <div class="diagram-column">
+                <img class="diagram" src="images/ohms-law.svg" alt="Схема резистивной цепи с напряжением U, током I, сопротивлением R и мощностью P" width="760" height="240">
+                <div class="note"><strong>Область применения:</strong> формулы рассчитаны на резистивную цепь. Для ВЧ- или другой переменнотоковой цепи с реактивной нагрузкой нужны дополнительные данные об импедансе и фазе.</div>
+            </div>
+            <div class="form-column">
+                <h2>Исходные данные</h2>
+                <form id="ohm-form" method="post" action="">
             <div class="form-grid">
                 <div class="field">
                     <label class="field-label" for="known1">Известная величина № 1</label>
@@ -274,10 +281,12 @@ $formatters = ['u' => 'oh_formatVoltage', 'i' => 'oh_formatCurrent', 'r' => 'oh_
             </div>
             <div class="action-row">
                 <button type="submit" name="calculate" value="1">Рассчитать</button>
-                <a class="clear-link" href="ohms_law.php">Очистить результат</a>
+                <a class="clear-link" href="ohms_law.php">Сбросить</a>
             </div>
             <div class="stale-hint" id="stale-hint">Исходные данные изменены. Нажми «Рассчитать», чтобы обновить результат.</div>
-        </form>
+                </form>
+            </div>
+        </div>
         <?php if ($error !== ''): ?><div class="error" id="calculation-error" role="alert"><?= oh_h($error) ?></div><?php endif; ?>
         <?php if ($resultValues !== null): ?>
             <div class="result" id="calculation-result" aria-live="polite">
