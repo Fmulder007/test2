@@ -300,6 +300,15 @@ foreach ($toroidCores as $id => $coreInfo) {
         .clear-link { color: #244f76; }
         @media (max-width: 680px) { body { padding: 10px; } .panel { padding: 15px; } .calculator-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; } .result-grid { grid-template-columns: minmax(0, 1fr); } .diagram { margin: 0 0 12px; } .value-row { grid-template-columns: minmax(0, 1fr) 105px; } .action-row { flex-direction: column; align-items: stretch; } .action-row button { width: 100%; } }
         @media print { body { padding: 0; background: #fff; } .panel { border-color: #aaa; break-inside: avoid; } .no-print, .back-link, button, .clear-link { display: none !important; } .result { border-color: #999; background: #fff; } }
+            .field { display: grid; grid-template-columns: minmax(155px, .9fr) minmax(0, 1.1fr); align-items: center; gap: 10px; }
+        .field-label { margin: 0; }
+        .mode-field { display: grid; grid-template-columns: minmax(155px, .9fr) minmax(0, 1.1fr); align-items: center; gap: 10px; margin-bottom: 8px; }
+        .form-grid { gap: 8px; }
+        .value-input, .unit-select, .mode-select { min-height: 39px; }
+        .custom-core-fields > p.subtle { margin: 5px 0 10px; font-size: .86rem; }
+        @media (max-width: 680px) {
+            .field, .mode-field { grid-template-columns: minmax(125px, .85fr) minmax(0, 1.15fr); gap: 8px; }
+        }
     </style>
 </head>
 <body>
@@ -357,18 +366,12 @@ foreach ($toroidCores as $id => $coreInfo) {
                         <input class="value-input" id="custom_h" name="custom_h" type="text" inputmode="decimal" value="<?= tw_h($customRaw['h']) ?>">
                     </div>
                 </div>
-                <div class="mode-field" style="margin-top:16px">
-                    <span class="field-label" id="custom_mode_label">Как известны параметры материала?</span>
-                    <div class="radio-options" role="radiogroup" aria-labelledby="custom_mode_label">
-                        <label class="radio-option">
-                            <input type="radio" name="custom_mode" value="mu"<?= $customMode === 'mu' ? ' checked' : '' ?>>
-                            <span>Известна относительная магнитная проницаемость μ</span>
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="custom_mode" value="measured"<?= $customMode === 'measured' ? ' checked' : '' ?>>
-                            <span>Измерена индуктивность пробной обмотки</span>
-                        </label>
-                    </div>
+                <div class="mode-field" style="margin-top:10px">
+                    <label class="field-label" id="custom_mode_label" for="custom_mode">Параметры материала</label>
+                    <select class="mode-select" id="custom_mode" name="custom_mode">
+                        <option value="mu"<?= $customMode === 'mu' ? ' selected' : '' ?>>По магнитной проницаемости μ</option>
+                        <option value="measured"<?= $customMode === 'measured' ? ' selected' : '' ?>>По измеренной индуктивности</option>
+                    </select>
                 </div>
                 <div id="custom-mu-field" class="mode-field"<?= $customMode === 'measured' ? ' hidden' : '' ?>>
                     <label class="field-label" for="custom_mu">Относительная проницаемость μ</label>
@@ -489,7 +492,7 @@ foreach ($toroidCores as $id => $coreInfo) {
 (() => {
     const selector = document.getElementById('core_id');
     const customFields = document.getElementById('custom-core-fields');
-    const customModeOptions = document.querySelectorAll('input[name="custom_mode"]');
+    const customModeSelector = document.getElementById('custom_mode');
     const customMuField = document.getElementById('custom-mu-field');
     const customMeasuredFields = document.getElementById('custom-measured-fields');
     const info = document.getElementById('core-info');
@@ -523,14 +526,13 @@ foreach ($toroidCores as $id => $coreInfo) {
     }
 
     function updateCustomMode() {
-        const selectedMode = document.querySelector('input[name="custom_mode"]:checked');
-        const measured = !!selectedMode && selectedMode.value === 'measured';
+        const measured = customModeSelector.value === 'measured';
         customMuField.hidden = measured;
         customMeasuredFields.hidden = !measured;
     }
 
     selector.addEventListener('change', updateCoreInfo);
-    customModeOptions.forEach(option => option.addEventListener('change', updateCustomMode));
+    customModeSelector.addEventListener('change', updateCustomMode);
     updateCoreInfo();
     updateCustomMode();
 })();
