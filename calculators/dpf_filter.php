@@ -399,6 +399,13 @@ if ($isExportRequest) {
         .value-input { display: block; width: 100%; min-width: 0; min-height: 43px; border: 1px solid #b8c0c8; border-radius: 6px; padding: 10px 11px; background: #fff; color: #202124; }
         .value-input:focus { outline: 3px solid #c5e2f8; border-color: #3976a8; }
         .field-hint { display: block; color: #69727b; font-size: .86rem; line-height: 1.4; margin-top: 5px; }
+        .mode-select { min-height: 39px; }
+        .field { display: grid; grid-template-columns: minmax(155px, .9fr) minmax(0, 1.1fr); align-items: center; gap: 10px; }
+        .field-label { margin: 0; }
+        .form-grid { gap: 8px; }
+        .mode-third-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+        .mode-third-grid .field { margin: 0; }
+        .value-input { min-height: 39px; }
         .mode-switch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; background: #edf1f4; border: 1px solid #d7dce1; border-radius: 8px; padding: 4px; }
         .mode-choice { position: relative; min-width: 0; cursor: pointer; }
         .mode-choice input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
@@ -486,22 +493,15 @@ if ($isExportRequest) {
 
             <div class="mode-third-grid">
                 <div class="field">
-                    <span class="field-label" id="mode-label">Вариант расчёта</span>
-                    <div class="mode-switch" role="radiogroup" aria-labelledby="mode-label">
-                        <label class="mode-choice">
-                            <input type="radio" name="mode" value="bandwidth"<?= dpf_checked($mode, 'bandwidth') ?>>
-                            <span>По полосе</span>
-                        </label>
-                        <label class="mode-choice">
-                            <input type="radio" name="mode" value="inductance"<?= dpf_checked($mode, 'inductance') ?>>
-                            <span>По L1</span>
-                        </label>
-                    </div>
+                    <label class="field-label" id="mode-label" for="mode">Способ расчёта</label>
+                    <select class="mode-select" id="mode" name="mode">
+                        <option value="bandwidth"<?= $mode === 'bandwidth' ? ' selected' : '' ?>>По полосе</option>
+                        <option value="inductance"<?= $mode === 'inductance' ? ' selected' : '' ?>>По индуктивности L1</option>
+                    </select>
                 </div>
                 <div class="field">
                     <label class="field-label" id="third-label" for="third_value"><?= $mode === 'bandwidth' ? 'Полоса пропускания ΔF, кГц' : 'Индуктивность каждой катушки L1, мкГн' ?></label>
                     <input class="value-input" id="third_value" name="third_value" type="text" inputmode="decimal" autocomplete="off" value="<?= dpf_h($thirdRaw) ?>" data-mode="<?= dpf_h($mode) ?>" required>
-                    <span class="field-hint" id="third-hint"><?= $mode === 'bandwidth' ? 'Задайте требуемую полосу пропускания.' : 'Задайте индуктивность одной катушки; обе катушки имеют этот номинал.' ?></span>
                 </div>
             </div>
 
@@ -591,13 +591,12 @@ if ($isExportRequest) {
     const form = document.getElementById('dpf-form');
     const third = document.getElementById('third_value');
     const thirdLabel = document.getElementById('third-label');
-    const thirdHint = document.getElementById('third-hint');
-    const modeInputs = [...document.querySelectorAll('input[name="mode"]')];
+    const modeSelect = document.getElementById('mode');
     const result = document.getElementById('calculation-result');
     const error = document.getElementById('calculation-error');
     const staleHint = document.getElementById('stale-hint');
     const defaults = { bandwidth: '4000', inductance: '100' };
-    const currentMode = () => modeInputs.find(input => input.checked)?.value || 'bandwidth';
+    const currentMode = () => modeSelect.value;
     const values = { bandwidth: defaults.bandwidth, inductance: defaults.inductance };
     let activeMode = currentMode();
     values[activeMode] = third.value;
@@ -607,19 +606,17 @@ if ($isExportRequest) {
         activeMode = nextMode;
         if (nextMode === 'bandwidth') {
             thirdLabel.textContent = 'Полоса пропускания ΔF, кГц';
-            thirdHint.textContent = 'Задайте требуемую полосу пропускания.';
         } else {
             thirdLabel.textContent = 'Индуктивность каждой катушки L1, мкГн';
-            thirdHint.textContent = 'Задайте индуктивность одной катушки; обе катушки имеют этот номинал.';
         }
         third.value = values[nextMode] ?? defaults[nextMode];
         third.placeholder = nextMode === 'bandwidth' ? 'Например, 100' : 'Например, 10';
     }
 
-    modeInputs.forEach(input => input.addEventListener('change', () => {
-        updateThirdField(input.value);
+    modeSelect.addEventListener('change', () => {
+        updateThirdField(modeSelect.value);
         markOutdated();
-    }));
+    });
 
     function markOutdated() {
         if (result) {
@@ -637,8 +634,9 @@ if ($isExportRequest) {
     }
 
     if (result || error) {
-        form.querySelectorAll('input').forEach(control => {
+        form.querySelectorAll('input:not([type="hidden"]), select').forEach(control => {
             control.addEventListener('input', markOutdated);
+            control.addEventListener('change', markOutdated);
         });
     }
 
