@@ -625,7 +625,9 @@ $cutoffHelp = $response === 'butter'
         .back-link:hover, .clear-link:hover { text-decoration: underline; }
         a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid #89bde5; outline-offset: 3px; }
         .note { padding: 12px 14px; border-left: 4px solid #3c7ca7; background: #f2f7fb; border-radius: 5px; line-height: 1.45; }
-        .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: end; }
+        .calculator-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+         .input-column { min-width: 0; }
+         .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: end; }
         .field { min-width: 0; }
         .field-label { display: block; font-weight: 700; margin-bottom: 6px; line-height: 1.35; }
         input, button { font: inherit; }
@@ -649,7 +651,7 @@ $cutoffHelp = $response === 'butter'
         .clear-link { color: #244f76; }
         .error { margin-top: 15px; padding: 12px; border: 1px solid #e4b7b7; border-radius: 8px; background: #fff5f5; color: #8b2323; line-height: 1.45; }
         .stale-hint { display: none; margin-top: 12px; color: #7a5200; font-size: .93rem; }
-        .result-layout { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); gap: 22px; align-items: start; }
+        .result-layout { display: block; }
         .diagram-wrap { min-width: 0; }
         .diagram { display: block; width: 100%; height: auto; margin: 0; border: 1px solid #d7dce1; border-radius: 8px; background: #fff; }
         .diagram-caption { margin: 8px 1px 0; color: #5f6368; font-size: .88rem; line-height: 1.45; }
@@ -698,7 +700,8 @@ $cutoffHelp = $response === 'butter'
         @media (max-width: 760px) {
             body { padding: 10px; }
             .panel { padding: 15px; }
-            .result-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+            .calculator-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+            .result-layout { display: block; }
             .component-columns { grid-template-columns: minmax(0, 1fr); gap: 18px; }
             .diagram { max-width: 100%; }
             .chart-box { height: 340px; }
@@ -732,7 +735,13 @@ $cutoffHelp = $response === 'butter'
         <div class="note" style="margin-top:14px"><strong>Модель:</strong> без потерь катушек и конденсаторов, паразитных параметров и монтажных эффектов. Импеданс источника и нагрузки считается одинаковым.</div>
     </section>
 
-    <section class="panel no-print">
+    <section class="panel">
+        <div class="calculator-layout">
+            <div class="diagram-wrap">
+                <img class="diagram" id="filter-diagram" src="<?= lpf_h($diagramSrc) ?>" alt="Схема ФНЧ <?= (int) $order ?>-го порядка с шунтирующими конденсаторами на входе и выходе и Cдоп параллельно L2" width="900" height="330">
+                <p class="diagram-caption" id="diagram-caption"><?= $order === 5 ? 'ФНЧ 5-го порядка: две последовательные катушки и три конденсатора на землю.' : 'ФНЧ 7-го порядка: три последовательные катушки и четыре конденсатора на землю.' ?> Cдоп включён параллельно L2.</p>
+            </div>
+            <div class="input-column no-print">
         <h2>Исходные данные</h2>
         <form id="lpf-form" method="post" action="">
             <input type="hidden" id="manual_values_json" name="manual_values_json" value="<?= lpf_h($manualValuesJson) ?>">
@@ -778,21 +787,19 @@ $cutoffHelp = $response === 'butter'
             </div>
             <div class="action-row">
                 <button type="submit" name="calculate" value="1">Рассчитать</button>
-                <a class="clear-link" href="lpf_notch.php">Сбросить результат</a>
+                <a class="clear-link" href="lpf_notch.php">Сбросить</a>
             </div>
             <?php if ($error !== ''): ?><div class="error" id="form-error" role="alert"><?= lpf_h($error) ?></div><?php endif; ?>
             <div class="stale-hint" id="stale-hint">Исходные данные изменены. Нажмите «Рассчитать», чтобы обновить номиналы и график.</div>
         </form>
+            </div>
+        </div>
     </section>
 
     <section class="panel" id="results-section">
         <h2>Схема и рассчитанные номиналы</h2>
         <p class="subtle small">Первая и последняя цепи — шунтирующие конденсаторы на землю. Cдоп подключается параллельно второй последовательной катушке L2 и настроен на 2Fc. Измеренные номиналы задаются отдельно для каждой физической детали.</p>
         <div class="result-layout">
-            <div class="diagram-wrap">
-                <img class="diagram" id="filter-diagram" src="<?= lpf_h($diagramSrc) ?>" alt="Схема ФНЧ <?= (int) $order ?>-го порядка с шунтирующими конденсаторами на входе и выходе и Cдоп параллельно L2" width="900" height="330">
-                <p class="diagram-caption" id="diagram-caption"><?= $order === 5 ? 'ФНЧ 5-го порядка: две последовательные катушки и три конденсатора на землю.' : 'ФНЧ 7-го порядка: три последовательные катушки и четыре конденсатора на землю.' ?> Cдоп включён параллельно L2.</p>
-            </div>
             <div class="result-column">
                 <div class="summary-grid">
                     <div class="metric"><span class="metric-label">Импеданс R</span><span class="metric-value calc-value"><?= $result !== null ? lpf_num($result['resistance']) . ' Ом' : '—' ?></span></div>
