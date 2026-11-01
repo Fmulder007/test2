@@ -233,12 +233,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         h2 { margin: 0 0 14px; font-size: 1.2rem; }
         p { line-height: 1.5; }
         .subtle { color: #5f6368; }
-        .form-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 16px; align-items: end; }
+        .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: end; }
         label { display: block; font-weight: 700; margin-bottom: 7px; }
         input, select, button { width: 100%; min-height: 43px; border: 1px solid #9aa0a6; border-radius: 6px; padding: 9px 11px; background: #fff; color: inherit; font: inherit; }
         button { border-color: #303f50; background: #303f50; color: #fff; font-weight: 700; cursor: pointer; }
         button:hover { background: #202d3a; }
-        .button-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+        .button-row { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+         .clear-link { color: #244f76; }
         .button-row button { width: auto; min-width: 170px; }
         .error { border: 1px solid #c62828; background: #fff5f5; padding: 12px 16px; border-radius: 6px; margin: 0 0 16px; }
         .error p { margin: 4px 0; }
@@ -255,7 +256,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         .hero-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, 390px); gap: 22px; align-items: center; margin-bottom: 18px; }
         .hero-image { display: block; width: 100%; height: auto; border: 1px solid #d7dce1; border-radius: 8px; background: #f6f9fb; }
         .back-link { display: inline-block; margin-top: 6px; color: #244f76; font-weight: 700; }
-        @media (max-width: 700px) { .hero-layout { grid-template-columns: minmax(0, 1fr); } .hero-image { max-width: 560px; } }
+        @media (max-width: 700px) { .calculator-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; } .hero-image { max-width: 100%; } }
         @media (max-width: 700px) {
             body { padding: 10px; }
             .panel { padding: 15px; }
@@ -268,7 +269,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             body { padding: 0; background: #fff; }
             main { max-width: none; }
             .panel { border: 0; padding: 0; margin: 0 0 12px; border-radius: 0; }
-            .screen-only { display: none !important; }
+            .screen-only, .clear-link { display: none !important; }
             .summary-item { break-inside: avoid; }
             h1 { font-size: 16pt; }
             h2 { font-size: 12pt; }
@@ -278,15 +279,17 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 <body>
 <main>
     <section class="panel">
-        <div class="hero-layout">
-            <div>
-                <h1>Калькулятор проволочных антенн</h1>
-                <p class="subtle">Начальные размеры диполя, Inverted Vee, EFHW, вертикалов и полноразмерных рамок. Без базы данных и внешних библиотек.</p>
-                <a class="back-link screen-only" href="index.php">← К списку калькуляторов</a>
-            </div>
-            <img class="hero-image" src="images/wire-antenna.svg" alt="Схема диполя с центральным питанием и условные изображения других проволочных антенн" width="760" height="260">
-        </div>
+        <h1>Калькулятор проволочных антенн</h1>
+        <p class="subtle">Начальные размеры диполя, Inverted Vee, EFHW, вертикалов и полноразмерных рамок. Без базы данных и внешних библиотек.</p>
+        <a class="back-link screen-only" href="index.php">← К списку калькуляторов</a>
+    </section>
 
+    <section class="panel">
+        <div class="calculator-layout">
+            <div class="diagram-column">
+                <img class="hero-image" src="images/wire-antenna.svg" alt="Схема диполя с центральным питанием и условные изображения других проволочных антенн" width="760" height="260">
+            </div>
+            <div class="form-column">
         <?php if ($errors !== []): ?>
             <div class="error" role="alert">
                 <?php foreach ($errors as $error): ?><p><?= h($error) ?></p><?php endforeach; ?>
@@ -314,8 +317,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             </div>
             <div class="button-row">
                 <button type="submit">Рассчитать</button>
+                <a class="clear-link" href="wire_antenna.php">Сбросить</a>
             </div>
         </form>
+            </div>
+        </div>
     </section>
 
     <?php if ($result !== null): ?>
