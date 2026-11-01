@@ -180,7 +180,7 @@ function lc_retune_formatCapacitance(float $farad): string
         .value-input, .unit-select { width: 100%; min-width: 0; border: 1px solid #b8c0c8; border-radius: 6px; padding: 10px; background: #fff; }
         .value-input:focus, .unit-select:focus { outline: 3px solid #c5e2f8; border-color: #3976a8; }
         .action-row { display: flex; flex-direction: column; align-items: stretch; gap: 10px; margin-top: 17px; }
-        .action-row button, .action-row .clear-button { width: 100%; }
+        .action-row button { width: 100%; }
         button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; border: 0; border-radius: 6px; padding: 11px 16px; color: #fff; background: #245c88; font-weight: 700; line-height: 1.25; cursor: pointer; }
         button:hover { background: #19476c; }
         button:focus-visible, a:focus-visible { outline: 3px solid #89bde5; outline-offset: 3px; }
@@ -191,10 +191,9 @@ function lc_retune_formatCapacitance(float $farad): string
         .formula { margin: 10px 0 0; color: #4d5b52; font-size: .95rem; line-height: 1.65; }
         .error { margin-top: 16px; padding: 12px; border: 1px solid #e4b7b7; border-radius: 8px; background: #fff5f5; color: #8b2323; line-height: 1.45; }
         .stale-hint { display: none; margin-top: 12px; color: #7a5200; font-size: .93rem; }
-        .clear-button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; border: 1px solid #b8c0c8; border-radius: 6px; padding: 10px 16px; color: #244f76; background: #fff; font-weight: 700; line-height: 1.25; text-decoration: none; }
-        .clear-button:hover { background: #f4f6f8; text-decoration: none; }
+        .clear-link { color: #244f76; }
         @media (max-width: 680px) { body { padding: 10px; } .panel { padding: 15px; } .top-layout { grid-template-columns: minmax(0, 1fr); } .diagram { margin: 0 0 12px; } }
-        @media print { body { padding: 0; background: #fff; } .panel { border-color: #aaa; break-inside: avoid; } .back-link, button, .clear-button, .stale-hint { display: none !important; } .result { border-color: #999; background: #fff; } }
+        @media print { body { padding: 0; background: #fff; } .panel { border-color: #aaa; break-inside: avoid; } .back-link, button, .clear-link, .stale-hint { display: none !important; } .result { border-color: #999; background: #fff; } }
     </style>
 </head>
 <body>
@@ -251,7 +250,7 @@ function lc_retune_formatCapacitance(float $farad): string
 
                     <div class="action-row">
                         <button type="submit" name="calculate" value="1">Рассчитать</button>
-                        <a class="clear-button" href="lc_retune.php">Очистить результаты</a>
+                        <a class="clear-link" href="lc_retune.php">Очистить результаты</a>
                     </div>
                     <div class="stale-hint" id="stale-hint">Исходные данные изменены. Нажми «Рассчитать», чтобы обновить результат.</div>
                 </form>
