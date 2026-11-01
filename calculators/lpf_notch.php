@@ -10,6 +10,8 @@
  */
 declare(strict_types=1);
 
+require_once __DIR__ . '/cct_frequency_axis.php';
+
 function lpf_h(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -400,6 +402,7 @@ function lpf_build_cct_from_profile(string $template, array $profile, array $val
 
     $axisMin = $cutoffHz * (float) $profile['axis_min_factor'];
     $axisMax = $cutoffHz * (float) $profile['axis_max_factor'];
+    [$axisMin, $axisMax] = cct_frequency_axis_bounds($axisMin, $axisMax);
     $axisCount = 0;
     $updated = preg_replace_callback('/(^Xax\\{\\r?\\n.*?^\\})/ms', static function (array $match) use ($axisMin, $axisMax, &$axisCount): string {
         $block = $match[0];
