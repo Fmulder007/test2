@@ -781,12 +781,16 @@ $parExportAvailable = ($parResult !== null
         a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid #89bde5; outline-offset: 2px; }
         .topology-heading { margin: 0 0 5px; }
         .topology-description { margin: 0 0 15px; color: #5f6368; font-size: .91rem; line-height: 1.45; }
-        .topology-layout { display: grid; grid-template-columns: minmax(220px, .78fr) minmax(0, 1.22fr); gap: 20px; align-items: start; }
+        .topology-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
         .diagram-wrap { min-width: 0; padding: 8px; border: 1px solid #d7dce1; border-radius: 8px; background: #fff; }
         .diagram { display: block; width: 100%; height: auto; }
         .diagram-caption { margin: 8px 2px 1px; color: #69727b; font-size: .82rem; line-height: 1.4; }
         .right-area { min-width: 0; }
         .grid-three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 11px; align-items: end; }
+         .input-fields { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+         .clear-link { color: #244f76; white-space: nowrap; }
+         .action-cell { display: flex; align-items: center; gap: 12px; }
+         .action-cell button { width: auto; }
         .field { min-width: 0; }
         .field-label { display: block; margin-bottom: 5px; font-size: .82rem; font-weight: 700; line-height: 1.3; }
         input, button { font: inherit; }
@@ -870,7 +874,7 @@ $parExportAvailable = ($parResult !== null
                 </div>
 
                 <div class="right-area">
-                    <div class="grid-three" aria-label="Исходные данные последовательной топологии">
+                    <div class="grid-three input-fields" aria-label="Исходные данные последовательной топологии">
                         <div class="field">
                             <label class="field-label" for="seq_resistance">Импеданс R, Ом</label>
                             <input class="value-input" id="seq_resistance" name="seq_resistance" type="text" inputmode="decimal" autocomplete="off" value="<?= dpf3_h($seqResistanceRaw) ?>" data-group="sequential">
@@ -898,6 +902,7 @@ $parExportAvailable = ($parResult !== null
                         </div>
                         <div class="action-cell">
                             <button type="submit" name="calculate" value="sequential" formnovalidate>Рассчитать</button>
+                            <a class="clear-link" href="#sequential-block" data-reset-group="sequential">Сбросить</a>
                         </div>
                     </div>
 
@@ -967,7 +972,7 @@ $parExportAvailable = ($parResult !== null
                 </div>
 
                 <div class="right-area">
-                    <div class="grid-three" aria-label="Исходные данные параллельной топологии">
+                    <div class="grid-three input-fields" aria-label="Исходные данные параллельной топологии">
                         <div class="field">
                             <label class="field-label" for="par_resistance">Импеданс R, Ом</label>
                             <input class="value-input" id="par_resistance" name="par_resistance" type="text" inputmode="decimal" autocomplete="off" value="<?= dpf3_h($parResistanceRaw) ?>" data-group="parallel">
@@ -986,6 +991,7 @@ $parExportAvailable = ($parResult !== null
                         </div>
                         <div class="action-cell">
                             <button type="submit" name="calculate" value="parallel" formnovalidate>Рассчитать</button>
+                            <a class="clear-link" href="#parallel-block" data-reset-group="parallel">Сбросить</a>
                         </div>
                     </div>
 
@@ -1351,6 +1357,35 @@ $parExportAvailable = ($parResult !== null
             valueLabel.textContent = activeMode === 'bandwidth' ? 'Полоса ΔF, кГц' : 'Индуктивность L1, мкГн';
         }
     }));
+
+    // Сброс каждого варианта затрагивает только его поля, номиналы и график.
+    form.querySelectorAll('[data-reset-group]').forEach(link => {
+        link.addEventListener('click', event => {
+            event.preventDefault();
+            const group = link.dataset.resetGroup;
+            const prefix = group === 'sequential' ? 'seq' : 'par';
+            if (group === 'sequential') {
+                document.getElementById('seq_resistance').value = '50';
+                document.getElementById('seq_frequency').value = '7.1';
+                modeInputs.forEach(input => { input.checked = input.value === 'bandwidth'; });
+                activeMode = 'bandwidth';
+                modeValues.bandwidth = '500';
+                modeValues.inductance = '4.7';
+                if (valueInput) valueInput.value = '500';
+                if (valueLabel) valueLabel.textContent = 'Полоса ΔF, кГц';
+            } else if (group === 'parallel') {
+                document.getElementById('par_resistance').value = '50';
+                document.getElementById('par_frequency').value = '7.1';
+                document.getElementById('par_bandwidth').value = '500';
+                document.getElementById('par_l1').value = '10';
+            } else {
+                return;
+            }
+            markOutdated(group);
+            const stale = document.getElementById(prefix + '-stale');
+            if (stale) stale.hidden = true;
+        });
+    });
 
     // Восстанавливаем оба графика после перезагрузки страницы, включая расчёт соседней топологии.
     drawResponseChart('sequential');
