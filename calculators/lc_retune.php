@@ -192,7 +192,7 @@ function lc_retune_formatCapacitance(float $farad): string
         .error { margin-top: 16px; padding: 12px; border: 1px solid #e4b7b7; border-radius: 8px; background: #fff5f5; color: #8b2323; line-height: 1.45; }
         .stale-hint { display: none; margin-top: 12px; color: #7a5200; font-size: .93rem; }
         .clear-link { color: #244f76; }
-        @media (max-width: 680px) { body { padding: 10px; } .panel { padding: 15px; } .top-layout { grid-template-columns: minmax(0, 1fr); } .diagram { margin: 0 0 12px; } }
+        @media (max-width: 680px) { body { padding: 10px; } .panel { padding: 15px; } .top-layout { grid-template-columns: minmax(0, 1fr); } .diagram { margin: 0 0 12px; } .action-row { flex-direction: column; align-items: stretch; } .action-row button { width: 100%; } }
         @media print { body { padding: 0; background: #fff; } .panel { border-color: #aaa; break-inside: avoid; } .back-link, button, .clear-link, .stale-hint { display: none !important; } .result { border-color: #999; background: #fff; } }
     </style>
 </head>
@@ -250,7 +250,7 @@ function lc_retune_formatCapacitance(float $farad): string
 
                     <div class="action-row">
                         <button type="submit" name="calculate" value="1">Рассчитать</button>
-                        <a class="clear-link" href="lc_retune.php">Очистить результаты</a>
+                        <a class="clear-link" href="lc_retune.php">Сбросить</a>
                     </div>
                     <div class="stale-hint" id="stale-hint">Исходные данные изменены. Нажми «Рассчитать», чтобы обновить результат.</div>
                 </form>
