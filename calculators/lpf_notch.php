@@ -623,17 +623,18 @@ $cutoffHelp = $response === 'butter'
         #results-section, #form-error { scroll-margin-top: 12px; }
         .back-link { display: inline-block; margin-top: 4px; color: #244f76; font-weight: 700; text-decoration: none; }
         .back-link:hover, .clear-link:hover { text-decoration: underline; }
-        a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid #89bde5; outline-offset: 3px; }
+        a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #89bde5; outline-offset: 3px; }
         .note { padding: 12px 14px; border-left: 4px solid #3c7ca7; background: #f2f7fb; border-radius: 5px; line-height: 1.45; }
         .calculator-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
          .input-column { min-width: 0; }
-         .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: end; }
-        .field { min-width: 0; }
-        .field-label { display: block; font-weight: 700; margin-bottom: 6px; line-height: 1.35; }
-        input, button { font: inherit; }
-        .value-input { display: block; width: 100%; min-width: 0; min-height: 43px; border: 1px solid #b8c0c8; border-radius: 6px; padding: 10px 11px; background: #fff; color: #202124; }
-        .field-hint { display: block; color: #69727b; font-size: .86rem; line-height: 1.4; margin-top: 5px; }
-        .choice-group { margin-top: 18px; }
+         .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; align-items: center; }
+        .field { display: grid; grid-template-columns: minmax(145px, .85fr) minmax(0, 1.15fr); align-items: center; gap: 10px; min-width: 0; }
+        .field-label { display: block; margin: 0; font-weight: 700; line-height: 1.3; }
+        input, select, button { font: inherit; }
+        .value-input, .form-select { display: block; width: 100%; min-width: 0; min-height: 39px; border: 1px solid #b8c0c8; border-radius: 6px; padding: 8px 10px; background: #fff; color: #202124; }
+        .value-input:focus, .form-select:focus { outline: 3px solid #c5e2f8; border-color: #3976a8; }
+        .field-hint { display: none; }
+        .choice-group { margin-top: 0; }
         .choice-heading { display: block; font-weight: 700; margin: 0 0 8px; }
         .choice-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
         .choice { position: relative; display: flex; align-items: flex-start; gap: 11px; min-width: 0; padding: 12px 13px; border: 1px solid #d7dce1; border-radius: 8px; background: #fff; cursor: pointer; }
@@ -643,7 +644,7 @@ $cutoffHelp = $response === 'butter'
         .choice-text { display: block; min-width: 0; line-height: 1.4; }
         .choice-title { display: block; font-weight: 700; }
         .choice-description { display: block; color: #5f6368; font-size: .9rem; margin-top: 3px; }
-        .action-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 18px; }
+        .action-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 12px; }
         button { display: inline-flex; align-items: center; justify-content: center; min-height: 43px; border: 0; border-radius: 6px; padding: 11px 17px; color: #fff; background: #245c88; font-weight: 700; line-height: 1.25; cursor: pointer; }
         button:hover { background: #19476c; }
         .export-cct-button { background: #28623f; }
@@ -706,9 +707,12 @@ $cutoffHelp = $response === 'butter'
             .diagram { max-width: 100%; }
             .chart-box { height: 340px; }
             .choice { padding: 11px; }
+            .field { grid-template-columns: minmax(130px, .85fr) minmax(0, 1.15fr); gap: 8px; }
         }
         @media (max-width: 440px) {
             .form-grid { grid-template-columns: minmax(0, 1fr); }
+            .field { grid-template-columns: minmax(112px, .8fr) minmax(0, 1.2fr); gap: 7px; }
+            .field-label { font-size: .9rem; }
             .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .metric { padding: 9px; }
             .metric-value { font-size: 1rem; }
@@ -749,41 +753,26 @@ $cutoffHelp = $response === 'butter'
                 <div class="field">
                     <label class="field-label" for="resistance">Импеданс, Ом</label>
                     <input class="value-input" id="resistance" name="resistance" type="text" inputmode="decimal" autocomplete="off" value="<?= lpf_h($resistanceRaw) ?>" required>
-                    <span class="field-hint">Одинаковое сопротивление источника и нагрузки.</span>
                 </div>
                 <div class="field">
                     <label class="field-label" for="cutoff">Частота среза Fc, МГц</label>
                     <input class="value-input" id="cutoff" name="cutoff" type="text" inputmode="decimal" autocomplete="off" value="<?= lpf_h($cutoffRaw) ?>" required>
-                    <span class="field-hint"><?= lpf_h($cutoffHelp) ?></span>
                 </div>
             </div>
 
-            <div class="choice-group">
-                <span class="choice-heading">Тип характеристики</span>
-                <div class="choice-list" role="radiogroup" aria-label="Тип характеристики фильтра">
-                    <label class="choice<?= $response === 'butter' ? ' selected' : '' ?>">
-                        <input type="radio" name="response" value="butter"<?= lpf_checked($response, 'butter') ?>>
-                        <span class="choice-text"><span class="choice-title">Баттерворта</span><span class="choice-description">Максимально ровная полоса пропускания; Fc соответствует уровню −3 дБ до установки Cдоп.</span></span>
-                    </label>
-                    <label class="choice<?= $response === 'cheby' ? ' selected' : '' ?>">
-                        <input type="radio" name="response" value="cheby"<?= lpf_checked($response, 'cheby') ?>>
-                        <span class="choice-text"><span class="choice-title">Чебышёва, 0,1 дБ</span><span class="choice-description">Более крутой спад и небольшая равноволновая пульсация; Fc — край полосы пульсаций.</span></span>
-                    </label>
-                </div>
+            <div class="field">
+                <label class="field-label" for="response">Тип АЧХ</label>
+                <select class="form-select" id="response" name="response">
+                    <option value="butter"<?= $response === 'butter' ? ' selected' : '' ?>>Баттерворта</option>
+                    <option value="cheby"<?= $response === 'cheby' ? ' selected' : '' ?>>Чебышёва, 0,1 дБ</option>
+                </select>
             </div>
-
-            <div class="choice-group">
-                <span class="choice-heading">Топология фильтра</span>
-                <div class="choice-list" role="radiogroup" aria-label="Порядок фильтра">
-                    <label class="choice<?= $orderChoice === '5' ? ' selected' : '' ?>">
-                        <input type="radio" name="order" value="5"<?= lpf_checked($orderChoice, '5') ?>>
-                        <span class="choice-text"><span class="choice-title">ФНЧ 5-го порядка</span><span class="choice-description">2 последовательные катушки и 3 шунтирующих конденсатора на землю.</span></span>
-                    </label>
-                    <label class="choice<?= $orderChoice === '7' ? ' selected' : '' ?>">
-                        <input type="radio" name="order" value="7"<?= lpf_checked($orderChoice, '7') ?>>
-                        <span class="choice-text"><span class="choice-title">ФНЧ 7-го порядка</span><span class="choice-description">3 последовательные катушки и 4 шунтирующих конденсатора на землю.</span></span>
-                    </label>
-                </div>
+            <div class="field">
+                <label class="field-label" for="order">Топология</label>
+                <select class="form-select" id="order" name="order">
+                    <option value="5"<?= $orderChoice === '5' ? ' selected' : '' ?>>ФНЧ 5-го порядка</option>
+                    <option value="7"<?= $orderChoice === '7' ? ' selected' : '' ?>>ФНЧ 7-го порядка</option>
+                </select>
             </div>
             <div class="action-row">
                 <button type="submit" name="calculate" value="1">Рассчитать</button>
@@ -926,8 +915,8 @@ $cutoffHelp = $response === 'butter'
     let stale = false;
 
     function selectedValue(name) {
-        const selected = form.querySelector('input[name="' + name + '"]:checked');
-        return selected ? selected.value : (name === 'order' ? '5' : 'butter');
+        const control = form.elements.namedItem(name);
+        return control ? control.value : (name === 'order' ? '5' : 'butter');
     }
 
     function updateDiagram() {
@@ -942,16 +931,8 @@ $cutoffHelp = $response === 'butter'
             : 'ФНЧ 7-го порядка: 3 последовательные катушки и 4 конденсатора на землю.') + ' Cдоп подключён параллельно L2.';
         orderSummary.textContent = order + '-й';
         componentTables.forEach(table => { table.hidden = table.dataset.order !== order; });
-        document.querySelectorAll('.choice').forEach(label => {
-            const input = label.querySelector('input');
-            label.classList.toggle('selected', !!input && input.checked);
-        });
         const response = selectedValue('response');
         legendBase.textContent = response === 'butter' ? 'Исходный фильтр Баттерворта' : 'Исходный фильтр Чебышёва, 0,1 дБ';
-        const fcHint = document.querySelector('label[for="cutoff"] + input + .field-hint');
-        if (fcHint) fcHint.textContent = response === 'butter'
-            ? 'Для Баттерворта Fc — уровень −3 дБ до установки Cдоп.'
-            : 'Для Чебышёва Fc — край полосы пульсаций 0,1 дБ до установки Cдоп.';
     }
 
     function markStale() {
@@ -968,7 +949,7 @@ $cutoffHelp = $response === 'butter'
         staleHint.style.display = 'block';
     }
 
-    form.querySelectorAll('input').forEach(control => {
+    form.querySelectorAll('input:not([type="hidden"]), select').forEach(control => {
         control.addEventListener('input', markStale);
         control.addEventListener('change', () => { updateDiagram(); markStale(); });
     });
