@@ -1,0 +1,11 @@
+Options -Indexes
+
+# Не выдавать настройки, SQL-дамп, документы и резервные копии напрямую.
+<FilesMatch "(?i)(^settings\.cfg$|\.cfg$|\.sql$|\.txt$|\.bak$|\.old$|\.log$|\.ini$|\.dist$|\.sample$)">
+    Require all denied
+</FilesMatch>
+
+# Дополнительно блокируем скрытые файлы, кроме самого .well-known при необходимости.
+<FilesMatch "^\.(?!well-known)">
+    Require all denied
+</FilesMatch>
