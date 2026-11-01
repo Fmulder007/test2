@@ -218,7 +218,7 @@ $voltageTypeLabels = [
         .stale-hint { display: none; margin-top: 12px; color: #7a5200; font-size: .93rem; }
         .small { font-size: .9rem; }
         .clear-link { color: #244f76; }
-        @media (max-width: 760px) {
+        @media (max-width: 680px) {
             .calculator-layout { grid-template-columns: minmax(0, 1fr); }
         }
         @media (max-width: 680px) {
@@ -296,7 +296,7 @@ $voltageTypeLabels = [
 
             <div class="action-row">
                 <button type="submit" name="calculate" value="1">Рассчитать</button>
-                <a class="clear-link" href="rf_power.php">Очистить результат</a>
+                <a class="clear-link" href="rf_power.php">Сбросить</a>
             </div>
             <div class="stale-hint" id="stale-hint">Параметры изменены. Нажми «Рассчитать», чтобы обновить результат.</div>
         </form>
