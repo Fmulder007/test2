@@ -169,8 +169,11 @@ function lc_retune_formatCapacitance(float $farad): string
         .form-column { min-width: 0; }
         .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: end; }
         .note { padding: 12px 14px; border-left: 4px solid #3c7ca7; background: #f2f7fb; border-radius: 5px; line-height: 1.45; }
-        .mode-field { margin: 0 0 17px; padding: 0; border: 0; }
-        .field-label, .mode-field legend { display: block; font-weight: 700; margin-bottom: 8px; }
+        .mode-field { display: grid; grid-template-columns: minmax(155px, .85fr) minmax(0, 1.15fr); align-items: center; gap: 10px; margin: 0 0 8px; padding: 0; border: 0; }
+        .field-label, .mode-field legend { display: block; margin: 0; font-weight: 700; }
+        .field { display: grid; grid-template-columns: minmax(155px, .85fr) minmax(0, 1.15fr); align-items: center; gap: 10px; }
+        .form-grid { gap: 8px; }
+        .value-input, .unit-select { min-height: 39px; }
         .mode-options { display: flex; flex-wrap: wrap; gap: 12px 24px; }
         .mode-options label { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
         .mode-options input { width: 17px; height: 17px; margin: 0; accent-color: #245c88; }
@@ -192,7 +195,7 @@ function lc_retune_formatCapacitance(float $farad): string
         .error { margin-top: 16px; padding: 12px; border: 1px solid #e4b7b7; border-radius: 8px; background: #fff5f5; color: #8b2323; line-height: 1.45; }
         .stale-hint { display: none; margin-top: 12px; color: #7a5200; font-size: .93rem; }
         .clear-link { color: #244f76; }
-        @media (max-width: 680px) { body { padding: 10px; } .panel { padding: 15px; } .top-layout { grid-template-columns: minmax(0, 1fr); } .diagram { margin: 0 0 12px; } .action-row { flex-direction: column; align-items: stretch; } .action-row button { width: 100%; } }
+        @media (max-width: 680px) { body { padding: 10px; } .panel { padding: 15px; } .top-layout { grid-template-columns: minmax(0, 1fr); } .diagram { margin: 0 0 12px; } .action-row { flex-direction: row; align-items: center; } .action-row button { width: auto; } .field, .mode-field { grid-template-columns: minmax(125px, .85fr) minmax(0, 1.15fr); gap: 8px; } }
         @media print { body { padding: 0; background: #fff; } .panel { border-color: #aaa; break-inside: avoid; } .back-link, button, .clear-link, .stale-hint { display: none !important; } .result { border-color: #999; background: #fff; } }
     </style>
 </head>
@@ -212,11 +215,13 @@ function lc_retune_formatCapacitance(float $farad): string
             <div class="form-column">
                 <h2>Исходные данные</h2>
                 <form id="retune-form" method="post" action="">
-                    <fieldset class="mode-field mode-options">
-                        <legend>Что пересчитываем?</legend>
-                        <label><input type="radio" name="mode" value="capacitance"<?= $mode === 'capacitance' ? ' checked' : '' ?>> Пересчитать ёмкость</label>
-                        <label><input type="radio" name="mode" value="inductance"<?= $mode === 'inductance' ? ' checked' : '' ?>> Пересчитать индуктивность</label>
-                    </fieldset>
+                    <div class="mode-field">
+                        <label class="field-label" for="mode">Что пересчитать</label>
+                        <select class="unit-select" id="mode" name="mode">
+                            <option value="capacitance"<?= $mode === 'capacitance' ? ' selected' : '' ?>>Ёмкость</option>
+                            <option value="inductance"<?= $mode === 'inductance' ? ' selected' : '' ?>>Индуктивность</option>
+                        </select>
+                    </div>
 
                     <div class="form-grid">
                         <div class="field">
@@ -293,7 +298,7 @@ function lc_retune_formatCapacitance(float $farad): string
     let previousType = parameterUnit.dataset.type;
 
     function selectedMode() {
-        return form.querySelector('input[name="mode"]:checked').value;
+        return form.elements.namedItem('mode').value;
     }
 
     function updateParameterType(resetValue) {
@@ -325,11 +330,9 @@ function lc_retune_formatCapacitance(float $farad): string
         if (hint) hint.style.display = 'block';
     }
 
-    form.querySelectorAll('input[name="mode"]').forEach(radio => {
-        radio.addEventListener('change', () => {
-            updateParameterType(true);
-            markOutdated();
-        });
+    form.elements.namedItem('mode').addEventListener('change', () => {
+        updateParameterType(true);
+        markOutdated();
     });
     if (result || error) {
         form.querySelectorAll('input, select').forEach(control => {
