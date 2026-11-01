@@ -57,39 +57,6 @@ function nearestStandardCapacitor(float $value): float
     return (($value - $low) <= ($high - $value)) ? $low : $high;
 }
 
-/**
- * Перевод дюймов в формат футы-дюймы с округлением дробной части
- * до ближайшей 1/32 дюйма, как в исходной программе.
- */
-function inchesToFeetAndInches(float $inches): string
-{
-    $feet = (int) floor($inches / 12.0);
-    $remainder = $inches - ($feet * 12.0);
-    $wholeInches = (int) floor($remainder);
-    $numerator = (int) round(($remainder - $wholeInches) * 32.0);
-
-    if ($numerator >= 32) {
-        $wholeInches++;
-        $numerator = 0;
-    }
-    if ($wholeInches >= 12) {
-        $feet++;
-        $wholeInches = 0;
-    }
-
-    $fraction = '';
-    if ($numerator > 0) {
-        $denominator = 32;
-        while ($numerator % 2 === 0) {
-            $numerator = intdiv($numerator, 2);
-            $denominator = intdiv($denominator, 2);
-        }
-        $fraction = ' ' . $numerator . '/' . $denominator;
-    }
-
-    return $feet . "'-" . $wholeInches . $fraction . '"';
-}
-
 /** Форматирование ёмкости по правилам таблицы старой программы. */
 function fmtCap(float $value): string
 {
@@ -115,22 +82,17 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         if (!is_finite($frequency) || $frequency <= 0.0) {
             $errors[] = 'Частота должна быть числом больше нуля.';
         } else {
-            // Формула из CCDANTEN.BAS: полная длина волны в дюймах.
-            $totalInches = (300.0 / $frequency) * 39.37;
-            $wireDiameters = [
-                12 => 0.0808,
-                14 => 0.0641,
-                16 => 0.0508,
-                18 => 0.0403,
-                20 => 0.0320,
-            ];
+            // Все линейные размеры и диаметры проводника задаются в метрической системе.
+            $totalLengthMeters = 300.0 / $frequency;
+            $wireDiametersMm = [2.05232, 1.62814, 1.29032, 1.02362, 0.81280];
             $totalCapacitanceFactors = [];
             $validFormula = true;
 
-            foreach ($wireDiameters as $awg => $diameter) {
-                // Формула индуктивности прямого проводника из оригинала.
-                $inductance = 0.00508 * $totalInches
-                    * (log((4.0 * $totalInches) / $diameter) - 0.75);
+            foreach ($wireDiametersMm as $wireIndex => $diameterMm) {
+                // Эквивалент исходной формулы индуктивности, непосредственно в метрах.
+                $diameterMeters = $diameterMm / 1000.0;
+                $inductance = 0.2 * $totalLengthMeters
+                    * (log((4.0 * $totalLengthMeters) / $diameterMeters) - 0.75);
 
                 if (!is_finite($inductance) || $inductance <= 0.0) {
                     $validFormula = false;
@@ -145,7 +107,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     $validFormula = false;
                     break;
                 }
-                $totalCapacitanceFactors[$awg] = $ctot;
+                $totalCapacitanceFactors[$wireIndex] = $ctot;
             }
 
             if (!$validFormula) {
@@ -159,27 +121,25 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     $capacitors = $sections - $capacitorOffset;
                     $capValues = [];
 
-                    foreach ($wireDiameters as $awg => $_diameter) {
+                    foreach ($wireDiametersMm as $wireIndex => $_diameterMm) {
                         if ($capacitors <= 0) {
-                            $capValues[$awg] = null;
+                            $capValues[$wireIndex] = null;
                             continue;
                         }
 
-                        $capValue = $totalCapacitanceFactors[$awg] * $capacitors;
+                        $capValue = $totalCapacitanceFactors[$wireIndex] * $capacitors;
                         if ($capacitorMode === 'nearest') {
                             $capValue = nearestStandardCapacitor($capValue);
                         }
-                        $capValues[$awg] = $capValue;
+                        $capValues[$wireIndex] = $capValue;
                     }
 
-                    $spacingInches = $totalInches / $sections;
+                    $spacingMeters = $totalLengthMeters / $sections;
                     $rows[] = [
                         'sections' => $sections,
                         'capacitors' => $capacitors,
                         'cap_values' => $capValues,
-                        'spacing_inches' => $spacingInches,
-                        'spacing_meters' => $spacingInches * 25.4 / 1000.0,
-                        'spacing_feet_inches' => inchesToFeetAndInches($spacingInches),
+                        'spacing_meters' => $spacingMeters,
                     ];
                 }
 
@@ -187,11 +147,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     'frequency' => $frequency,
                     'antenna_type' => $antennaType,
                     'capacitor_mode' => $capacitorMode,
-                    'wavelength_meters' => 300.0 / $frequency,
-                    'total_inches' => $totalInches,
-                    'total_feet' => $totalInches / 12.0,
-                    'total_meters' => $totalInches * 25.4 / 1000.0,
-                    'total_feet_inches' => inchesToFeetAndInches($totalInches),
+                    'wavelength_meters' => $totalLengthMeters,
+                    'total_meters' => $totalLengthMeters,
                     'rows' => $rows,
                 ];
             }
@@ -278,7 +235,7 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
         table { border-collapse: collapse; width: 100%; min-width: 900px; background: #fff; font-size: .94rem; }
         th, td { border-bottom: 1px solid #d7dce1; border-right: 1px solid #e4e7eb; padding: 8px 9px; text-align: right; white-space: nowrap; }
         th { background: #edf1f4; font-weight: 700; }
-        .awg-metric { font-size: .78rem; line-height: 1.35; font-weight: 400; color: #4f555b; }
+        .wire-metric { font-size: .78rem; line-height: 1.35; font-weight: 400; color: #4f555b; }
         thead tr:first-child th { text-align: center; }
         th:first-child, td:first-child { text-align: center; }
         tbody tr:nth-child(even) { background: #f8fafb; }
@@ -385,8 +342,7 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
                 </div>
                 <div class="summary-item">
                     <span>Полная длина провода</span>
-                    <strong><?= h($calculation['total_feet_inches']) ?></strong><br>
-                    <span><?= fmt($calculation['total_feet'], 2) ?> фута · <?= fmt($calculation['total_inches'], 2) ?> дюйма · <?= fmt($calculation['total_meters'], 3) ?> м</span>
+                    <strong><?= fmt($calculation['total_meters'], 3) ?> м</strong>
                 </div>
                 <div class="summary-item">
                     <span>Вариантов в таблице</span>
@@ -401,16 +357,12 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
                         <th rowspan="2">Секций<br>провода</th>
                         <th rowspan="2">Конденсаторов</th>
                         <th colspan="5">Ёмкость каждого конденсатора, пФ</th>
-                        <th colspan="2">Расстояние между конденсаторами</th>
+                        <th rowspan="2">Расстояние между конденсаторами, м</th>
                     </tr>
                     <tr>
-                        <th>AWG 12<br><small class="awg-metric">Ø 2,05 мм<br>3,31 мм²</small></th>
-                        <th>AWG 14<br><small class="awg-metric">Ø 1,63 мм<br>2,08 мм²</small></th>
-                        <th>AWG 16<br><small class="awg-metric">Ø 1,29 мм<br>1,31 мм²</small></th>
-                        <th>AWG 18<br><small class="awg-metric">Ø 1,02 мм<br>0,82 мм²</small></th>
-                        <th>AWG 20<br><small class="awg-metric">Ø 0,81 мм<br>0,52 мм²</small></th>
-                        <th>Футы-дюймы</th>
-                        <th>Метры</th>
+                        <?php foreach ($wireDiametersMm as $diameterMm): ?>
+                            <th><strong>Ø <?= fmt($diameterMm, 2) ?> мм</strong><br><small class="wire-metric"><?= fmt(M_PI * ($diameterMm ** 2) / 4.0, 2) ?> мм²</small></th>
+                        <?php endforeach; ?>
                     </tr>
                     </thead>
                     <tbody>
@@ -418,10 +370,9 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
                         <tr>
                             <td><?= (int) $row['sections'] ?></td>
                             <td><?= (int) $row['capacitors'] ?></td>
-                            <?php foreach ([12, 14, 16, 18, 20] as $awg): ?>
-                                <td><?= $row['cap_values'][$awg] === null ? '—' : h(fmtCap((float) $row['cap_values'][$awg])) ?></td>
+                            <?php foreach ($wireDiametersMm as $wireIndex => $_diameterMm): ?>
+                                <td><?= $row['cap_values'][$wireIndex] === null ? '—' : h(fmtCap((float) $row['cap_values'][$wireIndex])) ?></td>
                             <?php endforeach; ?>
-                            <td><?= h($row['spacing_feet_inches']) ?></td>
                             <td><?= fmt((float) $row['spacing_meters'], 3) ?></td>
                         </tr>
                     <?php endforeach; ?>
@@ -429,13 +380,13 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
                 </table>
             </div>
 
-            <p class="notes">Под AWG указаны диаметр (Ø) и площадь поперечного сечения в метрических единицах для голого круглого проводника. Размеры дробных дюймов округлены до ближайшей 1/32 дюйма. AWG — американский калибр: чем меньше номер, тем толще провод. «—» означает, что конденсаторы в этом варианте не требуются.</p>
+            <p class="notes">Под каждым диаметром указана площадь поперечного сечения голого круглого проводника. «—» означает, что конденсаторы в этом варианте не требуются.</p>
             <p class="notes">Расчёт повторяет формулы исходной программы. Он не моделирует диаграмму направленности, входное сопротивление, напряжение на конденсаторах или КСВ готовой антенны. Используйте расчёт как отправную точку для практической конструкции.</p>
         </section>
     <?php else: ?>
         <section class="panel screen-only">
             <h2>Как пользоваться</h2>
-            <p>Выберите тип антенны, укажите нижнюю частоту рабочего диапазона и выберите формат ёмкостей. Калькулятор сформирует таблицу конфигураций для провода AWG 12, 14, 16, 18 и 20.</p>
+            <p>Выберите тип антенны, укажите нижнюю частоту рабочего диапазона и выберите формат ёмкостей. Калькулятор сформирует таблицу конфигураций для пяти метрических диаметров провода, указанных в заголовках столбцов.</p>
             <p class="notes">В исходной программе для диполя показываются 25 конфигураций, а для вертикальной антенны или Long Wire — 50. Рекомендуется проектировать антенну для нижней частоты диапазона. Для конденсаторов автор исходной программы рекомендовал серебряно-слюдяные с допуском 5%.</p>
         </section>
     <?php endif; ?>
