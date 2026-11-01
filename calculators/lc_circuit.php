@@ -212,8 +212,11 @@ if ($result !== null) {
         .form-column { min-width: 0; }
         .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: end; }
         .note { padding: 12px 14px; border-left: 4px solid #3c7ca7; background: #f2f7fb; border-radius: 5px; line-height: 1.45; }
-        .field { min-width: 0; }
-        .field-label { display: block; font-weight: 700; margin-bottom: 6px; }
+        .field { display: grid; grid-template-columns: minmax(155px, .85fr) minmax(0, 1.15fr); align-items: center; gap: 10px; min-width: 0; }
+        .field-label { display: block; margin: 0; font-weight: 700; }
+        .mode-field { display: grid; grid-template-columns: minmax(155px, .85fr) minmax(0, 1.15fr); align-items: center; gap: 10px; margin-bottom: 8px; }
+        .form-grid { gap: 8px; }
+        .value-input, .unit-select, .mode-select { min-height: 39px; }
         select, input, button { font: inherit; }
         .value-row { display: grid; grid-template-columns: minmax(0, 1fr) 112px; gap: 8px; }
         .value-input, .unit-select, .mode-select { width: 100%; min-width: 0; border: 1px solid #b8c0c8; border-radius: 6px; padding: 10px; background: #fff; }
@@ -232,7 +235,7 @@ if ($result !== null) {
         .stale-hint { display: none; margin-top: 12px; color: #7a5200; font-size: .93rem; }
         .small { font-size: .9rem; }
         .clear-link { color: #244f76; }
-        @media (max-width: 680px) { body { padding: 10px; } .panel { padding: 15px; } .top-layout { grid-template-columns: minmax(0, 1fr); } .diagram { margin: 0 0 12px; } .action-row { flex-direction: column; align-items: stretch; } .action-row button { width: 100%; } }
+        @media (max-width: 680px) { body { padding: 10px; } .panel { padding: 15px; } .top-layout { grid-template-columns: minmax(0, 1fr); } .diagram { margin: 0 0 12px; } .action-row { flex-direction: row; align-items: center; } .action-row button { width: auto; } .field, .mode-field { grid-template-columns: minmax(125px, .85fr) minmax(0, 1.15fr); gap: 8px; } }
         @media print { body { padding: 0; background: #fff; } .panel { border-color: #aaa; break-inside: avoid; } .no-print, .back-link, button, .clear-link, .stale-hint { display: none !important; } .result { border-color: #999; background: #fff; } }
     </style>
 </head>
