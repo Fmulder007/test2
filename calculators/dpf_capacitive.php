@@ -710,12 +710,12 @@ if ($isDownloadRequest) {
         .back-link { display: inline-block; margin-top: 4px; color: #244f76; font-weight: 700; text-decoration: none; }
         .back-link:hover { text-decoration: underline; }
         a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid #89bde5; outline-offset: 2px; }
-        .work-layout { display: grid; grid-template-columns: minmax(230px, .78fr) minmax(0, 1.22fr); gap: 20px; align-items: start; }
+        .work-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
         .diagram-wrap { min-width: 0; padding: 8px; border: 1px solid #d7dce1; border-radius: 8px; background: #fff; }
         .diagram { display: block; width: 100%; height: auto; }
         .diagram-caption { margin: 8px 2px 1px; color: #69727b; font-size: .8rem; line-height: 1.4; }
         .input-area { min-width: 0; }
-        .input-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .input-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
         .field { min-width: 0; }
         .field-label { display: block; margin-bottom: 5px; font-size: .82rem; font-weight: 700; line-height: 1.3; }
         input, button { font: inherit; }
@@ -753,6 +753,8 @@ if ($isDownloadRequest) {
             .panel { padding: 15px; }
             .work-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; }
             .diagram-wrap { max-width: 100%; }
+            .action-row { flex-direction: column; align-items: stretch; }
+            .action-row button { width: 100%; }
             .diagram { max-height: 190px; object-fit: contain; }
             .result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
@@ -760,6 +762,8 @@ if ($isDownloadRequest) {
             .input-grid { grid-template-columns: minmax(0, 1fr); gap: 9px; }
             th, td { padding: 8px 6px; font-size: .82rem; }
             .chart-legend { font-size: .74rem; gap: 7px 12px; }
+             .action-row { flex-direction: column; align-items: stretch; }
+             .action-row button { width: 100%; }
         }
     </style>
 </head>
@@ -798,7 +802,7 @@ if ($isDownloadRequest) {
                         <input class="value-input" id="rout" name="rout" type="text" inputmode="decimal" value="<?= dpc_h($values['rout']) ?>" required>
                     </div>
                 </div>
-                <div class="action-row"><button type="submit">Рассчитать ДПФ</button></div>
+                <div class="action-row"><button type="submit">Рассчитать ДПФ</button><a class="clear-link" href="dpf_capacitive.php">Сбросить</a></div>
                 <?php if ($error !== ''): ?><div class="error" role="alert"><?= dpc_h($error) ?></div><?php endif; ?>
                 <p class="note">Индуктивность выбирается автоматически; масштаб подбирается так, чтобы реактивное сопротивление катушки было около 300 Ом на центральной частоте. В расчёте используются идеальные компоненты без потерь и паразитных параметров.</p>
             </div>
