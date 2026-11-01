@@ -209,8 +209,12 @@ $formatters = ['u' => 'oh_formatVoltage', 'i' => 'oh_formatCurrent', 'r' => 'oh_
          .diagram-column, .form-column { min-width: 0; }
          .diagram { margin: 0 0 14px; }
          .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: end; }
-        .field { min-width: 0; }
-        .field-label { display: block; font-weight: 700; margin-bottom: 6px; }
+        .field { display: grid; grid-template-columns: minmax(120px, .7fr) minmax(0, 1.3fr); align-items: center; gap: 10px; min-width: 0; }
+        .field-label { display: block; margin: 0; font-weight: 700; }
+        .quantity-input-row { display: grid; grid-template-columns: minmax(112px, .85fr) minmax(0, 1.15fr); gap: 8px; min-width: 0; }
+        .quantity-value-row { display: grid; grid-template-columns: minmax(0, 1fr) 86px; gap: 6px; min-width: 0; }
+        .form-grid { gap: 8px; }
+        .value-input, .unit-select, .quantity-select { min-height: 39px; }
         select, input, button { font: inherit; }
         .value-row { display: grid; grid-template-columns: minmax(0, 1fr) 112px; gap: 8px; }
         .value-input, .unit-select, .quantity-select { width: 100%; min-width: 0; border: 1px solid #b8c0c8; border-radius: 6px; padding: 10px; background: #fff; }
@@ -343,8 +347,8 @@ $formatters = ['u' => 'oh_formatVoltage', 'i' => 'oh_formatCurrent', 'r' => 'oh_
         select.value = units[quantity].some(([value]) => value === prior) ? prior : defaults[quantity].unit;
     }
     function updateLabels(reset1 = false, reset2 = false) {
-        document.querySelector('label[for="known1"]').textContent = 'Известная величина № 1 — ' + names[q1.value];
-        document.querySelector('label[for="known2"]').textContent = 'Известная величина № 2 — ' + names[q2.value];
+        document.querySelector('label[for="known1"]').textContent = 'Величина № 1';
+        document.querySelector('label[for="known2"]').textContent = 'Величина № 2';
         setUnits(u1, q1.value); setUnits(u2, q2.value);
         if (reset1) v1.value = defaults[q1.value].value;
         if (reset2) v2.value = defaults[q2.value].value;
