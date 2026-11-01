@@ -310,6 +310,11 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
             h1 { font-size: 16pt; }
             h2 { font-size: 12pt; }
         }
+    
+        .form-grid > div { display: grid; grid-template-columns: minmax(155px, .9fr) minmax(0, 1.1fr); align-items: center; gap: 10px; }
+        .form-grid label { margin: 0; font-weight: 700; }
+        .form-grid input, .form-grid select { min-height: 39px; }
+        @media (max-width: 700px) { .form-grid > div { grid-template-columns: minmax(135px, .9fr) minmax(0, 1.1fr); gap: 8px; } }
     </style>
 </head>
 <body>
