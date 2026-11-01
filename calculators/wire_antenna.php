@@ -256,7 +256,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         .hero-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, 390px); gap: 22px; align-items: center; margin-bottom: 18px; }
         .hero-image { display: block; width: 100%; height: auto; border: 1px solid #d7dce1; border-radius: 8px; background: #f6f9fb; }
         .back-link { display: inline-block; margin-top: 6px; color: #244f76; font-weight: 700; }
-        @media (max-width: 700px) { .calculator-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; } .hero-image { max-width: 100%; } }
+        .form-grid > div { display: grid; grid-template-columns: minmax(155px, .9fr) minmax(0, 1.1fr); align-items: center; gap: 10px; }
+        .form-grid label { margin: 0; font-weight: 700; }
+        .form-grid input, .form-grid select { min-height: 39px; }
+        @media (max-width: 700px) { .calculator-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; } .hero-image { max-width: 100%; } .form-grid > div { grid-template-columns: minmax(135px, .9fr) minmax(0, 1.1fr); gap: 8px; } }
         @media (max-width: 700px) {
             body { padding: 10px; }
             .panel { padding: 15px; }
@@ -311,7 +314,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     <input id="frequency" name="frequency" type="text" inputmode="decimal" autocomplete="off" required value="<?= h($frequencyInput) ?>" placeholder="7,1">
                 </div>
                 <div>
-                    <label for="radial_count">Число радиалов (для вертикала)</label>
+                    <label for="radial_count">Число радиалов</label>
                     <input id="radial_count" name="radial_count" type="number" min="1" max="120" step="1" required value="<?= h($radialCountInput) ?>">
                 </div>
             </div>
