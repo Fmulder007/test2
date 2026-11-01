@@ -210,7 +210,9 @@ function pc_unitOptions(string $selected, array $options): string
         .topline { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
         .back-link { color: #244f76; font-weight: 700; text-decoration: none; }
         .back-link:hover { text-decoration: underline; }
-        .calculators { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+        .calculators { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+         .calculator-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+         .diagram-column, .form-column { min-width: 0; }
         .calculator { min-width: 0; }
         .diagram { display: block; width: 100%; height: 150px; object-fit: contain; margin: 4px 0 14px; border: 1px solid #d7dce1; border-radius: 8px; background: #fff; }
         .mode-label, .field-label { display: block; font-weight: 700; margin-bottom: 6px; }
@@ -230,7 +232,7 @@ function pc_unitOptions(string $selected, array $options): string
         .formula { color: #4d5b52; font-size: .95rem; margin-bottom: 0; }
         .error { margin-top: 16px; padding: 12px; border: 1px solid #e4b7b7; border-radius: 8px; background: #fff5f5; color: #8b2323; line-height: 1.45; }
         .notes { font-size: .9rem; }
-        .clear-link { color: #244f76; }
+        .clear-link { color: #244f76; white-space: nowrap; }
         @media (max-width: 760px) {
             body { padding: 10px; }
             .panel { padding: 15px; }
@@ -242,7 +244,8 @@ function pc_unitOptions(string $selected, array $options): string
             body { padding: 0; }
             .panel { border: 1px solid #aaa; break-inside: avoid; }
             .screen-only, button { display: none !important; }
-            .calculators { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .calculators { grid-template-columns: minmax(0, 1fr); }
+             .calculator-layout { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -256,9 +259,13 @@ function pc_unitOptions(string $selected, array $options): string
 
     <form method="post" action="">
         <div class="calculators">
-            <section class="panel calculator">
+            <section class="panel calculator" id="resistor-calculator">
                 <h2>Параллельные резисторы</h2>
-                <img class="diagram" src="images/parallel-resistors.svg" alt="Схема двух резисторов R1 и R2, соединённых параллельно" width="640" height="260">
+                <div class="calculator-layout">
+                    <div class="diagram-column">
+                        <img class="diagram" src="images/parallel-resistors.svg" alt="Схема двух резисторов R1 и R2, соединённых параллельно" width="640" height="260">
+                    </div>
+                    <div class="form-column">
                 <label class="mode-label" for="r_mode">Что рассчитать</label>
                 <select class="mode-select" id="r_mode" name="r_mode">
                     <option value="total"<?= $rMode === 'total' ? ' selected' : '' ?>>Общее сопротивление по R₁ и R₂</option>
@@ -282,6 +289,9 @@ function pc_unitOptions(string $selected, array $options): string
                 </div>
                 <div class="action-row">
                     <button type="submit" name="calculate" value="resistor">Рассчитать сопротивление</button>
+                    <a class="clear-link screen-only" href="#resistor-calculator" data-reset-scope="resistor">Сбросить</a>
+                </div>
+                    </div>
                 </div>
                 <?php if ($activeCalculation === 'resistor' && $rError !== ''): ?>
                     <div class="error" role="alert"><?= pc_h($rError) ?></div>
@@ -294,9 +304,13 @@ function pc_unitOptions(string $selected, array $options): string
                 <?php endif; ?>
             </section>
 
-            <section class="panel calculator">
+            <section class="panel calculator" id="capacitor-calculator">
                 <h2>Последовательные конденсаторы</h2>
-                <img class="diagram" src="images/series-capacitors.svg" alt="Схема двух конденсаторов C1 и C2, соединённых последовательно" width="640" height="260">
+                <div class="calculator-layout">
+                    <div class="diagram-column">
+                        <img class="diagram" src="images/series-capacitors.svg" alt="Схема двух конденсаторов C1 и C2, соединённых последовательно" width="640" height="260">
+                    </div>
+                    <div class="form-column">
                 <label class="mode-label" for="c_mode">Что рассчитать</label>
                 <select class="mode-select" id="c_mode" name="c_mode">
                     <option value="total"<?= $cMode === 'total' ? ' selected' : '' ?>>Общую ёмкость по C₁ и C₂</option>
@@ -320,6 +334,9 @@ function pc_unitOptions(string $selected, array $options): string
                 </div>
                 <div class="action-row">
                     <button type="submit" name="calculate" value="capacitor">Рассчитать ёмкость</button>
+                    <a class="clear-link screen-only" href="#capacitor-calculator" data-reset-scope="capacitor">Сбросить</a>
+                </div>
+                    </div>
                 </div>
                 <?php if ($activeCalculation === 'capacitor' && $cError !== ''): ?>
                     <div class="error" role="alert"><?= pc_h($cError) ?></div>
@@ -336,7 +353,6 @@ function pc_unitOptions(string $selected, array $options): string
 
     <section class="panel notes">
         <p><strong>Важно.</strong> Расчёт предполагает идеальные компоненты. Для резисторов используются Ом, кОм и МОм; для конденсаторов — пФ, нФ, мкФ, мФ и Ф. Вводить десятичные значения можно как с точкой, так и с запятой. Результат автоматически выводится в удобных единицах.</p>
-        <p class="screen-only"><a class="clear-link" href="passive_components.php">Очистить поля и начать заново</a></p>
     </section>
 </main>
 
@@ -367,6 +383,32 @@ function pc_unitOptions(string $selected, array $options): string
     bindMode('c_mode', 'c_a_label', 'c_b_label', {
         total: ['Ёмкость C₁', 'Ёмкость C₂'],
         unknown: ['Общая ёмкость Cобщ', 'Известная ёмкость C₁']
+    });
+
+    const form = document.querySelector('form[method="post"]');
+    const resetValues = {
+        resistor: {r_mode: 'total', r_a: '1', r_a_unit: 'kohm', r_b: '2,2', r_b_unit: 'kohm'},
+        capacitor: {c_mode: 'total', c_a: '100', c_a_unit: 'nf', c_b: '220', c_b_unit: 'nf'}
+    };
+    document.querySelectorAll('[data-reset-scope]').forEach(link => {
+        link.addEventListener('click', event => {
+            event.preventDefault();
+            const scope = link.dataset.resetScope;
+            const card = document.getElementById(scope + '-calculator');
+            const defaults = resetValues[scope];
+            if (!form || !card || !defaults) return;
+
+            Object.entries(defaults).forEach(([name, value]) => {
+                const control = form.elements.namedItem(name);
+                if (control) {
+                    control.value = value;
+                    control.dispatchEvent(new Event('change', {bubbles: true}));
+                }
+            });
+            card.querySelectorAll('.result, .error').forEach(output => {
+                output.hidden = true;
+            });
+        });
     });
 })();
 </script>
