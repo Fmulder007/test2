@@ -358,7 +358,9 @@ function pcb_checked(string $current, string $value): string
         .line-choice img { display: block; width: 100%; height: auto; border: 1px solid #e0e5e9; border-radius: 5px; background: #fff; }
         .choice-title { display: block; font-weight: 700; margin-bottom: 5px; }
         .choice-desc { display: block; color: #5f6368; font-size: .92rem; line-height: 1.4; }
-        .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: end; }
+        .calculator-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+         .input-column { min-width: 0; }
+         .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: end; }
         .field { min-width: 0; }
         .field-label { display: block; font-weight: 700; margin-bottom: 6px; }
         .field-help { display: block; margin-top: 5px; color: #5f6368; font-size: .86rem; line-height: 1.4; }
@@ -367,7 +369,8 @@ function pcb_checked(string $current, string $value): string
         .input-unit { display: grid; grid-template-columns: minmax(0, 1fr) 100px; gap: 8px; }
         .geo-group[hidden] { display: none !important; }
         .geo-title { font-size: 1rem; margin: 0 0 12px; }
-        .button-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+        .button-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+         .clear-link { color: #244f76; }
         button { appearance: none; border: 1px solid #244f76; border-radius: 6px; padding: 11px 18px; font: inherit; font-weight: 700; color: #fff; background: #245c88; cursor: pointer; }
         button:hover { background: #1d4b70; }
         .result { background: #f1f7fb; border: 1px solid #c8dce9; border-radius: 9px; padding: 18px; }
@@ -388,7 +391,7 @@ function pcb_checked(string $current, string $value): string
         @media print {
             body { padding: 0; background: #fff; }
             .panel { border-color: #aaa; break-inside: avoid; }
-            .no-print, .back-link, button { display: none !important; }
+            .no-print, .back-link, button, .clear-link { display: none !important; }
             .result { background: #fff; border-color: #999; }
         }
     </style>
@@ -406,6 +409,7 @@ function pcb_checked(string $current, string $value): string
     <?php endif; ?>
 
     <form method="post" action="pcb_trace_width.php" id="pcb-form">
+        <div class="calculator-layout">
         <section class="panel no-print">
             <h2>1. Выбери тип линии</h2>
             <div class="choices">
@@ -427,6 +431,7 @@ function pcb_checked(string $current, string $value): string
             </div>
         </section>
 
+        <div class="input-column">
         <section class="panel">
             <h2>2. Общие параметры</h2>
             <div class="form-grid">
@@ -487,8 +492,11 @@ function pcb_checked(string $current, string $value): string
             </div>
             <div class="button-row">
                 <button type="submit" name="calculate" value="1">Рассчитать ширину дорожки</button>
+                <a class="clear-link" href="pcb_trace_width.php">Сбросить</a>
             </div>
         </section>
+        </div>
+        </div>
     </form>
 
     <?php if ($result !== null): ?>
