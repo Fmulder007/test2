@@ -293,6 +293,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 <img class="hero-image" src="images/wire-antenna.svg" alt="Схема диполя с центральным питанием и условные изображения других проволочных антенн" width="760" height="260">
             </div>
             <div class="form-column">
+        <h2>Исходные данные</h2>
         <?php if ($errors !== []): ?>
             <div class="error" role="alert">
                 <?php foreach ($errors as $error): ?><p><?= h($error) ?></p><?php endforeach; ?>
