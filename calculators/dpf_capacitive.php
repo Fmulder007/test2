@@ -722,8 +722,10 @@ if ($isDownloadRequest) {
         .value-input { display: block; width: 100%; min-width: 0; min-height: 38px; border: 1px solid #b8c0c8; border-radius: 6px; padding: 7px 9px; background: #fff; color: #202124; }
         .value-input:focus { border-color: #3976a8; outline: 3px solid #c5e2f8; }
         .input-hint { margin-top: 4px; color: #69727b; font-size: .74rem; line-height: 1.35; }
-        .action-row { margin-top: 14px; }
+        .action-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 12px; }
         button { display: inline-flex; align-items: center; justify-content: center; width: 100%; min-height: 39px; border: 0; border-radius: 6px; padding: 8px 12px; color: #fff; background: #245c88; font-size: .9rem; font-weight: 700; cursor: pointer; }
+        .action-row > button { width: auto; min-width: 170px; }
+        .clear-link { color: #244f76; white-space: nowrap; }
         button:hover { background: #19476c; }
         .error { margin-top: 12px; padding: 10px 12px; border: 1px solid #e4b7b7; border-radius: 7px; background: #fff5f5; color: #8b2323; font-size: .88rem; line-height: 1.45; }
         .result-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; margin-bottom: 14px; }
@@ -758,8 +760,8 @@ if ($isDownloadRequest) {
             .panel { padding: 15px; }
             .work-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; }
             .diagram-wrap { max-width: 100%; }
-            .action-row { flex-direction: column; align-items: stretch; }
-            .action-row button { width: 100%; }
+            .action-row { flex-direction: row; align-items: center; }
+            .action-row > button { width: auto; }
             .diagram { max-height: 190px; object-fit: contain; }
             .result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
@@ -767,8 +769,8 @@ if ($isDownloadRequest) {
             .input-grid { grid-template-columns: minmax(0, 1fr); gap: 9px; }
             th, td { padding: 8px 6px; font-size: .82rem; }
             .chart-legend { font-size: .74rem; gap: 7px 12px; }
-             .action-row { flex-direction: column; align-items: stretch; }
-             .action-row button { width: 100%; }
+             .action-row { flex-direction: row; align-items: center; }
+             .action-row > button { width: auto; }
         }
     </style>
 </head>
