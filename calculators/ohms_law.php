@@ -208,12 +208,9 @@ $formatters = ['u' => 'oh_formatVoltage', 'i' => 'oh_formatCurrent', 'r' => 'oh_
         .calculator-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
          .diagram-column, .form-column { min-width: 0; }
          .diagram { margin: 0 0 14px; }
-         .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: end; }
-        .field { display: grid; grid-template-columns: minmax(120px, .7fr) minmax(0, 1.3fr); align-items: center; gap: 10px; min-width: 0; }
-        .field-label { display: block; margin: 0; font-weight: 700; }
-        .quantity-input-row { display: grid; grid-template-columns: minmax(112px, .85fr) minmax(0, 1.15fr); gap: 8px; min-width: 0; }
+         .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 9px; align-items: center; }
+        .quantity-row { display: grid; grid-template-columns: minmax(125px, .9fr) minmax(0, 1.1fr); align-items: center; gap: 9px; min-width: 0; }
         .quantity-value-row { display: grid; grid-template-columns: minmax(0, 1fr) 86px; gap: 6px; min-width: 0; }
-        .form-grid { gap: 8px; }
         .value-input, .unit-select, .quantity-select { min-height: 39px; }
         select, input, button { font: inherit; }
         .value-row { display: grid; grid-template-columns: minmax(0, 1fr) 112px; gap: 8px; }
@@ -258,25 +255,23 @@ $formatters = ['u' => 'oh_formatVoltage', 'i' => 'oh_formatCurrent', 'r' => 'oh_
                 <h2>Исходные данные</h2>
                 <form id="ohm-form" method="post" action="">
             <div class="form-grid">
-                <div class="field">
-                    <label class="field-label" for="known1">Известная величина № 1</label>
-                    <select class="quantity-select" id="known1" name="known1">
+                <div class="quantity-row">
+                    <select class="quantity-select" id="known1" name="known1" aria-label="Выбор первой известной величины">
                         <?php foreach ($quantityNames as $key => $label): ?><option value="<?= oh_h($key) ?>"<?= oh_selected($known1, $key) ?>><?= oh_h($label) ?></option><?php endforeach; ?>
                     </select>
-                    <div class="value-row" style="margin-top:8px">
-                        <input class="value-input" id="value1" name="value1" type="text" inputmode="decimal" autocomplete="off" value="<?= oh_h($value1Raw) ?>" required>
+                    <div class="quantity-value-row">
+                        <input class="value-input" id="value1" name="value1" type="text" inputmode="decimal" autocomplete="off" value="<?= oh_h($value1Raw) ?>" aria-label="Номинал первой известной величины" required>
                         <select class="unit-select" id="unit1" name="unit1" aria-label="Единица первой величины">
                             <?php foreach ($unitOptions[$known1] as $unit => $label): ?><option value="<?= oh_h($unit) ?>"<?= oh_selected($unit1, $unit) ?>><?= oh_h($label) ?></option><?php endforeach; ?>
                         </select>
                     </div>
                 </div>
-                <div class="field">
-                    <label class="field-label" for="known2">Известная величина № 2</label>
-                    <select class="quantity-select" id="known2" name="known2">
+                <div class="quantity-row">
+                    <select class="quantity-select" id="known2" name="known2" aria-label="Выбор второй известной величины">
                         <?php foreach ($quantityNames as $key => $label): ?><option value="<?= oh_h($key) ?>"<?= oh_selected($known2, $key) ?>><?= oh_h($label) ?></option><?php endforeach; ?>
                     </select>
-                    <div class="value-row" style="margin-top:8px">
-                        <input class="value-input" id="value2" name="value2" type="text" inputmode="decimal" autocomplete="off" value="<?= oh_h($value2Raw) ?>" required>
+                    <div class="quantity-value-row">
+                        <input class="value-input" id="value2" name="value2" type="text" inputmode="decimal" autocomplete="off" value="<?= oh_h($value2Raw) ?>" aria-label="Номинал второй известной величины" required>
                         <select class="unit-select" id="unit2" name="unit2" aria-label="Единица второй величины">
                             <?php foreach ($unitOptions[$known2] as $unit => $label): ?><option value="<?= oh_h($unit) ?>"<?= oh_selected($unit2, $unit) ?>><?= oh_h($label) ?></option><?php endforeach; ?>
                         </select>
@@ -329,7 +324,6 @@ $formatters = ['u' => 'oh_formatVoltage', 'i' => 'oh_formatCurrent', 'r' => 'oh_
     const result = document.getElementById('calculation-result');
     const error = document.getElementById('calculation-error');
     const hint = document.getElementById('stale-hint');
-    const names = {u:'Напряжение U', i:'Ток I', r:'Сопротивление R', p:'Мощность P'};
     const units = {
         u: [['pv','пВ'],['nv','нВ'],['uv','мкВ'],['mv','мВ'],['v','В'],['kv','кВ'],['mvlt','МВ']],
         i: [['pa','пА'],['na','нА'],['ua','мкА'],['ma','мА'],['a','А'],['ka','кА']],
@@ -346,9 +340,7 @@ $formatters = ['u' => 'oh_formatVoltage', 'i' => 'oh_formatCurrent', 'r' => 'oh_
         }
         select.value = units[quantity].some(([value]) => value === prior) ? prior : defaults[quantity].unit;
     }
-    function updateLabels(reset1 = false, reset2 = false) {
-        document.querySelector('label[for="known1"]').textContent = 'Величина № 1';
-        document.querySelector('label[for="known2"]').textContent = 'Величина № 2';
+    function updateQuantityFields(reset1 = false, reset2 = false) {
         setUnits(u1, q1.value); setUnits(u2, q2.value);
         if (reset1) v1.value = defaults[q1.value].value;
         if (reset2) v2.value = defaults[q2.value].value;
@@ -357,9 +349,9 @@ $formatters = ['u' => 'oh_formatVoltage', 'i' => 'oh_formatCurrent', 'r' => 'oh_
         if (q1.value === q2.value) {
             const other = changed === 1 ? q2 : q1;
             other.value = ['u','i','r','p'].find(item => item !== (changed === 1 ? q1.value : q2.value));
-            updateLabels(true, true);
+            updateQuantityFieldstrue, true);
         } else {
-            updateLabels(changed === 1, changed === 2);
+            updateQuantityFieldschanged === 1, changed === 2);
         }
         markOutdated();
     }
@@ -376,7 +368,7 @@ $formatters = ['u' => 'oh_formatVoltage', 'i' => 'oh_formatCurrent', 'r' => 'oh_
         if (error) error.hidden = true;
         if (hint) hint.style.display = 'block';
     }
-    updateLabels(false, false);
+    updateQuantityFieldsfalse, false);
 })();
 </script>
 </body>
