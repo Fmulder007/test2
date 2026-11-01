@@ -1027,7 +1027,6 @@ $parExportAvailable = ($parResult !== null
                     </div>
                 </div>
             </div>
-        </section>
             <div class="response-chart" id="par-chart-panel">
                 <h3>Расчётная АЧХ параллельной топологии</h3>
                 <p class="chart-subtitle">Идеальная модель LC-цепи при сопротивлении источника и нагрузки R. Потери катушек, ESR конденсаторов и паразитные параметры монтажа не учитываются.</p>
