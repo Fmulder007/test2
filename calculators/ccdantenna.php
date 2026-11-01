@@ -64,6 +64,7 @@ function fmtCap(float $value): string
 }
 
 $frequencyInput = '7.1';
+$wireDiameterInput = '1.00';
 $antennaType = 'dipole';
 $capacitorMode = 'nearest';
 $errors = [];
@@ -72,6 +73,8 @@ $calculation = null;
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $frequencyInput = trim((string) ($_POST['frequency'] ?? ''));
     $frequencyNormalized = str_replace(',', '.', $frequencyInput);
+    $wireDiameterInput = trim((string) ($_POST['wire_diameter'] ?? ''));
+    $wireDiameterNormalized = str_replace(',', '.', $wireDiameterInput);
     $antennaType = (($_POST['antenna_type'] ?? '') === 'vertical') ? 'vertical' : 'dipole';
     $capacitorMode = (($_POST['capacitor_mode'] ?? '') === 'exact') ? 'exact' : 'nearest';
 
@@ -81,37 +84,36 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $frequency = (float) $frequencyNormalized;
         if (!is_finite($frequency) || $frequency <= 0.0) {
             $errors[] = 'Частота должна быть числом больше нуля.';
+        }
+    }
+
+    if ($wireDiameterNormalized === '' || !is_numeric($wireDiameterNormalized)) {
+        $errors[] = 'Введите диаметр провода в диапазоне от 0,5 до 3,0 мм.';
+    } else {
+        $wireDiameterMm = (float) $wireDiameterNormalized;
+        if (!is_finite($wireDiameterMm) || $wireDiameterMm < 0.5 || $wireDiameterMm > 3.0) {
+            $errors[] = 'Диаметр провода должен быть от 0,5 до 3,0 мм.';
+        }
+    }
+
+    if ($errors === []) {
+        // Все линейные размеры и диаметр проводника задаются в метрической системе.
+        $totalLengthMeters = 300.0 / $frequency;
+        $diameterMeters = $wireDiameterMm / 1000.0;
+
+        // Эквивалент исходной формулы индуктивности, непосредственно в метрах.
+        $inductance = 0.2 * $totalLengthMeters
+            * (log((4.0 * $totalLengthMeters) / $diameterMeters) - 0.75);
+
+        if (!is_finite($inductance) || $inductance <= 0.0) {
+            $errors[] = 'Для этой частоты и диаметра исходная формула не даёт физически корректного результата.';
         } else {
-            // Все линейные размеры и диаметры проводника задаются в метрической системе.
-            $totalLengthMeters = 300.0 / $frequency;
-            $wireDiametersMm = [2.05232, 1.62814, 1.29032, 1.02362, 0.81280];
-            $totalCapacitanceFactors = [];
-            $validFormula = true;
+            // CTOT из исходника; результат выражается в пФ.
+            $angularTerm = (6.2832 * $frequency) ** 2;
+            $totalCapacitanceFactor = 2.0 * ((1.0 / ($angularTerm * $inductance)) * 1_000_000.0);
 
-            foreach ($wireDiametersMm as $wireIndex => $diameterMm) {
-                // Эквивалент исходной формулы индуктивности, непосредственно в метрах.
-                $diameterMeters = $diameterMm / 1000.0;
-                $inductance = 0.2 * $totalLengthMeters
-                    * (log((4.0 * $totalLengthMeters) / $diameterMeters) - 0.75);
-
-                if (!is_finite($inductance) || $inductance <= 0.0) {
-                    $validFormula = false;
-                    break;
-                }
-
-                // CTOT из исходника; результат выражается в пФ.
-                $angularTerm = (6.2832 * $frequency) ** 2;
-                $ctot = 2.0 * ((1.0 / ($angularTerm * $inductance)) * 1_000_000.0);
-
-                if (!is_finite($ctot) || $ctot <= 0.0) {
-                    $validFormula = false;
-                    break;
-                }
-                $totalCapacitanceFactors[$wireIndex] = $ctot;
-            }
-
-            if (!$validFormula) {
-                $errors[] = 'Для этой частоты исходная формула не даёт физически корректного результата. Проверьте введённое значение.';
+            if (!is_finite($totalCapacitanceFactor) || $totalCapacitanceFactor <= 0.0) {
+                $errors[] = 'Для этой частоты и диаметра не удалось получить физически корректную ёмкость.';
             } else {
                 $sectionStep = ($antennaType === 'dipole') ? -2 : -1;
                 $capacitorOffset = ($antennaType === 'dipole') ? 2 : 1;
@@ -119,26 +121,20 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
                 for ($sections = 50; $sections >= 1; $sections += $sectionStep) {
                     $capacitors = $sections - $capacitorOffset;
-                    $capValues = [];
+                    $capValue = null;
 
-                    foreach ($wireDiametersMm as $wireIndex => $_diameterMm) {
-                        if ($capacitors <= 0) {
-                            $capValues[$wireIndex] = null;
-                            continue;
-                        }
-
-                        $capValue = $totalCapacitanceFactors[$wireIndex] * $capacitors;
+                    if ($capacitors > 0) {
+                        $capValue = $totalCapacitanceFactor * $capacitors;
                         if ($capacitorMode === 'nearest') {
                             $capValue = nearestStandardCapacitor($capValue);
                         }
-                        $capValues[$wireIndex] = $capValue;
                     }
 
                     $spacingMeters = $totalLengthMeters / $sections;
                     $rows[] = [
                         'sections' => $sections,
                         'capacitors' => $capacitors,
-                        'cap_values' => $capValues,
+                        'cap_value' => $capValue,
                         'spacing_meters' => $spacingMeters,
                     ];
                 }
@@ -147,6 +143,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     'frequency' => $frequency,
                     'antenna_type' => $antennaType,
                     'capacitor_mode' => $capacitorMode,
+                    'wire_diameter_mm' => $wireDiameterMm,
+                    'wire_area_mm2' => M_PI * ($wireDiameterMm ** 2) / 4.0,
                     'wavelength_meters' => $totalLengthMeters,
                     'total_meters' => $totalLengthMeters,
                     'rows' => $rows,
@@ -232,12 +230,11 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
         .summary-item span { display: block; color: #5f6368; font-size: .9rem; margin-bottom: 6px; }
         .summary-item strong { font-size: 1.05rem; }
         .table-wrap { overflow-x: auto; border: 1px solid #d7dce1; border-radius: 6px; }
-        table { border-collapse: collapse; width: 100%; min-width: 900px; background: #fff; font-size: .94rem; }
-        th, td { border-bottom: 1px solid #d7dce1; border-right: 1px solid #e4e7eb; padding: 8px 9px; text-align: right; white-space: nowrap; }
-        th { background: #edf1f4; font-weight: 700; }
-        .wire-metric { font-size: .78rem; line-height: 1.35; font-weight: 400; color: #4f555b; }
-        thead tr:first-child th { text-align: center; }
-        th:first-child, td:first-child { text-align: center; }
+        table { border-collapse: collapse; width: 100%; min-width: 640px; table-layout: fixed; background: #fff; font-size: .94rem; }
+        th, td { width: 25%; border-bottom: 1px solid #d7dce1; border-right: 1px solid #e4e7eb; padding: 8px 7px; text-align: center; }
+        th { background: #edf1f4; font-weight: 700; white-space: normal; overflow-wrap: normal; word-break: normal; vertical-align: middle; }
+        td { white-space: nowrap; }
+        .wire-spec { margin: 0 0 10px; font-weight: 700; color: #4f555b; }
         tbody tr:nth-child(even) { background: #f8fafb; }
         tbody tr:last-child td { border-bottom: 0; }
         .left { text-align: left; }
@@ -310,6 +307,10 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
                     </select>
                 </div>
                 <div>
+                    <label for="wire_diameter">Диаметр провода, мм</label>
+                    <input id="wire_diameter" name="wire_diameter" type="number" inputmode="decimal" min="0.5" max="3.0" step="0.01" required value="<?= h($wireDiameterInput) ?>" placeholder="Например, 1,00">
+                </div>
+                <div>
                     <label for="frequency">Нижняя частота диапазона, МГц</label>
                     <input id="frequency" name="frequency" type="number" inputmode="decimal" min="0.000001" step="any" required value="<?= h($frequencyInput) ?>" placeholder="Например, 7,1">
                 </div>
@@ -350,19 +351,21 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
                 </div>
             </div>
 
+            <p class="wire-spec">Провод: Ø <?= fmt($calculation['wire_diameter_mm'], 2) ?> мм · сечение <?= fmt($calculation['wire_area_mm2'], 2) ?> мм²</p>
             <div class="table-wrap">
                 <table>
+                    <colgroup>
+                        <col style="width:25%">
+                        <col style="width:25%">
+                        <col style="width:25%">
+                        <col style="width:25%">
+                    </colgroup>
                     <thead>
                     <tr>
-                        <th rowspan="2">Секций<br>провода</th>
-                        <th rowspan="2">Конденсаторов</th>
-                        <th colspan="5">Ёмкость каждого конденсатора, пФ</th>
-                        <th rowspan="2">Расстояние между конденсаторами, м</th>
-                    </tr>
-                    <tr>
-                        <?php foreach ($wireDiametersMm as $diameterMm): ?>
-                            <th><strong>Ø <?= fmt($diameterMm, 2) ?> мм</strong><br><small class="wire-metric"><?= fmt(M_PI * ($diameterMm ** 2) / 4.0, 2) ?> мм²</small></th>
-                        <?php endforeach; ?>
+                        <th>Секций провода</th>
+                        <th>Конденсаторов</th>
+                        <th>Ёмкость каждого конденсатора, пФ</th>
+                        <th>Расстояние между конденсаторами, м</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -370,23 +373,19 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
                         <tr>
                             <td><?= (int) $row['sections'] ?></td>
                             <td><?= (int) $row['capacitors'] ?></td>
-                            <?php foreach ($wireDiametersMm as $wireIndex => $_diameterMm): ?>
-                                <td><?= $row['cap_values'][$wireIndex] === null ? '—' : h(fmtCap((float) $row['cap_values'][$wireIndex])) ?></td>
-                            <?php endforeach; ?>
+                            <td><?= $row['cap_value'] === null ? '—' : h(fmtCap((float) $row['cap_value'])) ?></td>
                             <td><?= fmt((float) $row['spacing_meters'], 3) ?></td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
-
-            <p class="notes">Под каждым диаметром указана площадь поперечного сечения голого круглого проводника. «—» означает, что конденсаторы в этом варианте не требуются.</p>
             <p class="notes">Расчёт повторяет формулы исходной программы. Он не моделирует диаграмму направленности, входное сопротивление, напряжение на конденсаторах или КСВ готовой антенны. Используйте расчёт как отправную точку для практической конструкции.</p>
         </section>
     <?php else: ?>
         <section class="panel screen-only">
             <h2>Как пользоваться</h2>
-            <p>Выберите тип антенны, укажите нижнюю частоту рабочего диапазона и выберите формат ёмкостей. Калькулятор сформирует таблицу конфигураций для пяти метрических диаметров провода, указанных в заголовках столбцов.</p>
+            <p>Выберите тип антенны, укажите диаметр провода и нижнюю частоту рабочего диапазона, затем выберите формат ёмкостей. Калькулятор сформирует таблицу конфигураций для выбранного диаметра.</p>
             <p class="notes">В исходной программе для диполя показываются 25 конфигураций, а для вертикальной антенны или Long Wire — 50. Рекомендуется проектировать антенну для нижней частоты диапазона. Для конденсаторов автор исходной программы рекомендовал серебряно-слюдяные с допуском 5%.</p>
         </section>
     <?php endif; ?>
