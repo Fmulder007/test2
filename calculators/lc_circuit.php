@@ -232,7 +232,7 @@ if ($result !== null) {
         .stale-hint { display: none; margin-top: 12px; color: #7a5200; font-size: .93rem; }
         .small { font-size: .9rem; }
         .clear-link { color: #244f76; }
-        @media (max-width: 680px) { body { padding: 10px; } .panel { padding: 15px; } .top-layout { grid-template-columns: minmax(0, 1fr); } .diagram { margin: 0 0 12px; } }
+        @media (max-width: 680px) { body { padding: 10px; } .panel { padding: 15px; } .top-layout { grid-template-columns: minmax(0, 1fr); } .diagram { margin: 0 0 12px; } .action-row { flex-direction: column; align-items: stretch; } .action-row button { width: 100%; } }
         @media print { body { padding: 0; background: #fff; } .panel { border-color: #aaa; break-inside: avoid; } .no-print, .back-link, button, .clear-link, .stale-hint { display: none !important; } .result { border-color: #999; background: #fff; } }
     </style>
 </head>
@@ -290,7 +290,7 @@ if ($result !== null) {
                     </div>
                     <div class="action-row">
                         <button type="submit" name="calculate" value="1">Рассчитать</button>
-                        <a class="clear-link" href="lc_circuit.php">Очистить результаты</a>
+                        <a class="clear-link" href="lc_circuit.php">Сбросить</a>
                     </div>
                     <div class="stale-hint" id="stale-hint">Исходные данные изменены. Нажми «Рассчитать», чтобы обновить результат.</div>
                 </form>
