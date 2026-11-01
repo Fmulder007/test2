@@ -352,8 +352,9 @@ function pcb_checked(string $current, string $value): string
         .back-link { display: inline-block; margin-top: 6px; color: #244f76; font-weight: 700; text-decoration: none; }
         .back-link:hover { text-decoration: underline; }
         .choices { display: grid; grid-template-columns: 1fr; gap: 10px; }
-        .line-panel .field-label { display: block; margin: 0 0 5px; font-weight: 700; }
-        .line-type-select { width: 100%; min-height: 39px; border: 1px solid #b9c1c8; border-radius: 6px; padding: 8px 10px; font: inherit; background: #fff; color: #202124; margin-bottom: 12px; }
+        .line-type-row { display: grid; grid-template-columns: minmax(85px, .65fr) minmax(0, 1.35fr); align-items: center; gap: 8px; margin-bottom: 12px; }
+        .line-panel .field-label { display: block; margin: 0; font-weight: 700; }
+        .line-type-select { width: 100%; min-width: 0; min-height: 39px; border: 1px solid #b9c1c8; border-radius: 6px; padding: 8px 10px; font: inherit; background: #fff; color: #202124; }
         .line-diagram { display: block; width: 100%; max-height: 260px; object-fit: contain; border: 1px solid #e0e5e9; border-radius: 6px; background: #fff; }
         .line-caption { margin: 8px 0 0; color: #5f6368; font-size: .88rem; line-height: 1.4; }
         .field { display: grid; grid-template-columns: minmax(155px, .9fr) minmax(0, 1.1fr); align-items: center; gap: 10px; }
@@ -394,6 +395,7 @@ function pcb_checked(string $current, string $value): string
             .panel { padding: 15px; }
             .form-grid { grid-template-columns: minmax(0, 1fr); }
             .field { grid-template-columns: minmax(125px, .85fr) minmax(0, 1.15fr); gap: 8px; }
+            .line-type-row { grid-template-columns: minmax(80px, .65fr) minmax(0, 1.35fr); gap: 7px; }
             .line-choice { grid-template-columns: 22px minmax(95px, 125px) minmax(0, 1fr); gap: 8px; padding: 8px; }
             .choice-desc { font-size: .85rem; }
             .input-unit { grid-template-columns: minmax(0, 1fr) 94px; }
@@ -422,12 +424,14 @@ function pcb_checked(string $current, string $value): string
         <div class="calculator-layout">
         <section class="panel no-print line-panel">
             <h2>Тип линии</h2>
-            <label class="field-label" for="line_type">Конструкция</label>
-            <select id="line_type" name="line_type" class="line-type-select">
+            <div class="line-type-row">
+                <label class="field-label" for="line_type">Тип линии</label>
+                <select id="line_type" name="line_type" class="line-type-select">
                 <option value="microstrip"<?= $lineType === 'microstrip' ? ' selected' : '' ?>>Микрополосковая (Microstrip)</option>
                 <option value="stripline"<?= $lineType === 'stripline' ? ' selected' : '' ?>>Полосковая (Stripline)</option>
                 <option value="gcpw"<?= $lineType === 'gcpw' ? ' selected' : '' ?>>Копланарная (GCPW)</option>
-            </select>
+                </select>
+            </div>
             <img class="line-diagram" id="line-diagram" src="images/pcb-<?= $lineType ?>.svg" alt="Схема выбранного типа ВЧ-линии" width="360" height="300">
             <p class="line-caption" id="line-caption"><?= $lineType === 'microstrip' ? 'Дорожка на наружном слое; земля снизу.' : ($lineType === 'stripline' ? 'Дорожка расположена между двумя плоскостями земли.' : 'Боковые земляные участки и нижняя плоскость земли.') ?></p>
         </section>
