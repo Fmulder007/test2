@@ -231,7 +231,7 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
         .subtle { color: #5f6368; }
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: minmax(0, 1fr);
             gap: 16px;
             align-items: end;
         }
@@ -254,7 +254,8 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
             cursor: pointer;
         }
         button:hover { background: #202d3a; }
-        .button-row { display: flex; gap: 10px; margin-top: 16px; }
+        .button-row { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+         .clear-link { color: #244f76; }
         .button-row button { width: auto; min-width: 170px; }
         .error {
             border: 1px solid #c62828;
@@ -287,7 +288,7 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
         .hero-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, 390px); gap: 22px; align-items: center; margin-bottom: 18px; }
         .hero-image { display: block; width: 100%; height: auto; border: 1px solid #d7dce1; border-radius: 8px; background: #f6f9fb; }
         .back-link { display: inline-block; margin-top: 6px; color: #244f76; font-weight: 700; }
-        @media (max-width: 760px) { .hero-layout { grid-template-columns: minmax(0, 1fr); } .hero-image { max-width: 560px; } }
+        @media (max-width: 760px) { .calculator-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; } .hero-image { max-width: 100%; } }
         @media (max-width: 760px) {
             body { padding: 10px; }
             .panel { padding: 15px; }
@@ -300,7 +301,7 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
             body { padding: 0; background: #fff; }
             main { max-width: none; }
             .panel { border: 0; padding: 0; margin: 0 0 12px; border-radius: 0; }
-            .screen-only { display: none !important; }
+            .screen-only, .clear-link { display: none !important; }
             .table-wrap { overflow: visible; border: 0; }
             table { min-width: 0; font-size: 8pt; }
             th, td { padding: 4px; }
@@ -314,15 +315,17 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
 <body>
 <main>
     <section class="panel">
-        <div class="hero-layout">
-            <div>
-                <h1>CCDANTEN — расчёт CCD-антенн</h1>
-                <p class="subtle">Калькулятор по программе George Murphy, VE3ERP. Расчёт количества секций провода, ёмкости конденсаторов и расстояния между ними.</p>
-                <a class="back-link screen-only" href="index.php">← К списку калькуляторов</a>
-            </div>
-            <img class="hero-image" src="images/ccd-antenna.svg" alt="Упрощённая схема CCD-антенны с последовательными конденсаторами в проволочных плечах" width="760" height="260">
-        </div>
+        <h1>CCDANTEN — расчёт CCD-антенн</h1>
+        <p class="subtle">Калькулятор по программе George Murphy, VE3ERP. Расчёт количества секций провода, ёмкости конденсаторов и расстояния между ними.</p>
+        <a class="back-link screen-only" href="index.php">← К списку калькуляторов</a>
+    </section>
 
+    <section class="panel">
+        <div class="calculator-layout">
+            <div class="diagram-column">
+                <img class="hero-image" src="images/ccd-antenna.svg" alt="Упрощённая схема CCD-антенны с последовательными конденсаторами в проволочных плечах" width="760" height="260">
+            </div>
+            <div class="form-column">
         <?php if ($errors !== []): ?>
             <div class="error" role="alert">
                 <?php foreach ($errors as $error): ?>
@@ -354,8 +357,11 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
             </div>
             <div class="button-row">
                 <button type="submit">Рассчитать антенну</button>
+                <a class="clear-link" href="ccdantenna.php">Сбросить</a>
             </div>
         </form>
+            </div>
+        </div>
     </section>
 
     <?php if ($calculation !== null): ?>
