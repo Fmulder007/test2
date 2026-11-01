@@ -331,6 +331,7 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
                 <img class="hero-image" src="images/ccd-antenna.svg" alt="Упрощённая схема CCD-антенны с последовательными конденсаторами в проволочных плечах" width="760" height="260">
             </div>
             <div class="form-column">
+        <h2>Исходные данные</h2>
         <?php if ($errors !== []): ?>
             <div class="error" role="alert">
                 <?php foreach ($errors as $error): ?>
