@@ -634,6 +634,7 @@ $cutoffHelp = $response === 'butter'
         .value-input, .form-select { display: block; width: 100%; min-width: 0; min-height: 39px; border: 1px solid #b8c0c8; border-radius: 6px; padding: 8px 10px; background: #fff; color: #202124; }
         .value-input:focus, .form-select:focus { outline: 3px solid #c5e2f8; border-color: #3976a8; }
         .field-hint { display: none; }
+        #lpf-form { display: grid; gap: 8px; }
         .choice-group { margin-top: 0; }
         .choice-heading { display: block; font-weight: 700; margin: 0 0 8px; }
         .choice-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
