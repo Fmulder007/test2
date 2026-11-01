@@ -221,9 +221,9 @@ if ($result !== null) {
         .value-row { display: grid; grid-template-columns: minmax(0, 1fr) 112px; gap: 8px; }
         .value-input, .unit-select, .mode-select { width: 100%; min-width: 0; border: 1px solid #b8c0c8; border-radius: 6px; padding: 10px; background: #fff; }
         .value-input:focus, .unit-select:focus, .mode-select:focus { outline: 3px solid #c5e2f8; border-color: #3976a8; }
-        .mode-field { margin-bottom: 15px; }
-        .action-row { display: flex; flex-direction: column; align-items: stretch; gap: 10px; margin-top: 17px; }
-        .action-row button { width: 100%; }
+        .mode-field { margin-bottom: 8px; }
+        .action-row { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 12px; }
+        .action-row button { width: auto; }
         button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; border: 0; border-radius: 6px; padding: 11px 16px; color: #fff; background: #245c88; font-weight: 700; line-height: 1.25; cursor: pointer; }
         button:hover { background: #19476c; }
         button:focus-visible, a:focus-visible { outline: 3px solid #89bde5; outline-offset: 3px; }
