@@ -281,7 +281,7 @@ foreach ($toroidCores as $id => $coreInfo) {
         .radio-option:has(input:checked) { border-color: #8aafcb; background: #f2f7fb; }
         .custom-core-fields { margin-top: 14px; padding: 14px; border: 1px solid #d7dce1; border-radius: 8px; background: #fafbfd; }
         .custom-core-fields[hidden], .custom-measured-fields[hidden] { display: none; }
-        .core-info { margin-top: 12px; padding: 12px 14px; border: 1px solid #dbe4eb; border-radius: 8px; background: #f7fafc; line-height: 1.55; }
+        .core-info { grid-column: 1 / -1; width: 100%; min-width: 0; margin-top: 2px; padding: 12px 14px; border: 1px solid #dbe4eb; border-radius: 8px; background: #f7fafc; line-height: 1.55; overflow-wrap: anywhere; }
         .core-info[hidden] { display: none; }
         .action-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 17px; }
         button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; border: 0; border-radius: 6px; padding: 11px 16px; color: #fff; background: #245c88; font-weight: 700; line-height: 1.25; cursor: pointer; }
