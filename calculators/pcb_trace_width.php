@@ -352,6 +352,15 @@ function pcb_checked(string $current, string $value): string
         .back-link { display: inline-block; margin-top: 6px; color: #244f76; font-weight: 700; text-decoration: none; }
         .back-link:hover { text-decoration: underline; }
         .choices { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        .line-panel .field-label { display: block; margin: 0 0 5px; font-weight: 700; }
+        .line-type-select { width: 100%; min-height: 39px; border: 1px solid #b9c1c8; border-radius: 6px; padding: 8px 10px; font: inherit; background: #fff; color: #202124; margin-bottom: 12px; }
+        .line-diagram { display: block; width: 100%; max-height: 260px; object-fit: contain; border: 1px solid #e0e5e9; border-radius: 6px; background: #fff; }
+        .line-caption { margin: 8px 0 0; color: #5f6368; font-size: .88rem; line-height: 1.4; }
+        .field { display: grid; grid-template-columns: minmax(155px, .9fr) minmax(0, 1.1fr); align-items: center; gap: 10px; }
+        .field-label { margin: 0; }
+        .form-grid { gap: 8px; }
+        .field-help { display: none; }
+        .input-unit input, .field > input, .field select { min-height: 39px; }
         .line-choice { display: grid; grid-template-columns: 22px minmax(130px, 205px) minmax(0, 1fr); gap: 12px; align-items: center; border: 1px solid #d7dce1; border-radius: 8px; padding: 10px; cursor: pointer; background: #fff; }
         .line-choice:has(input:checked) { border-color: #8aafcb; background: #f2f7fb; }
         .line-choice input { margin: 0; accent-color: #245c88; width: 18px; height: 18px; }
@@ -384,6 +393,7 @@ function pcb_checked(string $current, string $value): string
             body { padding: 10px; }
             .panel { padding: 15px; }
             .form-grid { grid-template-columns: minmax(0, 1fr); }
+            .field { grid-template-columns: minmax(125px, .85fr) minmax(0, 1.15fr); gap: 8px; }
             .line-choice { grid-template-columns: 22px minmax(95px, 125px) minmax(0, 1fr); gap: 8px; padding: 8px; }
             .choice-desc { font-size: .85rem; }
             .input-unit { grid-template-columns: minmax(0, 1fr) 94px; }
@@ -410,25 +420,16 @@ function pcb_checked(string $current, string $value): string
 
     <form method="post" action="pcb_trace_width.php" id="pcb-form">
         <div class="calculator-layout">
-        <section class="panel no-print">
-            <h2>1. Выбери тип линии</h2>
-            <div class="choices">
-                <label class="line-choice">
-                    <input type="radio" name="line_type" value="microstrip"<?= pcb_checked($lineType, 'microstrip') ?>>
-                    <img src="images/pcb-microstrip.svg" alt="Микрополосковая линия: дорожка сверху, земля снизу" width="360" height="300">
-                    <span><span class="choice-title">Микрополосковая линия (Microstrip)</span><span class="choice-desc">Дорожка на наружном слое; под ней сплошной полигон земли. Вводится H — расстояние до земли.</span></span>
-                </label>
-                <label class="line-choice">
-                    <input type="radio" name="line_type" value="stripline"<?= pcb_checked($lineType, 'stripline') ?>>
-                    <img src="images/pcb-stripline.svg" alt="Симметричная полосковая линия между двумя плоскостями земли" width="360" height="300">
-                    <span><span class="choice-title">Симметричная полосковая линия (Stripline)</span><span class="choice-desc">Дорожка внутри платы строго посередине между двумя земляными плоскостями. Вводится полное расстояние B между плоскостями.</span></span>
-                </label>
-                <label class="line-choice">
-                    <input type="radio" name="line_type" value="gcpw"<?= pcb_checked($lineType, 'gcpw') ?>>
-                    <img src="images/pcb-gcpw.svg" alt="Копланарная линия с боковыми землями и нижней плоскостью земли" width="360" height="300">
-                    <span><span class="choice-title">Копланарная линия с землёй снизу (GCPW)</span><span class="choice-desc">Сигнальная дорожка между земляными участками сверху, плюс сплошная земля снизу. Вводятся H и боковой зазор S.</span></span>
-                </label>
-            </div>
+        <section class="panel no-print line-panel">
+            <h2>Тип линии</h2>
+            <label class="field-label" for="line_type">Конструкция</label>
+            <select id="line_type" name="line_type" class="line-type-select">
+                <option value="microstrip"<?= $lineType === 'microstrip' ? ' selected' : '' ?>>Микрополосковая (Microstrip)</option>
+                <option value="stripline"<?= $lineType === 'stripline' ? ' selected' : '' ?>>Полосковая (Stripline)</option>
+                <option value="gcpw"<?= $lineType === 'gcpw' ? ' selected' : '' ?>>Копланарная (GCPW)</option>
+            </select>
+            <img class="line-diagram" id="line-diagram" src="images/pcb-<?= $lineType ?>.svg" alt="Схема выбранного типа ВЧ-линии" width="360" height="300">
+            <p class="line-caption" id="line-caption"><?= $lineType === 'microstrip' ? 'Дорожка на наружном слое; земля снизу.' : ($lineType === 'stripline' ? 'Дорожка расположена между двумя плоскостями земли.' : 'Боковые земляные участки и нижняя плоскость земли.') ?></p>
         </section>
 
         <div class="input-column">
@@ -438,7 +439,6 @@ function pcb_checked(string $current, string $value): string
                 <div class="field">
                     <label class="field-label" for="er">Относительная диэлектрическая проницаемость εr</label>
                     <input type="text" inputmode="decimal" id="er" name="er" value="<?= pcb_h($raw['er']) ?>" autocomplete="off">
-                    <span class="field-help">Введи значение из документации на материал платы.</span>
                 </div>
                 <div class="field">
                     <label class="field-label" for="copper_t">Толщина меди T</label>
@@ -449,12 +449,10 @@ function pcb_checked(string $current, string $value): string
                             <option value="mm"<?= $raw['copper_unit'] === 'mm' ? ' selected' : '' ?>>мм</option>
                         </select>
                     </div>
-                    <span class="field-help">Для 35 мкм меди введи 35 и выбери мкм.</span>
                 </div>
                 <div class="field">
                     <label class="field-label" for="target_z">Требуемый импеданс Z₀, Ом</label>
                     <input type="text" inputmode="decimal" id="target_z" name="target_z" value="<?= pcb_h($raw['target_z']) ?>" autocomplete="off">
-                    <span class="field-help">Обычно 50 Ом для ВЧ-тракта; можно указать другое значение.</span>
                 </div>
             </div>
         </section>
@@ -522,19 +520,41 @@ function pcb_checked(string $current, string $value): string
 </main>
 <script>
 (() => {
-  const radios = document.querySelectorAll('input[name="line_type"]');
+  const selector = document.getElementById('line_type');
   const groups = document.querySelectorAll('[data-geometry]');
+  const diagram = document.getElementById('line-diagram');
+  const caption = document.getElementById('line-caption');
+  const diagramData = {
+    microstrip: {
+      src: 'images/pcb-microstrip.svg',
+      alt: 'Микрополосковая линия: дорожка на наружном слое, земля снизу',
+      caption: 'Дорожка на наружном слое; земля снизу.'
+    },
+    stripline: {
+      src: 'images/pcb-stripline.svg',
+      alt: 'Симметричная полосковая линия между двумя плоскостями земли',
+      caption: 'Дорожка расположена между двумя плоскостями земли.'
+    },
+    gcpw: {
+      src: 'images/pcb-gcpw.svg',
+      alt: 'Копланарная линия с боковыми земляными участками и нижней землёй',
+      caption: 'Боковые земляные участки и нижняя плоскость земли.'
+    }
+  };
   function updateGeometry() {
-    const selected = document.querySelector('input[name="line_type"]:checked');
-    if (!selected) return;
+    const selected = selector.value;
     groups.forEach(group => {
-      const active = group.dataset.geometry === selected.value;
-      // Только скрываем неактивные поля: значения должны сохраняться
-      // при переключении типа линии и после отправки формы.
-      group.hidden = !active;
+      // Только скрываем неактивные поля: значения сохраняются при переключении.
+      group.hidden = group.dataset.geometry !== selected;
     });
+    const data = diagramData[selected];
+    if (data) {
+      diagram.src = data.src;
+      diagram.alt = data.alt;
+      caption.textContent = data.caption;
+    }
   }
-  radios.forEach(radio => radio.addEventListener('change', updateGeometry));
+  selector.addEventListener('change', updateGeometry);
   updateGeometry();
 })();
 </script>
