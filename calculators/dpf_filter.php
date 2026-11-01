@@ -40,6 +40,207 @@ function dpf_checked(string $current, string $value): string
     return $current === $value ? ' checked' : '';
 }
 
+
+/**
+ * Формат числа RFSim99: мантисса и четырёхзначный показатель степени.
+ * Значения передаются в СИ: Ф, Гн, Ом, Гц.
+ */
+function dpf_cct_scientific(float $value): string
+{
+    if (!is_finite($value)) {
+        throw new RuntimeException('В CCT нельзя записать бесконечное или неопределённое значение.');
+    }
+
+    $formatted = sprintf('%.14E', $value);
+    $padded = preg_replace_callback(
+        '/E([+-])(\d+)$/',
+        static fn(array $match): string => 'E' . $match[1] . str_pad($match[2], 4, '0', STR_PAD_LEFT),
+        $formatted
+    );
+
+    if (!is_string($padded)) {
+        throw new RuntimeException('Не удалось отформатировать номинал для RFSim99.');
+    }
+    return $padded;
+}
+
+/**
+ * Создаёт CCT из одного из двух шаблонов ДПФ.
+ * Изменяются только номиналы заданных элементов, импедансы портов и Xax min/max.
+ */
+function dpf_build_cct(string $topology, array $result): string
+{
+    if ($topology === 'T') {
+        $templateName = 'BPF2_T.cct';
+        $componentMap = [
+            '260,180' => ['key' => 'c1', 'ctype' => '2', 'scale' => 1e-12],
+            '340,180' => ['key' => 'c1', 'ctype' => '2', 'scale' => 1e-12],
+            '300,250' => ['key' => 'c2', 'ctype' => '2', 'scale' => 1e-12],
+            '180,180' => ['key' => 'l1', 'ctype' => '3', 'scale' => 1e-6],
+            '410,180' => ['key' => 'l1', 'ctype' => '3', 'scale' => 1e-6],
+        ];
+        $expectedCounts = ['c1' => 2, 'c2' => 1, 'l1' => 2];
+    } elseif ($topology === 'P') {
+        $templateName = 'BPF2_P.cct';
+        $componentMap = [
+            '150,230' => ['key' => 'l1', 'ctype' => '3', 'scale' => 1e-6],
+            '340,230' => ['key' => 'l1', 'ctype' => '3', 'scale' => 1e-6],
+            '250,230' => ['key' => 'cb', 'ctype' => '2', 'scale' => 1e-12],
+            '200,300' => ['key' => 'ca', 'ctype' => '2', 'scale' => 1e-12],
+            '300,300' => ['key' => 'ca', 'ctype' => '2', 'scale' => 1e-12],
+        ];
+        $expectedCounts = ['ca' => 2, 'cb' => 1, 'l1' => 2];
+    } else {
+        throw new RuntimeException('Неизвестная топология для экспорта CCT.');
+    }
+
+    $templatePath = __DIR__ . '/templates/' . $templateName;
+    if (!is_file($templatePath) || !is_readable($templatePath)) {
+        throw new RuntimeException('Не найден шаблон /calculators/templates/' . $templateName . ' или нет доступа на чтение.');
+    }
+
+    $template = file_get_contents($templatePath);
+    if (!is_string($template) || $template === '') {
+        throw new RuntimeException('Не удалось прочитать шаблон ' . $templateName . '.');
+    }
+
+    $resistance = (float) $result['resistance'];
+    $frequencyMHz = (float) $result['frequency'];
+    $bandwidthKHz = (float) $result['delta_f'];
+
+    // Общее окно по частоте в пять раз шире полосы пропускания.
+    $minHz = ($frequencyMHz - 2.5 * ($bandwidthKHz / 1000.0)) * 1e6;
+    $maxHz = ($frequencyMHz + 2.5 * ($bandwidthKHz / 1000.0)) * 1e6;
+    if ($minHz < 0.0) {
+        $minHz = $frequencyMHz * 0.05 * 1e6;
+    }
+    if (!is_finite($minHz) || !is_finite($maxHz) || $maxHz <= $minHz) {
+        throw new RuntimeException('Для заданных параметров получился недопустимый диапазон отображения АЧХ.');
+    }
+
+    $drawdatPosition = strpos($template, 'drawdat{');
+    if ($drawdatPosition === false) {
+        throw new RuntimeException('В шаблоне не найден блок drawdat.');
+    }
+    $prefix = substr($template, 0, $drawdatPosition);
+    $drawdat = substr($template, $drawdatPosition);
+
+    $prefix = preg_replace_callback(
+        '/Xax\{([\s\S]*?)(\r?\n)\}/',
+        static function (array $match) use ($minHz, $maxHz): string {
+            $block = $match[1];
+            $eol = $match[2];
+            foreach (['max' => $maxHz, 'min' => $minHz] as $field => $value) {
+                $block = preg_replace_callback(
+                    '/^(' . preg_quote($field, '/') . '=\s*)[^\r\n]*/m',
+                    static fn(array $line): string => $line[1] . dpf_cct_scientific($value),
+                    $block,
+                    1,
+                    $count
+                );
+                if (!is_string($block) || $count !== 1) {
+                    throw new RuntimeException('В блоке Xax не удалось однозначно заменить параметр ' . $field . '.');
+                }
+            }
+            return 'Xax{' . $block . $eol . '}';
+        },
+        $prefix,
+        -1,
+        $xaxMatches
+    );
+    if (!is_string($prefix) || $xaxMatches !== 1) {
+        throw new RuntimeException('В шаблоне должен находиться ровно один блок Xax.');
+    }
+
+    $componentCounts = array_fill_keys(array_keys($expectedCounts), 0);
+    $drawdat = preg_replace_callback(
+        '/component\{([\s\S]*?)(\r?\n)\}/',
+        static function (array $match) use (&$componentCounts, $componentMap, $result): string {
+            $block = $match[1];
+            $eol = $match[2];
+
+            if (!preg_match('/^ctype=(\d+)\s*$/m', $block, $ctypeMatch)
+                || !preg_match('/^position\.x=(\d+)\s*$/m', $block, $xMatch)
+                || !preg_match('/^position\.y=(\d+)\s*$/m', $block, $yMatch)) {
+                return $match[0];
+            }
+
+            $coordinate = $xMatch[1] . ',' . $yMatch[1];
+            if (!isset($componentMap[$coordinate])) {
+                // В том числе оставляем вспомогательные компоненты ctype=4 без изменений.
+                return $match[0];
+            }
+
+            $mapping = $componentMap[$coordinate];
+            if ($ctypeMatch[1] !== $mapping['ctype']) {
+                throw new RuntimeException('Тип компонента в координатах ' . $coordinate . ' не совпадает с шаблоном.');
+            }
+
+            $key = $mapping['key'];
+            $value = $result[$key] ?? null;
+            if (!is_numeric($value) || !is_finite((float) $value) || (float) $value <= 0.0) {
+                throw new RuntimeException('Для элемента ' . strtoupper($key) . ' нет положительного конечного номинала.');
+            }
+
+            $nominalText = dpf_cct_scientific((float) $value * $mapping['scale']);
+            $updated = preg_replace_callback(
+                '/(value\[1\]=\{nom=\s*)[^;]+/',
+                static fn(array $nominalMatch): string => $nominalMatch[1] . $nominalText,
+                $block,
+                1,
+                $nominalCount
+            );
+            if (!is_string($updated) || $nominalCount !== 1) {
+                throw new RuntimeException('Не удалось заменить номинал компонента в координатах ' . $coordinate . '.');
+            }
+
+            $componentCounts[$key]++;
+            return 'component{' . $updated . $eol . '}';
+        },
+        $drawdat,
+        -1,
+        $componentMatches
+    );
+    if (!is_string($drawdat) || $componentMatches < 1) {
+        throw new RuntimeException('Не удалось обработать компоненты в блоке drawdat.');
+    }
+    foreach ($expectedCounts as $key => $expected) {
+        if ($componentCounts[$key] !== $expected) {
+            throw new RuntimeException('В шаблоне найдено неожиданное количество элементов ' . strtoupper($key) . '.');
+        }
+    }
+
+    $portCounts = ['1' => 0, '2' => 0];
+    $drawdat = preg_replace_callback(
+        '/P([12])\{([\s\S]*?)(\r?\n)\}/',
+        static function (array $match) use (&$portCounts, $resistance): string {
+            $port = $match[1];
+            $block = $match[2];
+            $eol = $match[3];
+            $updated = preg_replace_callback(
+                '/(^Zo=\s*)[^\r\n]*/m',
+                static fn(array $zoMatch): string => $zoMatch[1] . dpf_cct_scientific($resistance),
+                $block,
+                1,
+                $zoCount
+            );
+            if (!is_string($updated) || $zoCount !== 1) {
+                throw new RuntimeException('Не удалось изменить импеданс порта P' . $port . '.');
+            }
+            $portCounts[$port]++;
+            return 'P' . $port . '{' . $updated . $eol . '}';
+        },
+        $drawdat,
+        -1,
+        $portMatches
+    );
+    if (!is_string($drawdat) || $portMatches !== 2 || $portCounts !== ['1' => 1, '2' => 1]) {
+        throw new RuntimeException('В шаблоне должны находиться ровно по одному порту P1 и P2.');
+    }
+
+    return $prefix . $drawdat;
+}
+
 $mode = (string) ($_POST['mode'] ?? 'bandwidth');
 if (!in_array($mode, ['bandwidth', 'inductance'], true)) {
     $mode = 'bandwidth';
@@ -50,7 +251,11 @@ $frequencyRaw = trim((string) ($_POST['frequency'] ?? '6'));
 $thirdDefault = $mode === 'bandwidth' ? '4000' : '100';
 $thirdRaw = trim((string) ($_POST['third_value'] ?? $thirdDefault));
 
-$isSubmitted = (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') && isset($_POST['calculate']);
+$exportAction = (string) ($_POST['export'] ?? '');
+$isExportRequest = (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST')
+    && in_array($exportAction, ['T', 'P'], true);
+$isSubmitted = (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST')
+    && (isset($_POST['calculate']) || $isExportRequest);
 $error = '';
 $result = null;
 
@@ -126,8 +331,38 @@ if ($isSubmitted) {
         }
     }
 }
+
+if ($isExportRequest) {
+    $timestamp = trim((string) ($_POST['export_timestamp'] ?? ''));
+
+    if ($result === null || $error !== '') {
+        http_response_code(400);
+        exit('Невозможно экспортировать схему: проверьте исходные параметры фильтра.');
+    }
+    if (!preg_match('/^\d{8}_\d{6}$/', $timestamp)) {
+        http_response_code(400);
+        exit('Не удалось получить местные дату и время компьютера. Повторите скачивание с включённым JavaScript.');
+    }
+
+    try {
+        $cctContent = dpf_build_cct($exportAction, $result);
+    } catch (Throwable $exception) {
+        http_response_code(500);
+        exit('Не удалось сформировать CCT: ' . $exception->getMessage());
+    }
+
+    $downloadName = 'BPF2_' . $exportAction . '_' . $timestamp . '.cct';
+    header('Content-Type: application/octet-stream');
+    header('Content-Disposition: attachment; filename="' . $downloadName . '"');
+    header('Content-Length: ' . strlen($cctContent));
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    echo $cctContent;
+    exit;
+}
+
 ?>
-<!doctype html>
+<!doctype html
 <html lang="ru">
 <head>
     <meta charset="utf-8">
@@ -184,6 +419,9 @@ if ($isSubmitted) {
         .part-label { min-width: 0; }
         .part-description { display: block; color: #69727b; font-size: .82rem; line-height: 1.35; margin-top: 2px; }
         .part-value { flex: 0 0 auto; text-align: right; font-weight: 700; overflow-wrap: anywhere; }
+        .cct-export-form { margin-top: 12px; }
+        .cct-export-button { width: 100%; background: #28623f; }
+        .cct-export-button:hover { background: #1f4e32; }
         .error { margin-top: 15px; padding: 12px 13px; border: 1px solid #e4b7b7; border-radius: 8px; background: #fff5f5; color: #8b2323; line-height: 1.45; }
         .stale-hint { display: none; margin-top: 12px; color: #7a5200; font-size: .93rem; line-height: 1.4; }
         .formula-list { margin: 0; padding-left: 20px; line-height: 1.7; }
@@ -290,6 +528,16 @@ if ($isSubmitted) {
                             <div class="part-label"><strong>C2</strong><span class="part-description">Шунтирующий конденсатор</span></div>
                             <span class="part-value"><span data-result-value><?= $result !== null ? dpf_h(dpf_num($result['c2'])) : '—' ?></span> пФ</span>
                         </div>
+                        <?php if ($result !== null && $error === ''): ?>
+                        <form class="cct-export-form" method="post" action="">
+                            <input type="hidden" name="resistance" value="<?= dpf_h($resistanceRaw) ?>">
+                            <input type="hidden" name="frequency" value="<?= dpf_h($frequencyRaw) ?>">
+                            <input type="hidden" name="mode" value="<?= dpf_h($mode) ?>">
+                            <input type="hidden" name="third_value" value="<?= dpf_h($thirdRaw) ?>">
+                            <input type="hidden" name="export_timestamp" value="">
+                            <button class="cct-export-button" type="submit" name="export" value="T">Скачать CCT (Т)</button>
+                        </form>
+                        <?php endif; ?>
                     </section>
                     <section class="topology">
                         <h3>П-образная топология</h3>
@@ -301,6 +549,16 @@ if ($isSubmitted) {
                             <div class="part-label"><strong>Cb</strong><span class="part-description">Последовательный конденсатор</span></div>
                             <span class="part-value"><span data-result-value><?= $result !== null ? dpf_h(dpf_num($result['cb'])) : '—' ?></span> пФ</span>
                         </div>
+                        <?php if ($result !== null && $error === ''): ?>
+                        <form class="cct-export-form" method="post" action="">
+                            <input type="hidden" name="resistance" value="<?= dpf_h($resistanceRaw) ?>">
+                            <input type="hidden" name="frequency" value="<?= dpf_h($frequencyRaw) ?>">
+                            <input type="hidden" name="mode" value="<?= dpf_h($mode) ?>">
+                            <input type="hidden" name="third_value" value="<?= dpf_h($thirdRaw) ?>">
+                            <input type="hidden" name="export_timestamp" value="">
+                            <button class="cct-export-button" type="submit" name="export" value="P">Скачать CCT (П)</button>
+                        </form>
+                        <?php endif; ?>
                     </section>
                 </div>
             </div>
@@ -370,6 +628,34 @@ if ($isSubmitted) {
         form.querySelectorAll('input').forEach(control => {
             control.addEventListener('input', markOutdated);
         });
+    }
+
+    document.querySelectorAll('.cct-export-form').forEach(exportForm => {
+        exportForm.addEventListener('submit', () => {
+            const now = new Date();
+            const pad = value => String(value).padStart(2, '0');
+            const timestamp = [
+                now.getFullYear(),
+                pad(now.getMonth() + 1),
+                pad(now.getDate())
+            ].join('') + '_' + [
+                pad(now.getHours()),
+                pad(now.getMinutes()),
+                pad(now.getSeconds())
+            ].join('');
+            const timestampInput = exportForm.querySelector('input[name="export_timestamp"]');
+            if (timestampInput) timestampInput.value = timestamp;
+        });
+    });
+
+    const shouldScrollToResults = <?= ($result !== null && $error === '' && !$isExportRequest) ? 'true' : 'false' ?>;
+    if (shouldScrollToResults) {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            const resultPanel = document.getElementById('calculation-result');
+            if (resultPanel) {
+                resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }));
     }
 })();
 </script>
