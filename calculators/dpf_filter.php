@@ -571,6 +571,7 @@ if ($isExportRequest) {
                         <?php endif; ?>
                     </section>
                 </div>
+        </div>
     </section>
 
     <section class="panel">
