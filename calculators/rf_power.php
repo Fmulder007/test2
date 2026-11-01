@@ -188,14 +188,14 @@ $voltageTypeLabels = [
         .back-link:hover { text-decoration: underline; }
         .diagram { display: block; width: 100%; height: auto; margin: 16px 0; border: 1px solid #d7dce1; border-radius: 8px; background: #fff; }
         .note { padding: 12px 14px; border-left: 4px solid #3c7ca7; background: #f2f7fb; border-radius: 5px; line-height: 1.45; }
-        .calculator-layout { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 22px; align-items: start; }
+        .calculator-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
         .diagram-column, .form-column { min-width: 0; }
         .diagram { margin: 0 0 14px; }
         .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
         .field { min-width: 0; }
         .field-label { display: block; font-weight: 700; margin-bottom: 6px; }
         select, input, button { font: inherit; }
-        .value-row { display: grid; grid-template-columns: minmax(0, 1fr) 112px; gap: 8px; }
+        .value-row { display: grid; grid-template-columns: minmax(0, 1fr) 92px; gap: 8px; max-width: 280px; }
         .value-input, .unit-select, .mode-select { width: 100%; min-width: 0; border: 1px solid #b8c0c8; border-radius: 6px; padding: 10px; background: #fff; }
         .value-input:focus, .unit-select:focus, .mode-select:focus { outline: 3px solid #c5e2f8; border-color: #3976a8; }
         .mode-select { margin-bottom: 14px; }
