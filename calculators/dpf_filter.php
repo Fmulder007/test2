@@ -114,7 +114,7 @@ function dpf_build_cct(string $topology, array $result): string
     $minHz = ($frequencyMHz - 2.5 * ($bandwidthKHz / 1000.0)) * 1e6;
     $maxHz = ($frequencyMHz + 2.5 * ($bandwidthKHz / 1000.0)) * 1e6;
     $minimumAllowedHz = null;
-    if ($minHz < 0.0) {
+    if ($minHz <= 0.0) {
         $minimumAllowedHz = $frequencyMHz * 0.05 * 1e6;
         $minHz = $minimumAllowedHz;
     }
