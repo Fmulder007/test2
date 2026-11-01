@@ -349,9 +349,9 @@ $formatters = ['u' => 'oh_formatVoltage', 'i' => 'oh_formatCurrent', 'r' => 'oh_
         if (q1.value === q2.value) {
             const other = changed === 1 ? q2 : q1;
             other.value = ['u','i','r','p'].find(item => item !== (changed === 1 ? q1.value : q2.value));
-            updateQuantityFieldstrue, true);
+            updateQuantityFields(true, true);
         } else {
-            updateQuantityFieldschanged === 1, changed === 2);
+            updateQuantityFields(changed === 1, changed === 2);
         }
         markOutdated();
     }
@@ -368,7 +368,7 @@ $formatters = ['u' => 'oh_formatVoltage', 'i' => 'oh_formatCurrent', 'r' => 'oh_
         if (error) error.hidden = true;
         if (hint) hint.style.display = 'block';
     }
-    updateQuantityFieldsfalse, false);
+    updateQuantityFields(false, false);
 })();
 </script>
 </body>
