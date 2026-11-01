@@ -5,12 +5,12 @@
  * Самостоятельная страница: без базы данных, JavaScript и внешних библиотек.
  * Расчёты дают начальные размеры для изготовления и последующей настройки.
  *
- * Используемые практические формулы:
- *  - полуволновой диполь / EFHW: 468 / f (футы), общая длина;
- *  - четвертьволновый элемент: 234 / f (футы);
- *  - вертикал 5/8 волны: 585 / f (футы);
- *  - периметр полноразмерной волновой рамки: 1005 / f (футы).
- * f — частота в МГц. Эти формулы приблизительные; готовую антенну нужно подстроить.
+ * Используемые практические формулы заданы непосредственно в метрах:
+ *  - полуволновой диполь / EFHW: 142,6464 / f;
+ *  - четвертьволновый элемент: 71,3232 / f;
+ *  - вертикал 5/8 волны: 178,308 / f;
+ *  - периметр полноразмерной волновой рамки: 306,324 / f.
+ * f — частота в МГц. Формулы приблизительные; готовую антенну нужно подстроить.
  */
 declare(strict_types=1);
 
@@ -24,17 +24,19 @@ function fmt(float $value, int $decimals = 3): string
     return number_format($value, $decimals, ',', '');
 }
 
-/** Формат длины в метрах, сантиметрах и футах с десятичными дюймами. */
-function lengthText(float $meters): string
+/** Форматирование длины только в метрических единицах с удобным масштабом. */
+function metricLengthText(float $meters): string
 {
-    $inchesTotal = $meters / 0.0254;
-    $feet = (int) floor($inchesTotal / 12.0);
-    $inches = round($inchesTotal - $feet * 12.0, 1);
-    if ($inches >= 12.0) {
-        $feet++;
-        $inches = 0.0;
+    $length = abs($meters);
+
+    if ($length >= 1.0) {
+        return fmt($meters, 3) . ' м';
     }
-    return fmt($meters, 3) . ' м (' . $feet . ' фут ' . fmt($inches, 1) . ' дюйм)';
+    if ($length >= 0.01) {
+        return fmt($meters * 100.0, 2) . ' см';
+    }
+
+    return fmt($meters * 1000.0, 2) . ' мм';
 }
 
 $antennaTypes = [
@@ -82,11 +84,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $frequency = (float) $normalizedFrequency;
         $radialCount = (int) $radialCountInput;
         $wavelength = 299.792458 / $frequency;
-        // Практические коэффициенты заданы в футах; переводим в метры.
-        $halfWaveMeters = (468.0 / $frequency) * 0.3048;
-        $quarterWaveMeters = (234.0 / $frequency) * 0.3048;
-        $fiveEighthsMeters = (585.0 / $frequency) * 0.3048;
-        $loopPerimeterMeters = (1005.0 / $frequency) * 0.3048;
+        // Коэффициенты практических формул сразу выражены в метрах.
+        $halfWaveMeters = 142.6464 / $frequency;
+        $quarterWaveMeters = 71.3232 / $frequency;
+        $fiveEighthsMeters = 178.308 / $frequency;
+        $loopPerimeterMeters = 306.324 / $frequency;
 
         switch ($antennaType) {
             case 'dipole':
@@ -94,7 +96,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     'title' => $antennaTypes[$antennaType],
                     'frequency' => $frequency,
                     'wavelength' => $wavelength,
-                    'formula' => 'Полная длина = 468 / f (футы)',
+                    'formula' => 'Полная длина = 142,6464 / f (м)',
                     'items' => [
                         ['Общая длина провода', $halfWaveMeters],
                         ['Одно плечо диполя', $halfWaveMeters / 2.0],
@@ -111,7 +113,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     'title' => $antennaTypes[$antennaType],
                     'frequency' => $frequency,
                     'wavelength' => $wavelength,
-                    'formula' => 'Начальная общая длина = 468 / f (футы)',
+                    'formula' => 'Начальная общая длина = 142,6464 / f (м)',
                     'items' => [
                         ['Общая длина двух плеч', $halfWaveMeters],
                         ['Длина каждого плеча', $halfWaveMeters / 2.0],
@@ -128,7 +130,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     'title' => $antennaTypes[$antennaType],
                     'frequency' => $frequency,
                     'wavelength' => $wavelength,
-                    'formula' => 'Начальная длина полуволнового излучателя = 468 / f (футы)',
+                    'formula' => 'Начальная длина полуволнового излучателя = 142,6464 / f (м)',
                     'items' => [
                         ['Длина излучающего провода', $halfWaveMeters],
                         ['Ориентировочная длина свободного участка 0,05 λ (необязательный противовес)', $wavelength * 0.05],
@@ -146,7 +148,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     'title' => $antennaTypes[$antennaType],
                     'frequency' => $frequency,
                     'wavelength' => $wavelength,
-                    'formula' => 'Длина 1/4 волны = 234 / f (футы)',
+                    'formula' => 'Длина 1/4 волны = 71,3232 / f (м)',
                     'items' => [
                         ['Длина вертикального излучателя', $quarterWaveMeters],
                         ['Длина одного радиала (начальный размер)', $quarterWaveMeters],
@@ -165,7 +167,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     'title' => $antennaTypes[$antennaType],
                     'frequency' => $frequency,
                     'wavelength' => $wavelength,
-                    'formula' => 'Длина 5/8 волны = 585 / f (футы)',
+                    'formula' => 'Длина 5/8 волны = 178,308 / f (м)',
                     'items' => [
                         ['Длина вертикального излучателя 5/8 λ', $fiveEighthsMeters],
                         ['Ориентировочная длина одного радиала 1/4 λ', $quarterWaveMeters],
@@ -183,7 +185,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     'title' => $antennaTypes[$antennaType],
                     'frequency' => $frequency,
                     'wavelength' => $wavelength,
-                    'formula' => 'Периметр = 1005 / f (футы)',
+                    'formula' => 'Периметр = 306,324 / f (м)',
                     'items' => [
                         ['Полная длина провода (периметр)', $loopPerimeterMeters],
                         ['Длина одной стороны квадрата', $loopPerimeterMeters / 4.0],
@@ -201,7 +203,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     'title' => $antennaTypes[$antennaType],
                     'frequency' => $frequency,
                     'wavelength' => $wavelength,
-                    'formula' => 'Периметр = 1005 / f (футы); стороны равностороннего треугольника равны',
+                    'formula' => 'Периметр = 306,324 / f (м); стороны равностороннего треугольника равны',
                     'items' => [
                         ['Полная длина провода (периметр)', $loopPerimeterMeters],
                         ['Длина каждой из трёх сторон', $side],
@@ -342,7 +344,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 <?php foreach ($result['items'] as [$label, $meters]): ?>
                     <div class="summary-item">
                         <span><?= h((string) $label) ?></span>
-                        <strong><?= h(lengthText((float) $meters)) ?></strong>
+                        <strong><?= h(metricLengthText((float) $meters)) ?></strong>
                     </div>
                 <?php endforeach; ?>
             </div>
