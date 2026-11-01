@@ -6,6 +6,8 @@
  */
 declare(strict_types=1);
 
+require_once __DIR__ . '/cct_frequency_axis.php';
+
 function dpf3_h(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -258,6 +260,7 @@ function dpf3_build_sequential_cct(
     // Сначала меняем только две границы частотного окна, сохраняя остальные настройки Xax.
     $minHz = ($frequencyMHz - 2.5 * ($bandwidthKHz / 1000.0)) * 1e6;
     $maxHz = ($frequencyMHz + 2.5 * ($bandwidthKHz / 1000.0)) * 1e6;
+    [$minHz, $maxHz] = cct_frequency_axis_bounds($minHz, $maxHz);
     if (!is_finite($minHz) || !is_finite($maxHz) || $minHz <= 0.0 || $maxHz <= $minHz) {
         throw new RuntimeException('Для заданных параметров получился недопустимый диапазон отображения АЧХ.');
     }
@@ -427,6 +430,7 @@ function dpf3_build_parallel_cct(
     // Границы частотного окна задаются симметрично относительно центральной частоты.
     $minHz = ($frequencyMHz - 2.5 * ($bandwidthKHz / 1000.0)) * 1e6;
     $maxHz = ($frequencyMHz + 2.5 * ($bandwidthKHz / 1000.0)) * 1e6;
+    [$minHz, $maxHz] = cct_frequency_axis_bounds($minHz, $maxHz);
     if (!is_finite($minHz) || !is_finite($maxHz) || $minHz <= 0.0 || $maxHz <= $minHz) {
         throw new RuntimeException('Для заданных параметров получился недопустимый диапазон отображения АЧХ.');
     }
