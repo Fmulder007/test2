@@ -204,7 +204,7 @@ $voltageTypeLabels = [
         .field-label { margin: 0; }
         .field .value-row { min-width: 0; }
         #voltage-help, .field > .subtle { display: none; }
-        .mode-field { margin-bottom: 15px; }
+        .mode-field { margin-bottom: 8px; }
         .action-row { display: flex; align-items: center; gap: 12px; margin-top: 17px; }
         button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; border: 0; border-radius: 6px; padding: 11px 16px; color: #fff; background: #245c88; font-weight: 700; line-height: 1.25; cursor: pointer; }
         button:hover { background: #19476c; }
