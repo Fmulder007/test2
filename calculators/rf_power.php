@@ -188,7 +188,10 @@ $voltageTypeLabels = [
         .back-link:hover { text-decoration: underline; }
         .diagram { display: block; width: 100%; height: auto; margin: 16px 0; border: 1px solid #d7dce1; border-radius: 8px; background: #fff; }
         .note { padding: 12px 14px; border-left: 4px solid #3c7ca7; background: #f2f7fb; border-radius: 5px; line-height: 1.45; }
-        .form-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: end; }
+        .calculator-layout { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 22px; align-items: start; }
+        .diagram-column, .form-column { min-width: 0; }
+        .diagram { margin: 0 0 14px; }
+        .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
         .field { min-width: 0; }
         .field-label { display: block; font-weight: 700; margin-bottom: 6px; }
         select, input, button { font: inherit; }
@@ -197,7 +200,8 @@ $voltageTypeLabels = [
         .value-input:focus, .unit-select:focus, .mode-select:focus { outline: 3px solid #c5e2f8; border-color: #3976a8; }
         .mode-select { margin-bottom: 14px; }
         .mode-field { margin-bottom: 15px; }
-        .action-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 17px; }
+        .action-row { display: flex; align-items: stretch; gap: 10px; margin-top: 17px; }
+        .action-row button, .action-row .clear-link { flex: 1 1 0; min-width: 0; }
         button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; border: 0; border-radius: 6px; padding: 11px 16px; color: #fff; background: #245c88; font-weight: 700; line-height: 1.25; cursor: pointer; }
         button:hover { background: #19476c; }
         button:focus-visible, a:focus-visible { outline: 3px solid #89bde5; outline-offset: 3px; }
@@ -214,13 +218,19 @@ $voltageTypeLabels = [
         .error { margin-top: 16px; padding: 12px; border: 1px solid #e4b7b7; border-radius: 8px; background: #fff5f5; color: #8b2323; line-height: 1.45; }
         .stale-hint { display: none; margin-top: 12px; color: #7a5200; font-size: .93rem; }
         .small { font-size: .9rem; }
-        .clear-link { color: #244f76; }
+        .clear-link { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 10px 16px; border: 1px solid #9eafbf; border-radius: 6px; color: #244f76; background: #fff; font-weight: 700; line-height: 1.25; text-decoration: none; text-align: center; }
+        .clear-link:hover { background: #f2f6f9; text-decoration: underline; }
+        @media (max-width: 760px) {
+            .calculator-layout { grid-template-columns: minmax(0, 1fr); }
+        }
         @media (max-width: 680px) {
             body { padding: 10px; }
             .panel { padding: 15px; }
             .form-grid { grid-template-columns: minmax(0, 1fr); }
             .results-grid { grid-template-columns: minmax(0, 1fr); }
-            .diagram { margin: 12px 0; }
+            .diagram { margin: 0 0 12px; }
+            .action-row { flex-direction: column; align-items: stretch; }
+            .action-row button, .action-row .clear-link { flex: none; width: 100%; }
         }
         @media print {
             body { padding: 0; background: #fff; }
@@ -236,14 +246,17 @@ $voltageTypeLabels = [
         <h1>Калькулятор ВЧ-мощности</h1>
         <p class="subtle">Расчёт мощности синусоидального сигнала по измеренному напряжению на активной нагрузке. Подходит для оценки ВЧ-мощности по показаниям осциллографа.</p>
         <a class="back-link" href="index.php">← К списку калькуляторов</a>
-
-        <img class="diagram" src="images/rf-sine-voltage.svg" alt="Синусоида с обозначениями размаха Vpp, амплитуды Vp и действующего напряжения Vrms" width="760" height="260">
-        <div class="note"><strong>Важно:</strong> расчёт предназначен только для синусоидального сигнала и активной резистивной нагрузки. Для прямоугольного, искажённого сигнала или реактивной нагрузки этих формул недостаточно.</div>
     </section>
 
     <section class="panel">
-        <h2>Исходные данные</h2>
-        <form id="rf-form" method="post" action="">
+        <div class="calculator-layout">
+            <div class="diagram-column">
+                <img class="diagram" src="images/rf-sine-voltage.svg" alt="Синусоида с обозначениями размаха Vpp, амплитуды Vp и действующего напряжения Vrms" width="760" height="260">
+                <div class="note"><strong>Важно:</strong> расчёт предназначен только для синусоидального сигнала и активной резистивной нагрузки. Для прямоугольного, искажённого сигнала или реактивной нагрузки этих формул недостаточно.</div>
+            </div>
+            <div class="form-column">
+                <h2>Исходные данные</h2>
+                <form id="rf-form" method="post" action="">
             <div class="mode-field">
                 <label class="field-label" for="voltage_type">Какое напряжение измерено?</label>
                 <select class="mode-select" id="voltage_type" name="voltage_type">
@@ -284,11 +297,13 @@ $voltageTypeLabels = [
             </div>
 
             <div class="action-row">
-                <button type="submit" name="calculate" value="1">Рассчитать мощность</button>
+                <button type="submit" name="calculate" value="1">Рассчитать</button>
                 <a class="clear-link" href="rf_power.php">Очистить результат</a>
             </div>
-            <div class="stale-hint" id="stale-hint">Параметры изменены. Нажми «Рассчитать мощность», чтобы обновить результат.</div>
+            <div class="stale-hint" id="stale-hint">Параметры изменены. Нажми «Рассчитать», чтобы обновить результат.</div>
         </form>
+            </div>
+        </div>
 
         <?php if ($error !== ''): ?>
             <div class="error" id="calculation-error" role="alert"><?= rf_h($error) ?></div>
