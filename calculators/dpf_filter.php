@@ -389,8 +389,10 @@ if ($isExportRequest) {
         .back-link:hover { text-decoration: underline; }
         a:focus-visible, button:focus-visible { outline: 3px solid #89bde5; outline-offset: 3px; }
         .note { padding: 12px 14px; border-left: 4px solid #3c7ca7; background: #f2f7fb; border-radius: 5px; line-height: 1.45; }
-        .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: end; }
-        .mode-third-grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 14px; align-items: end; margin-top: 15px; }
+        .calculator-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+         .input-column { min-width: 0; }
+         .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: end; }
+        .mode-third-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: end; margin-top: 15px; }
         .field { min-width: 0; }
         .field-label { display: block; font-weight: 700; margin-bottom: 6px; line-height: 1.35; }
         input, button { font: inherit; }
@@ -410,7 +412,7 @@ if ($isExportRequest) {
         .result { overflow: hidden; }
         .result-heading { margin-bottom: 5px; }
         .result-intro { margin: 0 0 16px; }
-        .result-layout { display: grid; grid-template-columns: minmax(230px, .82fr) minmax(0, 1.18fr); gap: 20px; align-items: start; }
+        .result-values { min-width: 0; }
         .diagram { display: block; width: 100%; height: auto; margin: 0; border: 1px solid #d7dce1; border-radius: 8px; background: #fff; }
         .diagram-caption { margin: 8px 1px 0; color: #5f6368; font-size: .88rem; line-height: 1.45; }
         .summary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 13px; }
@@ -435,9 +437,9 @@ if ($isExportRequest) {
         @media (max-width: 760px) {
             body { padding: 10px; }
             .panel { padding: 15px; }
+            .calculator-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; }
             .mode-third-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 13px; }
-            .result-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
-            .diagram-wrap { max-width: 500px; margin: 0 auto; }
+            .diagram-wrap { max-width: 100%; margin: 0; }
         }
         @media (max-width: 440px) {
             .form-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
@@ -463,6 +465,12 @@ if ($isExportRequest) {
     </section>
 
     <section class="panel">
+        <div class="calculator-layout">
+            <div class="diagram-wrap">
+                <img class="diagram" src="images/dpf-filter-topologies.png" alt="Две топологии двухзвенного полосового фильтра: Т-образная с C1 и C2, П-образная с Ca и Cb; в каждой схеме две одинаковые катушки L1" width="439" height="439">
+                <p class="diagram-caption">Обе катушки L1 в каждой схеме имеют одинаковую индуктивность. Повторяющиеся обозначения конденсаторов также означают одинаковые номиналы.</p>
+            </div>
+            <div class="input-column">
         <h2>Исходные данные</h2>
         <form id="dpf-form" method="post" action="">
             <div class="form-grid">
@@ -499,22 +507,19 @@ if ($isExportRequest) {
 
             <div class="action-row">
                 <button type="submit" name="calculate" value="1">Рассчитать</button>
-                <a class="clear-link" href="dpf_filter.php">Сбросить значения</a>
+                <a class="clear-link" href="dpf_filter.php">Сбросить</a>
             </div>
             <div class="stale-hint" id="stale-hint">Исходные данные изменены. Нажмите «Рассчитать», чтобы обновить результаты.</div>
         </form>
         <?php if ($error !== ''): ?><div class="error" id="calculation-error" role="alert"><?= dpf_h($error) ?></div><?php endif; ?>
+            </div>
+        </div>
     </section>
 
     <section class="panel result" id="calculation-result" aria-live="polite">
         <h2 class="result-heading">Результаты расчёта</h2>
         <p class="subtle result-intro" id="result-intro"><?php if ($result !== null): ?><?= $result['mode'] === 'bandwidth' ? 'Расчёт по заданной полосе пропускания.' : 'Расчёт по заданной индуктивности катушек.' ?> Обозначения на рисунке соответствуют спискам номиналов.<?php else: ?>Введите исходные данные и нажмите «Рассчитать». Здесь появятся рассчитанные параметры и номиналы элементов.<?php endif; ?></p>
-        <div class="result-layout">
-            <div class="diagram-wrap">
-                <img class="diagram" src="images/dpf-filter-topologies.png" alt="Две топологии двухзвенного полосового фильтра: Т-образная с C1 и C2, П-образная с Ca и Cb; в каждой схеме две одинаковые катушки L1" width="439" height="439">
-                <p class="diagram-caption">Обе катушки L1 в каждой схеме имеют одинаковую индуктивность. Повторяющиеся обозначения конденсаторов также означают одинаковые номиналы.</p>
-            </div>
-            <div class="result-values" id="result-values">
+        <div class="result-values" id="result-values">
                 <div class="summary-grid" aria-label="Общие параметры фильтра">
                     <div class="metric"><span class="metric-label">Центральная частота Fc</span><strong class="metric-value"><span data-result-value><?= $result !== null ? dpf_h(dpf_num($result['frequency'])) : '—' ?></span> МГц</strong></div>
                     <div class="metric"><span class="metric-label">Полоса ΔF</span><strong class="metric-value"><span data-result-value><?= $result !== null ? dpf_h(dpf_num($result['delta_f'])) : '—' ?></span> кГц</strong></div>
@@ -566,8 +571,6 @@ if ($isExportRequest) {
                         <?php endif; ?>
                     </section>
                 </div>
-            </div>
-        </div>
     </section>
 
     <section class="panel">
