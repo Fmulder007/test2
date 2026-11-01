@@ -6,6 +6,8 @@
  */
 declare(strict_types=1);
 
+require_once __DIR__ . '/cct_frequency_axis.php';
+
 function dpc_h(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -565,9 +567,13 @@ function dpc_build_cct(
     dpc_replace_cct_block_field($template, 'P1', 'Zo', $rin);
     dpc_replace_cct_block_field($template, 'P2', 'Zo', $rout);
 
-    // Ширина окна АЧХ — четыре полосы пропускания: ±2 BW от центра.
-    dpc_replace_cct_block_field($template, 'Xax', 'max', $fcHz + 2.0 * $bandwidthHz);
-    dpc_replace_cct_block_field($template, 'Xax', 'min', $fcHz - 2.0 * $bandwidthHz);
+    // Округляем границы окна АЧХ по общему правилу для всех CCT-экспортов.
+    [$axisMin, $axisMax] = cct_frequency_axis_bounds(
+        $fcHz - 2.0 * $bandwidthHz,
+        $fcHz + 2.0 * $bandwidthHz
+    );
+    dpc_replace_cct_block_field($template, 'Xax', 'max', $axisMax);
+    dpc_replace_cct_block_field($template, 'Xax', 'min', $axisMin);
 
     return $template;
 }
