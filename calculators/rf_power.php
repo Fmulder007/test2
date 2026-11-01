@@ -198,7 +198,12 @@ $voltageTypeLabels = [
         .value-row { display: grid; grid-template-columns: minmax(0, 1fr) 92px; gap: 8px; max-width: 280px; }
         .value-input, .unit-select, .mode-select { width: 100%; min-width: 0; border: 1px solid #b8c0c8; border-radius: 6px; padding: 10px; background: #fff; }
         .value-input:focus, .unit-select:focus, .mode-select:focus { outline: 3px solid #c5e2f8; border-color: #3976a8; }
-        .mode-select { margin-bottom: 14px; }
+        .mode-select { margin: 0; }
+        .mode-field { display: grid; grid-template-columns: minmax(155px, .9fr) minmax(0, 1.1fr); align-items: center; gap: 10px; margin-bottom: 8px; }
+        .field { display: grid; grid-template-columns: minmax(155px, .9fr) minmax(0, 1.1fr); align-items: center; gap: 10px; }
+        .field-label { margin: 0; }
+        .field .value-row { min-width: 0; }
+        #voltage-help, .field > .subtle { display: none; }
         .mode-field { margin-bottom: 15px; }
         .action-row { display: flex; align-items: center; gap: 12px; margin-top: 17px; }
         button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; border: 0; border-radius: 6px; padding: 11px 16px; color: #fff; background: #245c88; font-weight: 700; line-height: 1.25; cursor: pointer; }
@@ -220,6 +225,7 @@ $voltageTypeLabels = [
         .clear-link { color: #244f76; }
         @media (max-width: 680px) {
             .calculator-layout { grid-template-columns: minmax(0, 1fr); }
+            .mode-field, .field { grid-template-columns: minmax(130px, .85fr) minmax(0, 1.15fr); gap: 8px; }
         }
         @media (max-width: 680px) {
             body { padding: 10px; }
@@ -258,9 +264,9 @@ $voltageTypeLabels = [
             <div class="mode-field">
                 <label class="field-label" for="voltage_type">Какое напряжение измерено?</label>
                 <select class="mode-select" id="voltage_type" name="voltage_type">
-                    <option value="vpp"<?= rf_selected($voltageType, 'vpp') ?>>Размах Vpp — от нижнего пика до верхнего</option>
-                    <option value="vp"<?= rf_selected($voltageType, 'vp') ?>>Амплитуда Vp — от нулевого уровня до пика</option>
-                    <option value="vrms"<?= rf_selected($voltageType, 'vrms') ?>>Действующее напряжение Vrms</option>
+                    <option value="vpp"<?= rf_selected($voltageType, 'vpp') ?>>Размах Vpp</option>
+                    <option value="vp"<?= rf_selected($voltageType, 'vp') ?>>Амплитуда Vp</option>
+                    <option value="vrms"<?= rf_selected($voltageType, 'vrms') ?>>Действующее Vrms</option>
                 </select>
             </div>
 
@@ -277,7 +283,6 @@ $voltageTypeLabels = [
                             <option value="kv"<?= rf_selected($voltageUnit, 'kv') ?>>кВ</option>
                         </select>
                     </div>
-                    <div id="voltage-help" class="subtle small">Можно использовать десятичную точку или запятую.</div>
                 </div>
                 <div class="field">
                     <label class="field-label" for="resistance">Сопротивление нагрузки</label>
@@ -290,7 +295,6 @@ $voltageTypeLabels = [
                             <option value="megaohm"<?= rf_selected($resistanceUnit, 'megaohm') ?>>МОм</option>
                         </select>
                     </div>
-                    <div class="subtle small">Для ВЧ обычно используют 50 Ом; значение можно изменить.</div>
                 </div>
             </div>
 
@@ -342,9 +346,9 @@ $voltageTypeLabels = [
     const typeSelect = document.getElementById('voltage_type');
     const voltageLabel = document.getElementById('voltage-label');
     const labels = {
-        vpp: 'Размах напряжения Vpp',
-        vp: 'Амплитуда Vp',
-        vrms: 'Действующее напряжение Vrms'
+        vpp: 'Напряжение Vpp',
+        vp: 'Напряжение Vp',
+        vrms: 'Напряжение Vrms'
     };
     const result = document.getElementById('calculation-result');
     const error = document.getElementById('calculation-error');
