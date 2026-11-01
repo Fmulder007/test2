@@ -6,6 +6,8 @@
  */
 declare(strict_types=1);
 
+require_once __DIR__ . '/cct_frequency_axis.php';
+
 function dpf_h(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -111,9 +113,12 @@ function dpf_build_cct(string $topology, array $result): string
     // Общее окно по частоте в пять раз шире полосы пропускания.
     $minHz = ($frequencyMHz - 2.5 * ($bandwidthKHz / 1000.0)) * 1e6;
     $maxHz = ($frequencyMHz + 2.5 * ($bandwidthKHz / 1000.0)) * 1e6;
+    $minimumAllowedHz = null;
     if ($minHz < 0.0) {
-        $minHz = $frequencyMHz * 0.05 * 1e6;
+        $minimumAllowedHz = $frequencyMHz * 0.05 * 1e6;
+        $minHz = $minimumAllowedHz;
     }
+    [$minHz, $maxHz] = cct_frequency_axis_bounds($minHz, $maxHz, $minimumAllowedHz);
     if (!is_finite($minHz) || !is_finite($maxHz) || $maxHz <= $minHz) {
         throw new RuntimeException('Для заданных параметров получился недопустимый диапазон отображения АЧХ.');
     }
@@ -535,7 +540,7 @@ if ($isExportRequest) {
                             <input type="hidden" name="mode" value="<?= dpf_h($mode) ?>">
                             <input type="hidden" name="third_value" value="<?= dpf_h($thirdRaw) ?>">
                             <input type="hidden" name="export_timestamp" value="">
-                            <button class="cct-export-button" type="submit" name="export" value="T">Скачать CCT (Т)</button>
+                            <button class="cct-export-button" type="submit" name="export" value="T">Скачать схему для RFSim99 (.cct)</button>
                         </form>
                         <?php endif; ?>
                     </section>
@@ -556,7 +561,7 @@ if ($isExportRequest) {
                             <input type="hidden" name="mode" value="<?= dpf_h($mode) ?>">
                             <input type="hidden" name="third_value" value="<?= dpf_h($thirdRaw) ?>">
                             <input type="hidden" name="export_timestamp" value="">
-                            <button class="cct-export-button" type="submit" name="export" value="P">Скачать CCT (П)</button>
+                            <button class="cct-export-button" type="submit" name="export" value="P">Скачать схему для RFSim99 (.cct)</button>
                         </form>
                         <?php endif; ?>
                     </section>
