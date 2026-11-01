@@ -622,6 +622,9 @@ if ($isExportRequest) {
         }
         if (error) error.hidden = true;
         if (staleHint && (result || error)) staleHint.style.display = 'block';
+        document.querySelectorAll('.cct-export-form').forEach(exportForm => {
+            exportForm.hidden = true;
+        });
     }
 
     if (result || error) {
