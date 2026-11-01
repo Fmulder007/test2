@@ -263,9 +263,11 @@ foreach ($toroidCores as $id => $coreInfo) {
         .subtle { color: #5f6368; }
         .back-link { display: inline-block; margin-top: 4px; color: #244f76; font-weight: 700; text-decoration: none; }
         .back-link:hover, .clear-link:hover { text-decoration: underline; }
-        .diagram { display: block; width: 100%; height: auto; margin: 16px 0; border: 1px solid #d7dce1; border-radius: 8px; background: #fff; }
+        .diagram { display: block; width: 100%; height: auto; margin: 0 0 14px; border: 1px solid #d7dce1; border-radius: 8px; background: #fff; }
+         .calculator-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+         .diagram-column, .form-column { min-width: 0; }
         .note { padding: 12px 14px; border-left: 4px solid #3c7ca7; background: #f2f7fb; border-radius: 5px; line-height: 1.5; }
-        .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: end; }
+        .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: end; }
         .field { min-width: 0; }
         .field-label { display: block; font-weight: 700; margin-bottom: 6px; }
         select, input, button { font: inherit; }
@@ -296,7 +298,7 @@ foreach ($toroidCores as $id => $coreInfo) {
         .error { margin-top: 16px; padding: 12px; border: 1px solid #e4b7b7; border-radius: 8px; background: #fff5f5; color: #8b2323; line-height: 1.45; }
         .small { font-size: .9rem; }
         .clear-link { color: #244f76; }
-        @media (max-width: 680px) { body { padding: 10px; } .panel { padding: 15px; } .form-grid, .result-grid { grid-template-columns: minmax(0, 1fr); } .diagram { margin: 12px 0; } .value-row { grid-template-columns: minmax(0, 1fr) 105px; } }
+        @media (max-width: 680px) { body { padding: 10px; } .panel { padding: 15px; } .calculator-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; } .result-grid { grid-template-columns: minmax(0, 1fr); } .diagram { margin: 0 0 12px; } .value-row { grid-template-columns: minmax(0, 1fr) 105px; } .action-row { flex-direction: column; align-items: stretch; } .action-row button { width: 100%; } }
         @media print { body { padding: 0; background: #fff; } .panel { border-color: #aaa; break-inside: avoid; } .no-print, .back-link, button, .clear-link { display: none !important; } .result { border-color: #999; background: #fff; } }
     </style>
 </head>
@@ -306,13 +308,17 @@ foreach ($toroidCores as $id => $coreInfo) {
         <h1>Расчёт витков на тороидальном сердечнике</h1>
         <p class="subtle">Укажи сердечник и требуемую индуктивность — калькулятор подберёт целое число витков с округлением вверх и оценит максимальный диаметр провода для однослойной намотки.</p>
         <a class="back-link" href="index.php">← К списку калькуляторов</a>
-        <img class="diagram" src="images/toroid-winding.svg" alt="Тороидальный сердечник с однослойной обмоткой и обозначениями наружного, внутреннего диаметров и высоты" width="760" height="250">
-        <div class="note"><strong>Важно о справочнике:</strong> для T50/T68 используется паспортный параметр A<sub>L</sub>. Для пользовательского кольца можно задать μ либо определить параметр A<sub>L</sub> по измеренной индуктивности равномерно распределённой пробной обмотки. Во втором случае эффективная μ также оценивается по размерам кольца.</div>
     </section>
 
     <section class="panel">
-        <h2>Исходные данные</h2>
-        <form method="post" action="">
+        <div class="calculator-layout">
+            <div class="diagram-column">
+                <img class="diagram" src="images/toroid-winding.svg" alt="Тороидальный сердечник с однослойной обмоткой и обозначениями наружного, внутреннего диаметров и высоты" width="760" height="250">
+                <div class="note"><strong>Важно о справочнике:</strong> для T50/T68 используется паспортный параметр A<sub>L</sub>. Для пользовательского кольца можно задать μ либо определить параметр A<sub>L</sub> по измеренной индуктивности равномерно распределённой пробной обмотки. Во втором случае эффективная μ также оценивается по размерам кольца.</div>
+            </div>
+            <div class="form-column">
+                <h2>Исходные данные</h2>
+                <form method="post" action="">
             <div class="mode-field">
                 <label class="field-label" for="core_id">Тип сердечника</label>
                 <select class="mode-select" id="core_id" name="core_id">
@@ -404,9 +410,11 @@ foreach ($toroidCores as $id => $coreInfo) {
 
             <div class="action-row">
                 <button type="submit" name="calculate" value="1">Рассчитать</button>
-                <a class="clear-link" href="toroid_winding.php">Очистить результат</a>
+                <a class="clear-link" href="toroid_winding.php">Сбросить</a>
             </div>
-        </form>
+                </form>
+            </div>
+        </div>
 
         <?php if ($error !== ''): ?><div class="error" role="alert"><?= tw_h($error) ?></div><?php endif; ?>
 
