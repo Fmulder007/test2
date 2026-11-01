@@ -797,7 +797,7 @@ $cutoffHelp = $response === 'butter'
     </section>
 
     <section class="panel" id="results-section">
-        <h2>Схема и рассчитанные номиналы</h2>
+        <h2>Рассчитанные номиналы</h2>
         <p class="subtle small">Первая и последняя цепи — шунтирующие конденсаторы на землю. Cдоп подключается параллельно второй последовательной катушке L2 и настроен на 2Fc. Измеренные номиналы задаются отдельно для каждой физической детали.</p>
         <div class="result-layout">
             <div class="result-column">
