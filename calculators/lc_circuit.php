@@ -253,7 +253,7 @@ if ($result !== null) {
             </div>
 
             <div class="form-column">
-                <h2>Что рассчитать?</h2>
+                <h2>Исходные данные</h2>
                 <form id="lc-form" method="post" action="">
                     <div class="mode-field">
                         <label class="field-label" for="mode">Режим расчёта</label>
