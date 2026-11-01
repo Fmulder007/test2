@@ -748,6 +748,11 @@ if ($isDownloadRequest) {
         .download-row { display: flex; justify-content: center; }
         button.download-button { width: 100%; max-width: 440px; background: #28623f; }
         button.download-button:hover { background: #1f4e32; }
+        .input-grid { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+        .input-grid .field { display: grid; grid-template-columns: minmax(155px, .9fr) minmax(0, 1.1fr); align-items: center; gap: 10px; }
+        .input-grid .field-label { margin: 0; }
+        .input-grid .value-input { min-height: 39px; }
+        @media (max-width: 760px) { .input-grid .field { grid-template-columns: minmax(135px, .9fr) minmax(0, 1.1fr); gap: 8px; } }
         @media (max-width: 760px) {
             body { padding: 10px; }
             .panel { padding: 15px; }
@@ -789,9 +794,8 @@ if ($isDownloadRequest) {
                         <input class="value-input" id="fc" name="fc" type="text" inputmode="decimal" value="<?= dpc_h($values['fc']) ?>" required>
                     </div>
                     <div class="field">
-                        <label class="field-label" for="bandwidth">Полоса пропускания, кГц</label>
+                        <label class="field-label" for="bandwidth">Полоса, кГц (−3 дБ)</label>
                         <input class="value-input" id="bandwidth" name="bandwidth" type="text" inputmode="decimal" value="<?= dpc_h($values['bandwidth']) ?>" required>
-                        <div class="input-hint">Между точками −3 дБ.</div>
                     </div>
                     <div class="field">
                         <label class="field-label" for="rin">Входной импеданс, Ом</label>
