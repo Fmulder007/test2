@@ -57,6 +57,9 @@ function cct_frequency_axis_bounds(
 
     if ($minimumAllowedHz !== null && $roundedMinimum < $minimumAllowedHz) {
         $roundedMinimum = $minimumAllowedHz;
+    } elseif ($roundedMinimum <= 0.0) {
+        // Не допускаем нулевую частоту после округления положительной границы вниз.
+        $roundedMinimum = $minimumHz;
     }
 
     if (!is_finite($roundedMinimum)
