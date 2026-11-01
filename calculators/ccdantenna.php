@@ -287,6 +287,8 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
         .notes { font-size: .92rem; color: #4f555b; }
         .hero-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, 390px); gap: 22px; align-items: center; margin-bottom: 18px; }
         .hero-image { display: block; width: 100%; height: auto; border: 1px solid #d7dce1; border-radius: 8px; background: #f6f9fb; }
+        .calculator-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+        .diagram-column, .form-column { min-width: 0; }
         .back-link { display: inline-block; margin-top: 6px; color: #244f76; font-weight: 700; }
         @media (max-width: 760px) { .calculator-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; } .hero-image { max-width: 100%; } }
         @media (max-width: 760px) {
@@ -311,10 +313,11 @@ $modeLabel = ($capacitorMode === 'exact') ? 'точные расчётные з�
             h2 { font-size: 12pt; }
         }
     
-        .form-grid > div { display: grid; grid-template-columns: minmax(155px, .9fr) minmax(0, 1.1fr); align-items: center; gap: 10px; }
-        .form-grid label { margin: 0; font-weight: 700; }
-        .form-grid input, .form-grid select { min-height: 39px; }
-        @media (max-width: 700px) { .form-grid > div { grid-template-columns: minmax(135px, .9fr) minmax(0, 1.1fr); gap: 8px; } }
+        form .form-grid > div { display: grid; grid-template-columns: minmax(155px, .9fr) minmax(0, 1.1fr); align-items: center; gap: 10px; }
+        form .form-grid > div > label { display: block; margin: 0; font-weight: 700; }
+        form .form-grid > div > input, form .form-grid > div > select { min-height: 39px; }
+        @media (max-width: 760px) { .calculator-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; } }
+        @media (max-width: 700px) { form .form-grid > div { grid-template-columns: minmax(135px, .9fr) minmax(0, 1.1fr); gap: 8px; } }
     </style>
 </head>
 <body>
