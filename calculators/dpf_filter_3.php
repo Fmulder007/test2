@@ -787,7 +787,11 @@ $parExportAvailable = ($parResult !== null
         .diagram-caption { margin: 8px 2px 1px; color: #69727b; font-size: .82rem; line-height: 1.4; }
         .right-area { min-width: 0; }
         .grid-three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 11px; align-items: end; }
-         .input-fields { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+         .input-fields { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+         .input-fields .field { display: grid; grid-template-columns: minmax(145px, .85fr) minmax(0, 1.15fr); align-items: center; gap: 10px; }
+         .input-fields .field-label { margin: 0; }
+         .input-fields .value-input { min-height: 37px; }
+         .input-fields .mode-switch { min-width: 0; }
          .clear-link { color: #244f76; white-space: nowrap; }
          .action-cell { display: flex; align-items: center; gap: 12px; }
          .action-cell button { width: auto; }
@@ -846,6 +850,7 @@ $parExportAvailable = ($parResult !== null
             .response-canvas { height: 275px; }
             .chart-canvas-wrap, .chart-placeholder { min-height: 250px; }
             .chart-legend { gap: 7px 12px; font-size: .74rem; }
+            .input-fields .field { grid-template-columns: minmax(120px, .85fr) minmax(0, 1.15fr); gap: 8px; }
         }
     </style>
 </head>
@@ -884,17 +889,11 @@ $parExportAvailable = ($parResult !== null
                             <input class="value-input" id="seq_frequency" name="seq_frequency" type="text" inputmode="decimal" autocomplete="off" value="<?= dpf3_h($seqFrequencyRaw) ?>" data-group="sequential">
                         </div>
                         <div class="field">
-                            <span class="field-label">Способ задания</span>
-                            <div class="mode-switch">
-                                <label class="mode-choice">
-                                    <input type="radio" name="seq_mode" value="bandwidth"<?= $seqMode === 'bandwidth' ? ' checked' : '' ?> data-group="sequential">
-                                    <span>По полосе</span>
-                                </label>
-                                <label class="mode-choice">
-                                    <input type="radio" name="seq_mode" value="inductance"<?= $seqMode === 'inductance' ? ' checked' : '' ?> data-group="sequential">
-                                    <span>По L1</span>
-                                </label>
-                            </div>
+                            <label class="field-label" for="seq_mode">Способ задания</label>
+                            <select class="value-input" id="seq_mode" name="seq_mode" data-group="sequential">
+                                <option value="bandwidth"<?= $seqMode === 'bandwidth' ? ' selected' : '' ?>>По полосе</option>
+                                <option value="inductance"<?= $seqMode === 'inductance' ? ' selected' : '' ?>>По L1</option>
+                            </select>
                         </div>
                         <div class="field">
                             <label class="field-label" id="seq-value-label" for="seq_value"><?= $seqMode === 'bandwidth' ? 'Полоса ΔF, кГц' : 'Индуктивность L1, мкГн' ?></label>
@@ -1189,7 +1188,7 @@ $parExportAvailable = ($parResult !== null
             const resistance = readPositiveNumber('seq_resistance');
             const frequencyMHz = readPositiveNumber('seq_frequency');
             const value = readPositiveNumber('seq_value');
-            const mode = form.querySelector('input[name="seq_mode"]:checked')?.value || 'bandwidth';
+            const mode = form.elements.namedItem('seq_mode')?.value || 'bandwidth';
             if (!resistance || !frequencyMHz || !value) return null;
             const deltaFkHz = mode === 'bandwidth' ? value : resistance * 1000 / (2 * Math.PI * value);
             return deltaFkHz > 0 && Number.isFinite(deltaFkHz)
@@ -1332,30 +1331,31 @@ $parExportAvailable = ($parResult !== null
     }
 
     form.querySelectorAll('[data-group="sequential"]').forEach(control => {
-        control.addEventListener(control.type === 'radio' ? 'change' : 'input', () => markOutdated('sequential'));
+        const eventName = control.tagName === 'SELECT' || control.type === 'radio' ? 'change' : 'input';
+        control.addEventListener(eventName, () => markOutdated('sequential'));
     });
     form.querySelectorAll('[data-group="parallel"]').forEach(control => {
         control.addEventListener('input', () => markOutdated('parallel'));
     });
 
-    const modeInputs = [...form.querySelectorAll('input[name="seq_mode"]')];
+    const modeSelect = document.getElementById('seq_mode');
     const valueInput = document.getElementById('seq_value');
     const valueLabel = document.getElementById('seq-value-label');
     const modeValues = {
         bandwidth: '500',
         inductance: '4.7'
     };
-    let activeMode = modeInputs.find(input => input.checked)?.value || 'bandwidth';
+    let activeMode = modeSelect?.value || 'bandwidth';
     if (valueInput) modeValues[activeMode] = valueInput.value;
 
-    modeInputs.forEach(input => input.addEventListener('change', () => {
+    modeSelect?.addEventListener('change', () => {
         if (valueInput) {
             modeValues[activeMode] = valueInput.value;
-            activeMode = input.value;
+            activeMode = modeSelect.value;
             valueInput.value = modeValues[activeMode] || (activeMode === 'bandwidth' ? '500' : '4.7');
             valueLabel.textContent = activeMode === 'bandwidth' ? 'Полоса ΔF, кГц' : 'Индуктивность L1, мкГн';
         }
-    }));
+    });
 
     // Сброс каждого варианта затрагивает только его поля, номиналы и график.
     form.querySelectorAll('[data-reset-group]').forEach(link => {
@@ -1366,7 +1366,7 @@ $parExportAvailable = ($parResult !== null
             if (group === 'sequential') {
                 document.getElementById('seq_resistance').value = '50';
                 document.getElementById('seq_frequency').value = '7.1';
-                modeInputs.forEach(input => { input.checked = input.value === 'bandwidth'; });
+                if (modeSelect) modeSelect.value = 'bandwidth';
                 activeMode = 'bandwidth';
                 modeValues.bandwidth = '500';
                 modeValues.inductance = '4.7';
