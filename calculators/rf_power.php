@@ -200,8 +200,7 @@ $voltageTypeLabels = [
         .value-input:focus, .unit-select:focus, .mode-select:focus { outline: 3px solid #c5e2f8; border-color: #3976a8; }
         .mode-select { margin-bottom: 14px; }
         .mode-field { margin-bottom: 15px; }
-        .action-row { display: flex; align-items: stretch; gap: 10px; margin-top: 17px; }
-        .action-row button, .action-row .clear-link { flex: 1 1 0; min-width: 0; }
+        .action-row { display: flex; align-items: center; gap: 12px; margin-top: 17px; }
         button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; border: 0; border-radius: 6px; padding: 11px 16px; color: #fff; background: #245c88; font-weight: 700; line-height: 1.25; cursor: pointer; }
         button:hover { background: #19476c; }
         button:focus-visible, a:focus-visible { outline: 3px solid #89bde5; outline-offset: 3px; }
@@ -218,8 +217,7 @@ $voltageTypeLabels = [
         .error { margin-top: 16px; padding: 12px; border: 1px solid #e4b7b7; border-radius: 8px; background: #fff5f5; color: #8b2323; line-height: 1.45; }
         .stale-hint { display: none; margin-top: 12px; color: #7a5200; font-size: .93rem; }
         .small { font-size: .9rem; }
-        .clear-link { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 10px 16px; border: 1px solid #9eafbf; border-radius: 6px; color: #244f76; background: #fff; font-weight: 700; line-height: 1.25; text-decoration: none; text-align: center; }
-        .clear-link:hover { background: #f2f6f9; text-decoration: underline; }
+        .clear-link { color: #244f76; }
         @media (max-width: 760px) {
             .calculator-layout { grid-template-columns: minmax(0, 1fr); }
         }
@@ -229,8 +227,8 @@ $voltageTypeLabels = [
             .form-grid { grid-template-columns: minmax(0, 1fr); }
             .results-grid { grid-template-columns: minmax(0, 1fr); }
             .diagram { margin: 0 0 12px; }
-            .action-row { flex-direction: column; align-items: stretch; }
-            .action-row button, .action-row .clear-link { flex: none; width: 100%; }
+            .action-row { flex-direction: column; align-items: flex-start; }
+            .action-row button { width: 100%; }
         }
         @media print {
             body { padding: 0; background: #fff; }
