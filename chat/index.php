@@ -144,5 +144,5 @@ $darkTheme = $user && !empty($user['dark_theme']);
 </div>
 </div>
 <?php endif; ?>
-<script src="assets/transport.js?v=1.3.0" defer></script><script src="assets/auth.js?v=1.3.0" defer></script><script src="assets/chat.js?v=1.3.0" defer></script>
+<script src="assets/transport.js?v=1.3.0" defer></script><script src="assets/auth.js?v=1.3.0" defer></script><script src="assets/chat.js?v=1.3.1" defer></script>
 </body></html>
