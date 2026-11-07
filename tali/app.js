@@ -200,7 +200,8 @@
     el.volume.value = String(el.video.volume);
 
     const fullscreen = document.fullscreenElement === el.stage ||
-      document.webkitFullscreenElement === el.stage;
+      document.webkitFullscreenElement === el.stage ||
+      el.video.webkitDisplayingFullscreen === true;
     el.fullscreen.textContent = fullscreen ? '⤡' : '⛶';
     el.fullscreen.title = fullscreen ? 'Выйти из полноэкранного режима' : 'Во весь экран';
     el.fullscreen.setAttribute('aria-label', el.fullscreen.title);
@@ -1023,6 +1024,7 @@
       }
       saveCurrentPosition(false);
     });
+    el.video.addEventListener('webkitbeginfullscreen', updatePlaybackControls);
     el.video.addEventListener('webkitendfullscreen', () => {
       el.video.controls = false;
       updatePlaybackControls();
