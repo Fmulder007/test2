@@ -661,7 +661,7 @@
     else sessionStorage.setItem('tali_playlist', String(openId));
     state.view = 'playlists';
     el.browseToolbar.hidden = true;
-    el.listHeader.hidden = true;
+    updateListHeader('playlist-index');
     setLoading(true);
     try {
       const result = await api('playlists');
