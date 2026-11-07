@@ -620,21 +620,31 @@ function ownedPlaylist(PDO $pdo, array $user, int $playlistId): array
     return $playlist;
 }
 
-function playlistItems(PDO $pdo, int $playlistId): array
+function playlistItems(PDO $pdo, int $playlistId, int $userId): array
 {
     $stmt = $pdo->prepare(
-        'SELECT id, media_path, sort_order, added_at
-         FROM playlist_items
-         WHERE playlist_id = :playlist_id
-         ORDER BY sort_order, id'
+        'SELECT pi.id, pi.media_path, pi.sort_order, pi.added_at,
+                wp.position_seconds, wp.duration_seconds
+         FROM playlist_items pi
+         LEFT JOIN watch_positions wp
+           ON wp.media_path = pi.media_path AND wp.user_id = :user_id
+         WHERE pi.playlist_id = :playlist_id
+         ORDER BY pi.sort_order, pi.id'
     );
-    $stmt->execute(['playlist_id' => $playlistId]);
+    $stmt->execute([
+        'playlist_id' => $playlistId,
+        'user_id' => $userId,
+    ]);
 
     $items = $stmt->fetchAll();
     foreach ($items as &$item) {
         $item['url'] = mediaUrl($item['media_path']);
         $item['id'] = (int)$item['id'];
         $item['sort_order'] = (int)$item['sort_order'];
+        $item['position_seconds'] = $item['position_seconds'] === null
+            ? 0.0 : (float)$item['position_seconds'];
+        $item['duration_seconds'] = $item['duration_seconds'] === null
+            ? 0.0 : (float)$item['duration_seconds'];
     }
     unset($item);
 
@@ -653,7 +663,7 @@ function listPlaylists(PDO $pdo, array $user): array
     $result = [];
     foreach ($stmt->fetchAll() as $playlist) {
         $playlist['id'] = (int)$playlist['id'];
-        $playlist['items'] = playlistItems($pdo, $playlist['id']);
+        $playlist['items'] = playlistItems($pdo, $playlist['id'], (int)$user['id']);
         $result[] = $playlist;
     }
 

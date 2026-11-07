@@ -296,6 +296,23 @@
     return parts[parts.length - 1] || path;
   }
 
+  function appendProgressTrack(item) {
+    const watch = item.watch || (
+      item.position_seconds
+        ? { position: item.position_seconds, duration: item.duration_seconds }
+        : null
+    );
+    if (!watch || Number(watch.duration) <= 0 || Number(watch.position) <= 0) return;
+
+    const track = document.createElement('div');
+    track.className = 'progress-track';
+    const fill = document.createElement('div');
+    fill.className = 'progress-fill';
+    fill.style.width = `${Math.min(100, Number(watch.position) / Number(watch.duration) * 100)}%`;
+    track.append(fill);
+    el.list.append(track);
+  }
+
   function setBreadcrumbs(path) {
     el.breadcrumbs.replaceChildren();
     const parts = path ? path.split('/') : [];
@@ -318,7 +335,8 @@
       crumb.type = 'button';
       crumb.className = 'crumb' + (index === parts.length - 1 ? ' crumb-current' : '');
       crumb.textContent = part;
-      crumb.addEventListener('click', () => loadDirectory(accumulated));
+      const targetPath = accumulated;
+      crumb.addEventListener('click', () => loadDirectory(targetPath));
       el.breadcrumbs.append(crumb);
     });
   }
@@ -454,16 +472,7 @@
       row.append(actions);
       el.list.append(row);
 
-      const watch = item.watch || (item.position_seconds ? { position: item.position_seconds, duration: item.duration_seconds } : null);
-      if (!isDirectory && watch && Number(watch.duration) > 0 && Number(watch.position) > 0) {
-        const track = document.createElement('div');
-        track.className = 'progress-track';
-        const fill = document.createElement('div');
-        fill.className = 'progress-fill';
-        fill.style.width = `${Math.min(100, Number(watch.position) / Number(watch.duration) * 100)}%`;
-        track.append(fill);
-        el.list.append(track);
-      }
+      if (!isDirectory) appendProgressTrack(item);
     });
   }
 
@@ -636,6 +645,7 @@
       actions.append(remove);
       row.append(actions);
       el.list.append(row);
+      appendProgressTrack(item);
     });
   }
 
@@ -864,6 +874,24 @@
 
   async function requestVideoFullscreen() {
     try {
+      const isStageFullscreen = document.fullscreenElement === el.stage ||
+        document.webkitFullscreenElement === el.stage;
+
+      if (isStageFullscreen) {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+        return;
+      }
+
+      // На iOS Safari видео может открываться в отдельном нативном fullscreen.
+      if (el.video.webkitDisplayingFullscreen && el.video.webkitExitFullscreen) {
+        el.video.webkitExitFullscreen();
+        return;
+      }
+
       if (el.stage.requestFullscreen) {
         await el.stage.requestFullscreen();
       } else if (el.stage.webkitRequestFullscreen) {
