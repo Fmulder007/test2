@@ -195,8 +195,9 @@
   function appendDateCell(row, value, unixTimestamp = false) {
     const cell = document.createElement('time');
     cell.className = 'entry-date';
+    const numericValue = Number(value);
     const date = unixTimestamp
-      ? parseApiDate(Number(value))
+      ? (numericValue > 0 ? parseApiDate(numericValue) : null)
       : parseApiDate(value);
 
     if (!date) {
@@ -1093,6 +1094,14 @@
         orientation && typeof orientation.lock === 'function') {
       try {
         await orientation.lock('landscape');
+        if (!isStageFullscreen()) {
+          try { orientation.unlock(); } catch (_) { /* ignore late unlock */ }
+          state.orientationLocked = false;
+          state.fullscreenActive = false;
+          state.rotation = 0;
+          updateVideoRotation();
+          return;
+        }
         state.orientationLocked = true;
         state.rotation = 0;
         updateVideoRotation();
@@ -1281,7 +1290,12 @@
     }
 
     enableNameDrag(el.nowPlaying);
-    el.video.addEventListener('loadedmetadata', updatePlaybackControls);
+    el.video.addEventListener('loadedmetadata', () => {
+      updatePlaybackControls();
+      if (isStageFullscreen() && state.fullscreenActive && !state.orientationLocked) {
+        applyFullscreenFallbackRotation();
+      }
+    });
     el.video.addEventListener('durationchange', updatePlaybackControls);
     el.video.addEventListener('play', () => {
       state.playbackEnded = false;
