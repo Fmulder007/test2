@@ -1,0 +1,855 @@
+'use strict';
+
+(() => {
+  const API = '/api.php';
+  const $ = (id) => document.getElementById(id);
+
+  const el = {
+    loginPanel: $('loginPanel'), appPanel: $('appPanel'), loginForm: $('loginForm'),
+    nickname: $('nicknameInput'), remember: $('rememberInput'), loginError: $('loginError'),
+    profileInfo: $('profileInfo'), logout: $('logoutButton'), theme: $('themeButton'),
+    welcome: $('welcomeText'), viewTitle: $('viewTitle'), refresh: $('refreshButton'),
+    navButtons: [...document.querySelectorAll('.nav-button')],
+    playerPanel: $('playerPanel'), video: $('videoPlayer'), nowPlaying: $('nowPlaying'),
+    resumeLabel: $('resumeLabel'), restart: $('restartButton'), previous: $('previousButton'),
+    next: $('nextButton'), fullscreen: $('fullscreenButton'), playerStatus: $('playerStatus'),
+    browseToolbar: $('browseToolbar'), breadcrumbs: $('breadcrumbs'), listHeader: $('listHeader'),
+    list: $('itemList'), empty: $('emptyMessage'), loading: $('loadingMessage'),
+    playlistDialog: $('playlistDialog'), playlistDialogForm: $('playlistDialogForm'),
+    playlistDialogFile: $('playlistDialogFile'), playlistSelect: $('playlistSelect'),
+    playlistDialogError: $('playlistDialogError'), closePlaylistDialog: $('closePlaylistDialog'),
+    createPlaylistFromDialog: $('createPlaylistFromDialog'), toast: $('toast')
+  };
+
+  const state = {
+    user: null,
+    view: 'browse',
+    path: sessionStorage.getItem('tali_path') || '',
+    directoryItems: [],
+    playlists: [],
+    activePlaylist: null,
+    queue: [],
+    queueIndex: -1,
+    currentItem: null,
+    lastSaveAt: 0,
+    ignoreNextPauseSave: false,
+    savePending: false,
+    lastTouchAt: 0,
+    pendingPlaylistItem: null,
+    toastTimer: null
+  };
+
+  async function api(action, data = {}, method = 'POST') {
+    const options = {
+      method,
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: {}
+    };
+
+    let url = API;
+    if (method === 'GET') {
+      url += '?action=' + encodeURIComponent(action);
+    } else {
+      options.headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify({ ...data, action });
+    }
+
+    const response = await fetch(url, options);
+    let result;
+    try {
+      result = await response.json();
+    } catch (_) {
+      throw new Error('Сервер вернул некорректный ответ');
+    }
+
+    if (!response.ok || !result || result.ok !== true) {
+      if (response.status === 401) {
+        showLogin();
+      }
+      throw new Error(result && result.error ? result.error : `Ошибка HTTP ${response.status}`);
+    }
+    return result;
+  }
+
+  function showToast(message) {
+    el.toast.textContent = message;
+    el.toast.classList.add('visible');
+    clearTimeout(state.toastTimer);
+    state.toastTimer = setTimeout(() => el.toast.classList.remove('visible'), 2600);
+  }
+
+  function setLoading(loading) {
+    el.loading.hidden = !loading;
+    if (loading) {
+      el.empty.hidden = true;
+      el.list.replaceChildren();
+    }
+  }
+
+  function showLogin(message = '') {
+    state.user = null;
+    el.appPanel.hidden = true;
+    el.profileInfo.hidden = true;
+    el.logout.hidden = true;
+    el.loginPanel.hidden = false;
+    el.loginError.textContent = message;
+    el.nickname.focus();
+    stopPlayer();
+  }
+
+  function showApp() {
+    el.loginPanel.hidden = true;
+    el.appPanel.hidden = false;
+    el.profileInfo.hidden = false;
+    el.logout.hidden = false;
+    el.profileInfo.innerHTML = '';
+    const label = document.createElement('strong');
+    label.textContent = state.user.nickname;
+    el.profileInfo.append('Профиль: ', label);
+    el.welcome.textContent = `Привет, ${state.user.nickname}`;
+  }
+
+  function setTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#171a1e' : '#f4f5f7';
+    localStorage.setItem('tali_theme', theme);
+    el.theme.textContent = theme === 'dark' ? '☀' : '◐';
+    el.theme.title = theme === 'dark' ? 'Включить дневную тему' : 'Включить ночную тему';
+  }
+
+  function initTheme() {
+    const saved = localStorage.getItem('tali_theme');
+    setTheme(saved === 'dark' ? 'dark' : 'light');
+  }
+
+  function setView(view) {
+    state.view = view;
+    state.activePlaylist = null;
+    el.navButtons.forEach((button) => button.classList.toggle('active', button.dataset.view === view));
+    el.playerPanel.hidden = !state.currentItem;
+    el.browseToolbar.hidden = view !== 'browse';
+    el.listHeader.hidden = view === 'playlists';
+    el.refresh.hidden = view === 'playlists';
+
+    if (view === 'browse') {
+      el.viewTitle.textContent = 'Видеотека';
+      loadDirectory(state.path);
+    } else if (view === 'history') {
+      el.viewTitle.textContent = 'История просмотра';
+      loadHistory();
+    } else if (view === 'playlists') {
+      el.viewTitle.textContent = 'Плейлисты';
+      loadPlaylists();
+    }
+  }
+
+  function formatBytes(bytes) {
+    if (!Number.isFinite(Number(bytes)) || Number(bytes) < 0) return '';
+    const value = Number(bytes);
+    if (value < 1024) return `${value} Б`;
+    if (value < 1024 ** 2) return `${(value / 1024).toFixed(0)} КБ`;
+    if (value < 1024 ** 3) return `${(value / 1024 ** 2).toFixed(1)} МБ`;
+    return `${(value / 1024 ** 3).toFixed(2)} ГБ`;
+  }
+
+  function formatTime(seconds) {
+    const value = Math.max(0, Math.floor(Number(seconds) || 0));
+    const h = Math.floor(value / 3600);
+    const m = Math.floor((value % 3600) / 60);
+    const s = value % 60;
+    return h > 0
+      ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+      : `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  function basename(path) {
+    const parts = String(path || '').split('/');
+    return parts[parts.length - 1] || path;
+  }
+
+  function setBreadcrumbs(path) {
+    el.breadcrumbs.replaceChildren();
+    const parts = path ? path.split('/') : [];
+    const root = document.createElement('button');
+    root.type = 'button';
+    root.className = 'crumb' + (parts.length === 0 ? ' crumb-current' : '');
+    root.textContent = 'Видеотека';
+    root.addEventListener('click', () => loadDirectory(''));
+    el.breadcrumbs.append(root);
+
+    let accumulated = '';
+    parts.forEach((part, index) => {
+      const separator = document.createElement('span');
+      separator.className = 'crumb-separator';
+      separator.textContent = '›';
+      el.breadcrumbs.append(separator);
+
+      accumulated = accumulated ? `${accumulated}/${part}` : part;
+      const crumb = document.createElement('button');
+      crumb.type = 'button';
+      crumb.className = 'crumb' + (index === parts.length - 1 ? ' crumb-current' : '');
+      crumb.textContent = part;
+      crumb.addEventListener('click', () => loadDirectory(accumulated));
+      el.breadcrumbs.append(crumb);
+    });
+  }
+
+  async function loadDirectory(path) {
+    state.path = path;
+    sessionStorage.setItem('tali_path', path);
+    state.view = 'browse';
+    state.activePlaylist = null;
+    el.navButtons.forEach((button) => button.classList.toggle('active', button.dataset.view === 'browse'));
+    el.viewTitle.textContent = 'Видеотека';
+    el.browseToolbar.hidden = false;
+    el.listHeader.hidden = false;
+    el.refresh.hidden = false;
+    setBreadcrumbs(path);
+    setLoading(true);
+    try {
+      const result = await api('browse', { path });
+      state.directoryItems = result.items || [];
+      renderItems(state.directoryItems, 'directory');
+    } catch (error) {
+      renderError(error.message);
+    } finally {
+      el.loading.hidden = true;
+    }
+  }
+
+  function renderError(message) {
+    el.list.replaceChildren();
+    el.empty.hidden = false;
+    el.empty.textContent = message;
+  }
+
+  function renderItems(items, mode, options = {}) {
+    el.list.replaceChildren();
+    el.empty.hidden = items.length > 0;
+    el.empty.textContent = items.length ? '' : 'В этом разделе пока ничего нет.';
+
+    const videos = items.filter((item) => item.type === 'video' || item.media_path || item.path);
+    if (mode === 'directory') {
+      state.directoryItems = items;
+      state.queue = items.filter((item) => item.type === 'video');
+    } else if (mode === 'history') {
+      state.queue = items;
+    } else if (mode === 'playlist') {
+      state.queue = items;
+    }
+
+    items.forEach((item, index) => {
+      const isDirectory = item.type === 'directory';
+      const row = document.createElement('div');
+      row.className = 'item-row';
+
+      const main = document.createElement('button');
+      main.type = 'button';
+      main.className = 'entry-main';
+      const icon = document.createElement('span');
+      icon.className = 'entry-icon';
+      icon.textContent = isDirectory ? '▰' : '▶';
+      const name = document.createElement('span');
+      name.className = 'entry-name';
+      name.textContent = item.name || basename(item.media_path || item.path);
+      main.append(icon, name);
+      main.addEventListener('click', () => {
+        if (isDirectory) {
+          loadDirectory(item.path);
+        } else {
+          const queue = mode === 'directory' ? state.queue : items;
+          const queueIndex = queue.findIndex((entry) => entry.path === item.path || entry.media_path === item.media_path);
+          playFromQueue(queue, queueIndex < 0 ? index : queueIndex);
+        }
+      });
+      row.append(main);
+
+      const size = document.createElement('span');
+      size.className = 'entry-size';
+      if (isDirectory) size.textContent = 'Каталог';
+      else if (item.size !== undefined && item.size !== null) size.textContent = formatBytes(item.size);
+      else size.textContent = item.completed ? 'Просмотрено' : formatTime(item.position_seconds || 0);
+      row.append(size);
+
+      const actions = document.createElement('div');
+      actions.className = 'row-actions';
+      if (!isDirectory) {
+        const add = document.createElement('button');
+        add.type = 'button';
+        add.className = 'small-button';
+        add.textContent = '+ список';
+        add.title = 'Добавить в плейлист';
+        add.addEventListener('click', (event) => {
+          event.stopPropagation();
+          openAddToPlaylist(item);
+        });
+        actions.append(add);
+
+        if (mode === 'playlist') {
+          const itemId = item.id;
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.className = 'small-button';
+          remove.textContent = '×';
+          remove.title = 'Убрать из плейлиста';
+          remove.addEventListener('click', () => removePlaylistItem(state.activePlaylist.id, itemId));
+          actions.append(remove);
+        }
+      }
+      row.append(actions);
+      el.list.append(row);
+
+      const watch = item.watch || (item.position_seconds ? { position: item.position_seconds, duration: item.duration_seconds } : null);
+      if (!isDirectory && watch && Number(watch.duration) > 0 && Number(watch.position) > 0) {
+        const track = document.createElement('div');
+        track.className = 'progress-track';
+        const fill = document.createElement('div');
+        fill.className = 'progress-fill';
+        fill.style.width = `${Math.min(100, Number(watch.position) / Number(watch.duration) * 100)}%`;
+        track.append(fill);
+        el.list.append(track);
+      }
+    });
+  }
+
+  async function loadHistory() {
+    state.view = 'history';
+    state.activePlaylist = null;
+    el.browseToolbar.hidden = true;
+    el.listHeader.hidden = false;
+    setLoading(true);
+    try {
+      const result = await api('history', { limit: 200 });
+      const items = (result.items || []).map((item) => ({
+        ...item,
+        name: basename(item.media_path),
+        path: item.media_path,
+        type: 'video'
+      }));
+      renderItems(items, 'history');
+    } catch (error) {
+      renderError(error.message);
+    } finally {
+      el.loading.hidden = true;
+    }
+  }
+
+  async function loadPlaylists(openId = null) {
+    state.view = 'playlists';
+    el.browseToolbar.hidden = true;
+    el.listHeader.hidden = true;
+    setLoading(true);
+    try {
+      const result = await api('playlists');
+      state.playlists = result.items || [];
+      if (openId !== null) {
+        const playlist = state.playlists.find((item) => Number(item.id) === Number(openId));
+        if (playlist) {
+          renderPlaylist(playlist);
+          return;
+        }
+      }
+      renderPlaylistIndex();
+    } catch (error) {
+      renderError(error.message);
+    } finally {
+      el.loading.hidden = true;
+    }
+  }
+
+  function renderPlaylistIndex() {
+    state.activePlaylist = null;
+    el.list.replaceChildren();
+    el.empty.hidden = state.playlists.length > 0;
+    el.empty.textContent = 'Плейлистов пока нет. Создай первый.';
+
+    const createRow = document.createElement('div');
+    createRow.className = 'item-row';
+    const createButton = document.createElement('button');
+    createButton.type = 'button';
+    createButton.className = 'entry-main';
+    createButton.innerHTML = '<span class="entry-icon">＋</span><span class="entry-name">Создать плейлист</span>';
+    createButton.addEventListener('click', createPlaylist);
+    createRow.append(createButton);
+    createRow.append(document.createElement('span'));
+    createRow.append(document.createElement('span'));
+    el.list.append(createRow);
+
+    state.playlists.forEach((playlist) => {
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      const main = document.createElement('button');
+      main.type = 'button';
+      main.className = 'entry-main';
+      const icon = document.createElement('span');
+      icon.className = 'entry-icon';
+      icon.textContent = '☷';
+      const name = document.createElement('span');
+      name.className = 'entry-name';
+      name.textContent = playlist.name;
+      main.append(icon, name);
+      main.addEventListener('click', () => loadPlaylists(playlist.id));
+      row.append(main);
+
+      const count = document.createElement('span');
+      count.className = 'entry-size';
+      count.textContent = `${(playlist.items || []).length} видео`;
+      row.append(count);
+
+      const actions = document.createElement('div');
+      actions.className = 'row-actions';
+      const rename = document.createElement('button');
+      rename.className = 'small-button';
+      rename.type = 'button';
+      rename.textContent = 'Имя';
+      rename.title = 'Переименовать';
+      rename.addEventListener('click', () => renamePlaylist(playlist));
+      const remove = document.createElement('button');
+      remove.className = 'small-button';
+      remove.type = 'button';
+      remove.textContent = '×';
+      remove.title = 'Удалить плейлист';
+      remove.addEventListener('click', () => deletePlaylist(playlist));
+      actions.append(rename, remove);
+      row.append(actions);
+      el.list.append(row);
+    });
+  }
+
+  function renderPlaylist(playlist) {
+    state.activePlaylist = playlist;
+    el.list.replaceChildren();
+    el.empty.hidden = (playlist.items || []).length > 0;
+    el.empty.textContent = 'В этом плейлисте пока нет видео.';
+
+    const heading = document.createElement('div');
+    heading.className = 'item-row';
+    const back = document.createElement('button');
+    back.type = 'button';
+    back.className = 'entry-main';
+    back.innerHTML = '<span class="entry-icon">‹</span><span class="entry-name">Все плейлисты</span>';
+    back.addEventListener('click', renderPlaylistIndex);
+    heading.append(back, document.createElement('span'), document.createElement('span'));
+    el.list.append(heading);
+
+    const items = (playlist.items || []).map((item) => ({
+      ...item,
+      path: item.media_path,
+      name: basename(item.media_path),
+      type: 'video'
+    }));
+    state.queue = items;
+
+    items.forEach((item, index) => {
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      const main = document.createElement('button');
+      main.type = 'button';
+      main.className = 'entry-main';
+      const icon = document.createElement('span');
+      icon.className = 'entry-icon';
+      icon.textContent = '▶';
+      const name = document.createElement('span');
+      name.className = 'entry-name';
+      name.textContent = item.name;
+      main.append(icon, name);
+      main.addEventListener('click', () => playFromQueue(items, index));
+      row.append(main, document.createElement('span'));
+
+      const actions = document.createElement('div');
+      actions.className = 'row-actions';
+      if (index > 0) {
+        const up = document.createElement('button');
+        up.className = 'small-button'; up.type = 'button'; up.textContent = '↑'; up.title = 'Выше';
+        up.addEventListener('click', () => reorderPlaylist(playlist, items, index, index - 1));
+        actions.append(up);
+      }
+      if (index < items.length - 1) {
+        const down = document.createElement('button');
+        down.className = 'small-button'; down.type = 'button'; down.textContent = '↓'; down.title = 'Ниже';
+        down.addEventListener('click', () => reorderPlaylist(playlist, items, index, index + 1));
+        actions.append(down);
+      }
+      const remove = document.createElement('button');
+      remove.className = 'small-button'; remove.type = 'button'; remove.textContent = '×'; remove.title = 'Убрать из плейлиста';
+      remove.addEventListener('click', () => removePlaylistItem(playlist.id, item.id));
+      actions.append(remove);
+      row.append(actions);
+      el.list.append(row);
+    });
+  }
+
+  function normalizeQueueItem(item) {
+    const path = item.path || item.media_path;
+    return {
+      ...item,
+      path,
+      name: item.name || basename(path),
+      url: item.url || mediaUrl(path),
+      type: 'video'
+    };
+  }
+
+  function mediaUrl(path) {
+    return '/video/' + String(path).split('/').map((part) => encodeURIComponent(part)).join('/');
+  }
+
+  function playFromQueue(queue, index) {
+    if (!Array.isArray(queue) || !queue.length || index < 0 || index >= queue.length) return;
+    state.queue = queue.map(normalizeQueueItem);
+    state.queueIndex = index;
+    playCurrent();
+  }
+
+  function playCurrent() {
+    const item = state.queue[state.queueIndex];
+    if (!item) return;
+    saveCurrentPosition(false);
+    if (!el.video.paused) {
+      state.ignoreNextPauseSave = true;
+      el.video.pause();
+    }
+    state.currentItem = item;
+    state.lastSaveAt = 0;
+    el.playerPanel.hidden = false;
+    el.nowPlaying.textContent = item.name;
+    el.resumeLabel.hidden = true;
+    el.restart.hidden = true;
+    el.playerStatus.textContent = '';
+    el.previous.disabled = state.queueIndex <= 0;
+    el.next.disabled = state.queueIndex >= state.queue.length - 1;
+
+    el.video.src = item.url;
+    el.video.load();
+    const resumePosition = Number(item.watch?.position ?? item.position_seconds ?? 0);
+    const durationHint = Number(item.watch?.duration ?? item.duration_seconds ?? 0);
+
+    const onMetadata = () => {
+      el.video.removeEventListener('loadedmetadata', onMetadata);
+      const actualDuration = Number.isFinite(el.video.duration) ? el.video.duration : durationHint;
+      if (!item.completed && resumePosition > 15 && (!actualDuration || resumePosition < actualDuration - 10)) {
+        el.video.currentTime = Math.min(resumePosition, actualDuration > 0 ? actualDuration - 1 : resumePosition);
+        el.resumeLabel.textContent = `Продолжение с ${formatTime(resumePosition)} · можно начать сначала`;
+        el.resumeLabel.hidden = false;
+        el.restart.hidden = false;
+      }
+    };
+    el.video.addEventListener('loadedmetadata', onMetadata);
+    const playPromise = el.video.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(() => {
+        el.playerStatus.textContent = 'Нажми ▶ в панели видео для начала воспроизведения.';
+      });
+    }
+  }
+
+  function stopPlayer() {
+    try { el.video.pause(); } catch (_) { /* ignore */ }
+    el.video.removeAttribute('src');
+    el.video.load();
+    state.currentItem = null;
+    state.queue = [];
+    state.queueIndex = -1;
+    el.playerPanel.hidden = true;
+  }
+
+  async function saveCurrentPosition(showFeedback = false) {
+    if (!state.user || !state.currentItem || !state.currentItem.path) return;
+    const position = Number(el.video.currentTime);
+    const duration = Number(el.video.duration);
+    if (!Number.isFinite(position) || position < 0) return;
+
+    const payload = {
+      path: state.currentItem.path,
+      position,
+      duration: Number.isFinite(duration) && duration > 0 ? duration : 0
+    };
+    if (state.savePending) return;
+    state.savePending = true;
+    state.lastSaveAt = Date.now();
+    try {
+      await api('save_position', payload);
+      if (showFeedback) showToast('Позиция просмотра сохранена');
+    } catch (error) {
+      if (showFeedback) showToast(error.message);
+    } finally {
+      state.savePending = false;
+    }
+  }
+
+  function savePositionBeacon() {
+    if (!state.user || !state.currentItem || !state.currentItem.path) return;
+    const position = Number(el.video.currentTime);
+    const duration = Number(el.video.duration);
+    if (!Number.isFinite(position) || position < 0) return;
+    const body = new Blob([JSON.stringify({
+      action: 'save_position',
+      path: state.currentItem.path,
+      position,
+      duration: Number.isFinite(duration) && duration > 0 ? duration : 0
+    })], { type: 'application/json' });
+    navigator.sendBeacon(`${API}?action=save_position`, body);
+  }
+
+  async function createPlaylist() {
+    const name = window.prompt('Название нового плейлиста:');
+    if (!name || !name.trim()) return;
+    try {
+      await api('playlist_create', { name: name.trim() });
+      await loadPlaylists();
+      showToast('Плейлист создан');
+    } catch (error) {
+      showToast(error.message);
+    }
+  }
+
+  async function renamePlaylist(playlist) {
+    const name = window.prompt('Новое название плейлиста:', playlist.name);
+    if (!name || !name.trim() || name.trim() === playlist.name) return;
+    try {
+      await api('playlist_rename', { playlist_id: playlist.id, name: name.trim() });
+      await loadPlaylists();
+      showToast('Название изменено');
+    } catch (error) {
+      showToast(error.message);
+    }
+  }
+
+  async function deletePlaylist(playlist) {
+    if (!window.confirm(`Удалить плейлист «${playlist.name}»?`)) return;
+    try {
+      await api('playlist_delete', { playlist_id: playlist.id });
+      await loadPlaylists();
+      showToast('Плейлист удалён');
+    } catch (error) {
+      showToast(error.message);
+    }
+  }
+
+  async function openAddToPlaylist(item) {
+    state.pendingPlaylistItem = normalizeQueueItem(item);
+    el.playlistDialogFile.textContent = state.pendingPlaylistItem.name;
+    el.playlistDialogError.textContent = '';
+    try {
+      const result = await api('playlists');
+      state.playlists = result.items || [];
+      if (!state.playlists.length) {
+        const create = window.confirm('Плейлистов пока нет. Создать новый?');
+        if (create) await createPlaylist();
+        const refreshed = await api('playlists');
+        state.playlists = refreshed.items || [];
+      }
+      if (!state.playlists.length) return;
+      el.playlistSelect.replaceChildren();
+      state.playlists.forEach((playlist) => {
+        const option = document.createElement('option');
+        option.value = String(playlist.id);
+        option.textContent = playlist.name;
+        el.playlistSelect.append(option);
+      });
+      if (typeof el.playlistDialog.showModal === 'function') el.playlistDialog.showModal();
+      else await addToSelectedPlaylist();
+    } catch (error) {
+      showToast(error.message);
+    }
+  }
+
+  async function addToSelectedPlaylist() {
+    if (!state.pendingPlaylistItem) return;
+    const playlistId = Number(el.playlistSelect.value);
+    if (!playlistId) {
+      el.playlistDialogError.textContent = 'Сначала создай плейлист.';
+      return;
+    }
+    try {
+      await api('playlist_add', { playlist_id: playlistId, path: state.pendingPlaylistItem.path });
+      if (el.playlistDialog.open) el.playlistDialog.close();
+      showToast('Добавлено в плейлист');
+      if (state.view === 'playlists') await loadPlaylists();
+    } catch (error) {
+      el.playlistDialogError.textContent = error.message;
+    }
+  }
+
+  async function removePlaylistItem(playlistId, itemId) {
+    try {
+      await api('playlist_remove', { playlist_id: playlistId, item_id: itemId });
+      await loadPlaylists(playlistId);
+      showToast('Видео убрано из плейлиста');
+    } catch (error) {
+      showToast(error.message);
+    }
+  }
+
+  async function reorderPlaylist(playlist, items, from, to) {
+    const reordered = [...items];
+    const [moved] = reordered.splice(from, 1);
+    reordered.splice(to, 0, moved);
+    try {
+      await api('playlist_reorder', {
+        playlist_id: playlist.id,
+        item_ids: reordered.map((item) => item.id)
+      });
+      await loadPlaylists(playlist.id);
+    } catch (error) {
+      showToast(error.message);
+    }
+  }
+
+  function bindEvents() {
+    el.loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      el.loginError.textContent = '';
+      const nickname = el.nickname.value.trim();
+      if (!nickname) {
+        el.loginError.textContent = 'Введи имя или позывной.';
+        return;
+      }
+      const submit = el.loginForm.querySelector('button[type="submit"]');
+      submit.disabled = true;
+      try {
+        const result = await api('login', { nickname, remember: el.remember.checked });
+        state.user = result.user;
+        showApp();
+        await loadDirectory(state.path);
+        showToast(`Привет, ${state.user.nickname}!`);
+      } catch (error) {
+        el.loginError.textContent = error.message;
+      } finally {
+        submit.disabled = false;
+      }
+    });
+
+    el.logout.addEventListener('click', async () => {
+      try { await api('logout'); } catch (_) { /* cookie may already be gone */ }
+      sessionStorage.removeItem('tali_path');
+      state.path = '';
+      showLogin();
+    });
+
+    el.theme.addEventListener('click', () => {
+      setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+    });
+
+    el.refresh.addEventListener('click', () => {
+      if (state.view === 'browse') loadDirectory(state.path);
+      else if (state.view === 'history') loadHistory();
+    });
+
+    el.navButtons.forEach((button) => {
+      button.addEventListener('click', () => setView(button.dataset.view));
+    });
+
+    el.previous.addEventListener('click', () => {
+      if (state.queueIndex > 0) {
+        state.queueIndex -= 1;
+        playCurrent();
+      }
+    });
+
+    el.next.addEventListener('click', () => {
+      if (state.queueIndex >= 0 && state.queueIndex < state.queue.length - 1) {
+        state.queueIndex += 1;
+        playCurrent();
+      }
+    });
+
+    el.restart.addEventListener('click', () => {
+      el.video.currentTime = 0;
+      el.video.play().catch(() => {});
+      el.resumeLabel.hidden = true;
+      el.restart.hidden = true;
+      saveCurrentPosition(false);
+    });
+
+    el.fullscreen.addEventListener('click', async () => {
+      try {
+        if (el.video.requestFullscreen) await el.video.requestFullscreen();
+        else if (el.video.webkitEnterFullscreen) el.video.webkitEnterFullscreen();
+      } catch (_) { showToast('Полноэкранный режим недоступен'); }
+    });
+
+    el.video.addEventListener('timeupdate', () => {
+      if (!state.currentItem) return;
+      if (Date.now() - state.lastSaveAt >= 15000) saveCurrentPosition(false);
+    });
+    el.video.addEventListener('pause', () => {
+      if (state.ignoreNextPauseSave) {
+        state.ignoreNextPauseSave = false;
+        return;
+      }
+      saveCurrentPosition(false);
+    });
+    el.video.addEventListener('ended', async () => {
+      await saveCurrentPosition(false);
+      if (state.queueIndex >= 0 && state.queueIndex < state.queue.length - 1) {
+        state.queueIndex += 1;
+        playCurrent();
+      }
+    });
+
+    el.playlistDialogForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      addToSelectedPlaylist();
+    });
+    el.closePlaylistDialog.addEventListener('click', () => el.playlistDialog.close());
+    el.createPlaylistFromDialog.addEventListener('click', async () => {
+      await createPlaylist();
+      const result = await api('playlists');
+      state.playlists = result.items || [];
+      el.playlistSelect.replaceChildren();
+      state.playlists.forEach((playlist) => {
+        const option = document.createElement('option');
+        option.value = String(playlist.id);
+        option.textContent = playlist.name;
+        el.playlistSelect.append(option);
+      });
+    });
+
+    document.addEventListener('click', () => renewOnLocalAction());
+    document.addEventListener('keydown', (event) => {
+      if (!state.user || event.repeat) return;
+      const target = event.target;
+      if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+      if (!state.currentItem) return;
+      if (event.code === 'Space') {
+        event.preventDefault();
+        if (el.video.paused) el.video.play().catch(() => {});
+        else el.video.pause();
+      } else if (event.code === 'ArrowRight') {
+        event.preventDefault(); el.video.currentTime = Math.min(el.video.duration || Infinity, el.video.currentTime + 10);
+      } else if (event.code === 'ArrowLeft') {
+        event.preventDefault(); el.video.currentTime = Math.max(0, el.video.currentTime - 10);
+      } else if (event.code === 'ArrowUp') {
+        event.preventDefault(); el.video.volume = Math.min(1, el.video.volume + .05);
+      } else if (event.code === 'ArrowDown') {
+        event.preventDefault(); el.video.volume = Math.max(0, el.video.volume - .05);
+      } else if (event.code === 'KeyF') {
+        event.preventDefault(); el.fullscreen.click();
+      }
+    });
+    window.addEventListener('pagehide', savePositionBeacon);
+  }
+
+  function renewOnLocalAction() {
+    if (!state.user || Date.now() - state.lastTouchAt < 5000) return;
+    state.lastTouchAt = Date.now();
+    api('touch').catch(() => {});
+  }
+
+  async function initialize() {
+    initTheme();
+    bindEvents();
+    try {
+      const result = await api('me', {}, 'GET');
+      state.user = result.user;
+      showApp();
+      await loadDirectory(state.path);
+    } catch (_) {
+      showLogin();
+    }
+  }
+
+  initialize();
+})();
