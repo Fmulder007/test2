@@ -38,6 +38,10 @@
     ignoreNextPauseSave: false,
     saveChain: Promise.resolve(),
     rotation: 0,
+    fullscreenActive: false,
+    fullscreenEntryPending: false,
+    orientationLocked: false,
+    nativeFullscreenActive: false,
     lastTouchAt: 0,
     pendingPlaylistItem: null,
     toastTimer: null,
@@ -139,7 +143,7 @@
     el.navButtons.forEach((button) => button.classList.toggle('active', button.dataset.view === view));
     el.playerPanel.hidden = !state.currentItem;
     el.browseToolbar.hidden = view !== 'browse';
-    el.listHeader.hidden = view !== 'browse';
+    updateListHeader(view === 'browse' ? 'directory' : view);
     if (view === 'browse') {
       loadDirectory(state.path);
     } else if (view === 'history') {
@@ -166,6 +170,58 @@
       day: '2-digit', month: '2-digit', year: 'numeric',
       hour: '2-digit', minute: '2-digit'
     }).format(date);
+  }
+
+  function parseApiDate(value) {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      const numericDate = new Date(value * 1000);
+      return Number.isNaN(numericDate.getTime()) ? null : numericDate;
+    }
+
+    const raw = String(value ?? '').trim();
+    if (!raw) return null;
+
+    let normalized = raw;
+    if (/^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/.test(raw)) {
+      normalized = raw.replace(' ', 'T') + 'Z';
+    } else if (/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$/.test(raw)) {
+      normalized = raw + 'Z';
+    }
+
+    const date = new Date(normalized);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  function appendDateCell(row, value, unixTimestamp = false) {
+    const cell = document.createElement('time');
+    cell.className = 'entry-date';
+    const date = unixTimestamp
+      ? parseApiDate(Number(value))
+      : parseApiDate(value);
+
+    if (!date) {
+      cell.textContent = '—';
+      row.append(cell);
+      return cell;
+    }
+
+    const datePart = document.createElement('span');
+    datePart.className = 'entry-date-part';
+    datePart.textContent = new Intl.DateTimeFormat('ru-RU', {
+      day: '2-digit', month: '2-digit', year: 'numeric'
+    }).format(date);
+
+    const timePart = document.createElement('span');
+    timePart.className = 'entry-time-part';
+    timePart.textContent = new Intl.DateTimeFormat('ru-RU', {
+      hour: '2-digit', minute: '2-digit'
+    }).format(date);
+
+    cell.dateTime = date.toISOString();
+    cell.title = date.toLocaleString('ru-RU');
+    cell.append(datePart, timePart);
+    row.append(cell);
+    return cell;
   }
 
   function itemPath(item) {
@@ -266,7 +322,7 @@
 
   function updateSortHeader() {
     document.querySelectorAll('.sort-button').forEach((button) => {
-      const active = button.dataset.sort === state.preferences.sort_by;
+      const active = state.view === 'browse' && button.dataset.sort === state.preferences.sort_by;
       const indicator = button.querySelector('.sort-indicator');
       button.classList.toggle('sort-button-active', active);
       button.setAttribute('aria-sort', active
@@ -278,6 +334,30 @@
           : '↕';
       }
     });
+  }
+
+  function updateListHeader(mode) {
+    const isDirectory = mode === 'directory';
+    el.listHeader.hidden = false;
+    el.listHeader.classList.toggle('list-header--directory', isDirectory);
+
+    const dateDesktop = el.listHeader.querySelector('.date-label-desktop');
+    const dateMobile = el.listHeader.querySelector('.date-label-mobile');
+    const infoLabel = el.listHeader.querySelector('.info-label');
+
+    if (dateDesktop) {
+      dateDesktop.textContent = mode === 'history' ? 'Просмотрено'
+        : mode === 'playlist' ? 'Добавлено'
+        : mode === 'playlist-index' ? 'Обновлён'
+        : 'Дата изменения';
+    }
+    if (dateMobile) dateMobile.textContent = 'Дата';
+    if (infoLabel) {
+      infoLabel.textContent = mode === 'directory' ? 'Размер'
+        : mode === 'playlist-index' ? 'Видео'
+        : 'Сведения';
+    }
+    updateSortHeader();
   }
 
   function saveSortPreferences() {
@@ -415,7 +495,7 @@
     state.activePlaylist = null;
     el.navButtons.forEach((button) => button.classList.toggle('active', button.dataset.view === 'browse'));
     el.browseToolbar.hidden = false;
-    el.listHeader.hidden = false;
+    updateListHeader('directory');
     setBreadcrumbs(path);
     setLoading(true);
     try {
@@ -502,22 +582,9 @@
       row.append(main);
 
       if (mode === 'directory') {
-        const modified = document.createElement('time');
-        modified.className = 'entry-date';
-        const modifiedValue = Number(item.modified) || 0;
-        if (modifiedValue > 0) {
-          const date = new Date(modifiedValue * 1000);
-          const datePart = document.createElement('span'); datePart.className = 'entry-date-part';
-          datePart.textContent = new Intl.DateTimeFormat('ru-RU', {day:'2-digit',month:'2-digit',year:'numeric'}).format(date);
-          const timePart = document.createElement('span'); timePart.className = 'entry-time-part';
-          timePart.textContent = new Intl.DateTimeFormat('ru-RU', {hour:'2-digit',minute:'2-digit'}).format(date);
-          modified.append(datePart, timePart);
-        } else modified.textContent = '—';
-        if (modifiedValue > 0) {
-          modified.dateTime = new Date(modifiedValue * 1000).toISOString();
-          modified.title = new Date(modifiedValue * 1000).toLocaleString('ru-RU');
-        }
-        row.append(modified);
+        appendDateCell(row, Number(item.modified) || 0, true);
+      } else if (mode === 'history') {
+        appendDateCell(row, item.last_watched_at);
       }
 
       const size = document.createElement('span');
@@ -537,8 +604,9 @@
         const add = document.createElement('button');
         add.type = 'button';
         add.className = 'small-button';
-        add.textContent = '+ список';
+        add.innerHTML = '<span class="action-label-full">+ список</span><span class="action-label-mobile">＋</span>';
         add.title = 'Добавить в плейлист';
+        add.setAttribute('aria-label', 'Добавить в плейлист');
         add.addEventListener('click', (event) => {
           event.stopPropagation();
           openAddToPlaylist(item);
@@ -569,7 +637,7 @@
     state.view = 'history';
     state.activePlaylist = null;
     el.browseToolbar.hidden = true;
-    el.listHeader.hidden = true;
+    updateListHeader('history');
     setLoading(true);
     try {
       const result = await api('history', { limit: 200 });
@@ -616,6 +684,7 @@
   function renderPlaylistIndex() {
     sessionStorage.removeItem('tali_playlist');
     state.activePlaylist = null;
+    updateListHeader('playlist-index');
     el.list.replaceChildren();
     el.empty.hidden = state.playlists.length > 0;
     el.empty.textContent = 'Плейлистов пока нет. Создай первый.';
@@ -628,8 +697,13 @@
     createButton.innerHTML = '<span class="entry-icon">＋</span><span class="entry-name">Создать плейлист</span>';
     createButton.addEventListener('click', createPlaylist);
     createRow.append(createButton);
-    createRow.append(document.createElement('span'));
-    createRow.append(document.createElement('span'));
+    appendDateCell(createRow, null);
+    const createInfo = document.createElement('span');
+    createInfo.className = 'entry-size';
+    createRow.append(createInfo);
+    const createActions = document.createElement('div');
+    createActions.className = 'row-actions';
+    createRow.append(createActions);
     el.list.append(createRow);
 
     state.playlists.forEach((playlist) => {
@@ -647,6 +721,7 @@
       main.append(icon, name);
       main.addEventListener('click', () => loadPlaylists(playlist.id));
       row.append(main);
+      appendDateCell(row, playlist.updated_at);
 
       const count = document.createElement('span');
       count.className = 'entry-size';
@@ -658,8 +733,9 @@
       const rename = document.createElement('button');
       rename.className = 'small-button';
       rename.type = 'button';
-      rename.textContent = 'Имя';
+      rename.innerHTML = '<span class="action-label-full">Имя</span><span class="action-label-mobile">✎</span>';
       rename.title = 'Переименовать';
+      rename.setAttribute('aria-label', 'Переименовать');
       rename.addEventListener('click', () => renamePlaylist(playlist));
       const remove = document.createElement('button');
       remove.className = 'small-button';
@@ -675,6 +751,7 @@
 
   function renderPlaylist(playlist) {
     state.activePlaylist = playlist;
+    updateListHeader('playlist');
     el.list.replaceChildren();
     el.empty.hidden = (playlist.items || []).length > 0;
     el.empty.textContent = 'В этом плейлисте пока нет видео.';
@@ -686,7 +763,14 @@
     back.className = 'entry-main';
     back.innerHTML = '<span class="entry-icon">‹</span><span class="entry-name">Все плейлисты</span>';
     back.addEventListener('click', renderPlaylistIndex);
-    heading.append(back, document.createElement('span'), document.createElement('span'));
+    heading.append(back);
+    appendDateCell(heading, null);
+    const headingInfo = document.createElement('span');
+    headingInfo.className = 'entry-size';
+    heading.append(headingInfo);
+    const headingActions = document.createElement('div');
+    headingActions.className = 'row-actions';
+    heading.append(headingActions);
     el.list.append(heading);
 
     const items = (playlist.items || []).map((item) => ({
@@ -721,7 +805,16 @@
       enableNameDrag(name);
       main.append(icon, name);
       main.addEventListener('click', () => playFromQueue(items, index));
-      row.append(main, document.createElement('span'));
+      row.append(main);
+      appendDateCell(row, item.added_at);
+
+      const itemInfo = document.createElement('span');
+      itemInfo.className = 'entry-size';
+      const itemCompleted = Number(item.duration_seconds) > 0 &&
+        Number(item.position_seconds) >= Number(item.duration_seconds) - 15;
+      itemInfo.textContent = itemCompleted ? 'Просмотрено'
+        : Number(item.position_seconds) > 0 ? formatTime(item.position_seconds) : '—';
+      row.append(itemInfo);
 
       const actions = document.createElement('div');
       actions.className = 'row-actions';
@@ -968,12 +1061,84 @@
     }
   }
 
+  function isStageFullscreen() {
+    return document.fullscreenElement === el.stage ||
+      document.webkitFullscreenElement === el.stage;
+  }
+
+  function applyFullscreenFallbackRotation() {
+    if (!isStageFullscreen()) return;
+    const isMobile = window.matchMedia('(max-width: 760px)').matches;
+    const orientation = window.screen && window.screen.orientation;
+    const isPortrait = orientation && typeof orientation.type === 'string'
+      ? orientation.type.startsWith('portrait')
+      : window.innerHeight > window.innerWidth;
+    const isLandscapeVideo = Number(el.video.videoWidth) > Number(el.video.videoHeight);
+
+    state.rotation = isMobile && isPortrait && isLandscapeVideo ? 90 : 0;
+    updateVideoRotation();
+  }
+
+  async function enterFullscreenOrientation(allowOrientationLock) {
+    if (state.fullscreenActive) return;
+    state.fullscreenActive = true;
+    state.rotation = 0;
+    updateVideoRotation();
+
+    const isMobile = window.matchMedia('(max-width: 760px)').matches;
+    const isLandscapeVideo = Number(el.video.videoWidth) > Number(el.video.videoHeight);
+    const orientation = window.screen && window.screen.orientation;
+
+    if (allowOrientationLock && isMobile && isLandscapeVideo &&
+        orientation && typeof orientation.lock === 'function') {
+      try {
+        await orientation.lock('landscape');
+        state.orientationLocked = true;
+        state.rotation = 0;
+        updateVideoRotation();
+        return;
+      } catch (_) {
+        // Браузер не разрешил блокировку: повернём само видео средствами CSS.
+      }
+    }
+
+    state.orientationLocked = false;
+    applyFullscreenFallbackRotation();
+  }
+
+  function exitFullscreenOrientation() {
+    const orientation = window.screen && window.screen.orientation;
+    if (state.orientationLocked && orientation && typeof orientation.unlock === 'function') {
+      try { orientation.unlock(); } catch (_) { /* ignore unsupported unlock */ }
+    }
+    state.orientationLocked = false;
+    state.fullscreenActive = false;
+    state.rotation = 0;
+    updateVideoRotation();
+  }
+
+  function syncFullscreenState() {
+    if (isStageFullscreen()) {
+      if (!state.fullscreenActive && !state.fullscreenEntryPending) {
+        enterFullscreenOrientation(false);
+      }
+    } else if (state.fullscreenActive) {
+      exitFullscreenOrientation();
+    }
+    updatePlaybackControls();
+  }
+
+  function handleFullscreenViewportChange() {
+    if (isStageFullscreen() && state.fullscreenActive && !state.orientationLocked) {
+      applyFullscreenFallbackRotation();
+    } else {
+      updateVideoRotation();
+    }
+  }
+
   async function requestVideoFullscreen() {
     try {
-      const isStageFullscreen = document.fullscreenElement === el.stage ||
-        document.webkitFullscreenElement === el.stage;
-
-      if (isStageFullscreen) {
+      if (isStageFullscreen()) {
         if (document.exitFullscreen) {
           await document.exitFullscreen();
         } else if (document.webkitExitFullscreen) {
@@ -982,18 +1147,21 @@
         return;
       }
 
-      // На iOS Safari видео может открываться в отдельном нативном fullscreen.
+      // iOS Safari открывает видео в собственном полноэкранном проигрывателе.
       if (el.video.webkitDisplayingFullscreen && el.video.webkitExitFullscreen) {
         el.video.webkitExitFullscreen();
         return;
       }
 
       if (el.stage.requestFullscreen) {
+        state.fullscreenEntryPending = true;
         await el.stage.requestFullscreen();
+        await enterFullscreenOrientation(true);
       } else if (el.stage.webkitRequestFullscreen) {
-        await el.stage.webkitRequestFullscreen();
+        state.fullscreenEntryPending = true;
+        el.stage.webkitRequestFullscreen();
+        await enterFullscreenOrientation(false);
       } else if (el.video.webkitEnterFullscreen) {
-        // iOS Safari показывает собственную панель управления в полноэкранном режиме.
         el.video.controls = true;
         el.video.webkitEnterFullscreen();
       } else {
@@ -1002,6 +1170,11 @@
     } catch (_) {
       el.video.controls = false;
       showToast('Полноэкранный режим недоступен');
+    } finally {
+      state.fullscreenEntryPending = false;
+      if (!isStageFullscreen() && state.fullscreenActive) {
+        exitFullscreenOrientation();
+      }
     }
   }
 
@@ -1044,7 +1217,9 @@
     });
 
     document.querySelectorAll('.sort-button').forEach((button) => {
-      button.addEventListener('click', () => changeSort(button.dataset.sort));
+      button.addEventListener('click', () => {
+        if (state.view === 'browse') changeSort(button.dataset.sort);
+      });
     });
 
     el.navButtons.forEach((button) => {
@@ -1099,7 +1274,11 @@
     });
     el.fullscreen.addEventListener('click', requestVideoFullscreen);
     el.rotate.addEventListener('click', rotateVideo);
-    window.addEventListener('resize', updateVideoRotation);
+    window.addEventListener('resize', handleFullscreenViewportChange);
+    if (window.screen && window.screen.orientation &&
+        typeof window.screen.orientation.addEventListener === 'function') {
+      window.screen.orientation.addEventListener('change', handleFullscreenViewportChange);
+    }
 
     enableNameDrag(el.nowPlaying);
     el.video.addEventListener('loadedmetadata', updatePlaybackControls);
@@ -1124,13 +1303,21 @@
       }
       saveCurrentPosition(false);
     });
-    el.video.addEventListener('webkitbeginfullscreen', updatePlaybackControls);
-    el.video.addEventListener('webkitendfullscreen', () => {
-      el.video.controls = false;
+    el.video.addEventListener('webkitbeginfullscreen', () => {
+      state.nativeFullscreenActive = true;
+      state.rotation = 0;
+      updateVideoRotation();
       updatePlaybackControls();
     });
-    document.addEventListener('fullscreenchange', updatePlaybackControls);
-    document.addEventListener('webkitfullscreenchange', updatePlaybackControls);
+    el.video.addEventListener('webkitendfullscreen', () => {
+      el.video.controls = false;
+      state.nativeFullscreenActive = false;
+      state.rotation = 0;
+      updateVideoRotation();
+      updatePlaybackControls();
+    });
+    document.addEventListener('fullscreenchange', syncFullscreenState);
+    document.addEventListener('webkitfullscreenchange', syncFullscreenState);
     el.video.addEventListener('ended', async () => {
       await saveCurrentPosition(false);
       if (state.queueIndex >= 0 && state.queueIndex < state.queue.length - 1) {
