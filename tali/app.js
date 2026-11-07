@@ -1044,7 +1044,11 @@
 
     el.video.addEventListener('loadedmetadata', updatePlaybackControls);
     el.video.addEventListener('durationchange', updatePlaybackControls);
-    el.video.addEventListener('play', updatePlaybackControls);
+    el.video.addEventListener('play', () => {
+      state.playbackEnded = false;
+      updateCurrentRowHighlight();
+      updatePlaybackControls();
+    });
     el.video.addEventListener('volumechange', updatePlaybackControls);
     el.video.addEventListener('timeupdate', () => {
       updatePlaybackControls();
