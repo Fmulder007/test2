@@ -1132,7 +1132,7 @@
       await loadHistory();
     } else if (savedView === 'playlists') {
       const savedPlaylist = sessionStorage.getItem('tali_playlist');
-      const playlistId = savedPlaylist && /^\\d+$/.test(savedPlaylist)
+      const playlistId = savedPlaylist && /^\d+$/.test(savedPlaylist)
         ? Number(savedPlaylist) : null;
       await loadPlaylists(playlistId);
     } else {
