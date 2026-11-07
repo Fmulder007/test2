@@ -410,7 +410,6 @@
     el.navButtons.forEach((button) => button.classList.toggle('active', button.dataset.view === 'browse'));
     el.browseToolbar.hidden = false;
     el.listHeader.hidden = false;
-    el.refresh.hidden = false;
     setBreadcrumbs(path);
     setLoading(true);
     try {
@@ -1036,11 +1035,6 @@
 
     el.theme.addEventListener('click', () => {
       setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
-    });
-
-    el.refresh.addEventListener('click', () => {
-      if (state.view === 'browse') loadDirectory(state.path);
-      else if (state.view === 'history') loadHistory();
     });
 
     document.querySelectorAll('.sort-button').forEach((button) => {
