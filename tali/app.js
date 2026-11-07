@@ -34,6 +34,7 @@
     queue: [],
     queueIndex: -1,
     currentItem: null,
+    playbackEnded: false,
     lastSaveAt: 0,
     ignoreNextPauseSave: false,
     savePending: false,
@@ -130,6 +131,8 @@
 
   function setView(view) {
     state.view = view;
+    sessionStorage.setItem('tali_view', view);
+    sessionStorage.removeItem('tali_playlist');
     state.activePlaylist = null;
     el.navButtons.forEach((button) => button.classList.toggle('active', button.dataset.view === view));
     el.playerPanel.hidden = !state.currentItem;
@@ -345,6 +348,8 @@
   async function loadDirectory(path) {
     state.path = path;
     sessionStorage.setItem('tali_path', path);
+    sessionStorage.setItem('tali_view', 'browse');
+    sessionStorage.removeItem('tali_playlist');
     state.view = 'browse';
     state.activePlaylist = null;
     el.navButtons.forEach((button) => button.classList.toggle('active', button.dataset.view === 'browse'));
@@ -369,6 +374,14 @@
     el.list.replaceChildren();
     el.empty.hidden = false;
     el.empty.textContent = message;
+  }
+
+  function updateCurrentRowHighlight() {
+    const currentPath = state.currentItem && !state.playbackEnded
+      ? itemPath(state.currentItem) : '';
+    el.list.querySelectorAll('.item-row[data-media-path]').forEach((row) => {
+      row.classList.toggle('item-row--current', Boolean(currentPath) && row.dataset.mediaPath === currentPath);
+    });
   }
 
   function renderItems(items, mode, options = {}) {
@@ -398,6 +411,12 @@
       const isDirectory = item.type === 'directory';
       const row = document.createElement('div');
       row.className = `item-row item-row--${mode}`;
+      if (!isDirectory) {
+        row.dataset.mediaPath = itemPath(item);
+        if (!state.playbackEnded && state.currentItem && itemPath(state.currentItem) === itemPath(item)) {
+          row.classList.add('item-row--current');
+        }
+      }
 
       const main = document.createElement('button');
       main.type = 'button';
@@ -478,6 +497,8 @@
   }
 
   async function loadHistory() {
+    sessionStorage.setItem('tali_view', 'history');
+    sessionStorage.removeItem('tali_playlist');
     state.view = 'history';
     state.activePlaylist = null;
     el.browseToolbar.hidden = true;
@@ -500,6 +521,9 @@
   }
 
   async function loadPlaylists(openId = null) {
+    sessionStorage.setItem('tali_view', 'playlists');
+    if (openId === null) sessionStorage.removeItem('tali_playlist');
+    else sessionStorage.setItem('tali_playlist', String(openId));
     state.view = 'playlists';
     el.browseToolbar.hidden = true;
     el.listHeader.hidden = true;
@@ -523,6 +547,7 @@
   }
 
   function renderPlaylistIndex() {
+    sessionStorage.removeItem('tali_playlist');
     state.activePlaylist = null;
     el.list.replaceChildren();
     el.empty.hidden = state.playlists.length > 0;
@@ -613,6 +638,10 @@
     items.forEach((item, index) => {
       const row = document.createElement('div');
       row.className = 'item-row item-row--playlist';
+      row.dataset.mediaPath = itemPath(item);
+      if (!state.playbackEnded && state.currentItem && itemPath(state.currentItem) === itemPath(item)) {
+        row.classList.add('item-row--current');
+      }
       const main = document.createElement('button');
       main.type = 'button';
       main.className = 'entry-main';
@@ -681,6 +710,8 @@
       el.video.pause();
     }
     state.currentItem = item;
+    state.playbackEnded = false;
+    updateCurrentRowHighlight();
     state.lastSaveAt = 0;
     el.playerPanel.hidden = false;
     el.nowPlaying.textContent = item.name;
@@ -725,6 +756,8 @@
     el.download.removeAttribute('download');
     el.download.hidden = true;
     state.currentItem = null;
+    state.playbackEnded = false;
+    updateCurrentRowHighlight();
     state.queue = [];
     state.queueIndex = -1;
     el.playerPanel.hidden = true;
@@ -926,7 +959,7 @@
         state.user = result.user;
         state.preferences = normalizePreferences(result.preferences);
         showApp();
-        await loadDirectory(state.path);
+        await restoreSavedView();
         showToast(`Привет, ${state.user.nickname}!`);
       } catch (error) {
         el.loginError.textContent = error.message;
@@ -938,6 +971,8 @@
     el.logout.addEventListener('click', async () => {
       try { await api('logout'); } catch (_) { /* cookie may already be gone */ }
       sessionStorage.removeItem('tali_path');
+      sessionStorage.removeItem('tali_view');
+      sessionStorage.removeItem('tali_playlist');
       state.path = '';
       showLogin();
     });
@@ -1036,6 +1071,9 @@
       if (state.queueIndex >= 0 && state.queueIndex < state.queue.length - 1) {
         state.queueIndex += 1;
         playCurrent();
+      } else {
+        state.playbackEnded = true;
+        updateCurrentRowHighlight();
       }
     });
 
@@ -1088,6 +1126,20 @@
     api('touch').catch(() => {});
   }
 
+  async function restoreSavedView() {
+    const savedView = sessionStorage.getItem('tali_view');
+    if (savedView === 'history') {
+      await loadHistory();
+    } else if (savedView === 'playlists') {
+      const savedPlaylist = sessionStorage.getItem('tali_playlist');
+      const playlistId = savedPlaylist && /^\\d+$/.test(savedPlaylist)
+        ? Number(savedPlaylist) : null;
+      await loadPlaylists(playlistId);
+    } else {
+      await loadDirectory(state.path);
+    }
+  }
+
   async function initialize() {
     initTheme();
     bindEvents();
@@ -1096,7 +1148,7 @@
       state.user = result.user;
       state.preferences = normalizePreferences(result.preferences);
       showApp();
-      await loadDirectory(state.path);
+      await restoreSavedView();
     } catch (_) {
       showLogin();
     }
