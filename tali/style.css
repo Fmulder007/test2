@@ -146,7 +146,12 @@ h2 { margin: 0; font-size: 19px; }
 .item-row.item-row--current:hover { background: var(--accent-soft); }
 .entry-main { display: flex; align-items: center; gap: 11px; min-width: 0; padding: 5px 2px; border: 0; background: transparent; color: var(--text); text-align: left; }
 .entry-icon { flex: 0 0 22px; color: var(--accent); font-size: 17px; text-align: center; }
-.entry-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+ .entry-name {
+  display:block; min-width:0; overflow-x:auto; overflow-y:hidden; white-space:nowrap;
+  text-overflow:clip; scrollbar-width:none; touch-action:pan-y; cursor:grab;
+}
+.entry-name::-webkit-scrollbar, .now-playing::-webkit-scrollbar {display:none}
+.entry-name.name-dragging, .now-playing.name-dragging {cursor:grabbing; user-select:none}
 .entry-main:hover .entry-name { color: var(--accent); text-decoration: underline; }
 .entry-date, .entry-size { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .entry-date { overflow: hidden; text-overflow: ellipsis; }
@@ -174,7 +179,10 @@ h2 { margin: 0; font-size: 19px; }
 .player-panel { margin-bottom: 17px; padding: 12px; background: var(--surface-2); }
 .player-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
 .player-title-wrap { min-width: 0; }
-.now-playing { overflow: hidden; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+ .now-playing {
+  min-width:0; overflow-x:auto; overflow-y:hidden; white-space:nowrap; font-weight:650;
+  scrollbar-width:none; touch-action:pan-y; cursor:grab;
+}
 .resume-label { margin-top: 3px; color: var(--muted); font-size: 12px; }
 .video-stage {
   position: relative;
@@ -186,11 +194,8 @@ h2 { margin: 0; font-size: 19px; }
   background: #000;
 }
 #videoPlayer {
-  display: block;
-  width: 100%;
-  height: 100%;
-  background: #000;
-  object-fit: contain;
+  display:block; position:relative; width:100%; height:100%;
+  background:#000; object-fit:contain;
 }
 .video-controls {
   position: absolute;
@@ -266,7 +271,6 @@ h2 { margin: 0; font-size: 19px; }
 .video-stage:fullscreen .video-controls, .video-stage:-webkit-full-screen .video-controls {
   padding-bottom: max(12px, env(safe-area-inset-bottom));
 }
-.player-status { min-height: 17px; margin-top: 7px; color: var(--muted); font-size: 11px; }
 
 .empty-message, .loading-message { padding: 30px 12px; color: var(--muted); text-align: center; font-size: 13px; }
 .footer { padding: 0 20px 25px; color: var(--muted); text-align: center; font-size: 11px; }
@@ -320,6 +324,8 @@ input[type="text"]:focus, select:focus { border-color: var(--accent); box-shadow
   .entry-icon { flex-basis: 18px; font-size: 14px; }
   .entry-name { font-size: 13px; }
   .entry-size, .entry-date { font-size: 9px; }
+  .entry-date { display:flex; flex-direction:column; justify-content:center; gap:0; line-height:1.05; white-space:normal; }
+  .entry-date-part, .entry-time-part {display:block}
   .row-actions { gap: 3px; }
   .small-button { padding: 5px 6px; font-size: 10px; }
   .player-heading { align-items: flex-start; }
@@ -330,7 +336,7 @@ input[type="text"]:focus, select:focus { border-color: var(--accent); box-shadow
   .player-volume { width: 56px; flex-basis: 56px; }
   .player-time { min-width: 30px; font-size: 10px; }
   .resume-label { max-width: 45vw; }
-  .profile-info { max-width: 110px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .profile-info { display:block; max-width:110px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
 }
 
 @media (max-width: 390px) {
@@ -340,6 +346,7 @@ input[type="text"]:focus, select:focus { border-color: var(--accent); box-shadow
   .item-row--playlist { grid-template-columns: minmax(0, 1fr) 55px 92px; gap: 4px; }
   .list-header { padding-left: 4px; padding-right: 4px; font-size: 8px; letter-spacing: 0; }
   .entry-date, .entry-size { font-size: 8px; }
+  .entry-date {line-height:1.05}
   .entry-main { gap: 4px; }
   .entry-icon { flex-basis: 15px; font-size: 12px; }
   .small-button { padding: 4px; font-size: 9px; }
