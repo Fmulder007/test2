@@ -42,16 +42,6 @@
     </section>
 
     <section id="appPanel" class="app-panel" hidden>
-      <div class="app-heading">
-        <div>
-          <h1 id="viewTitle">Видеотека</h1>
-          <p id="welcomeText" class="muted small-text"></p>
-        </div>
-        <div class="heading-actions">
-          <button id="refreshButton" class="secondary-button" type="button" title="Перечитать текущий список">↻ <span>Обновить</span></button>
-        </div>
-      </div>
-
       <div class="main-grid">
         <aside class="sidebar" aria-label="Разделы">
           <button class="nav-button active" data-view="browse" type="button"><span class="nav-icon">▤</span> Каталоги</button>
@@ -87,12 +77,12 @@
                   <span class="player-control-spacer"></span>
                   <button id="volumeButton" class="player-control-button" type="button" title="Выключить звук" aria-label="Выключить звук">🔊</button>
                   <input id="volumeInput" class="player-volume" type="range" min="0" max="1" step="0.05" value="1" aria-label="Громкость">
+                  <button id="rotateButton" class="player-control-button" type="button" title="Повернуть видео" aria-label="Повернуть видео">↻</button>
                   <button id="fullscreenButton" class="player-control-button" type="button" title="Во весь экран" aria-label="Во весь экран">⛶</button>
                   <a id="downloadButton" class="player-download" href="#" title="Скачать видео" aria-label="Скачать видео" hidden>⇩</a>
                 </div>
               </div>
             </div>
-            <div id="playerStatus" class="player-status" aria-live="polite"></div>
           </section>
 
           <div id="browseToolbar" class="browse-toolbar">
