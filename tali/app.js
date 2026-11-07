@@ -355,7 +355,7 @@
     if (infoLabel) {
       infoLabel.textContent = mode === 'directory' ? 'Размер'
         : mode === 'playlist-index' ? 'Видео'
-        : 'Сведения';
+        : 'Просмотр';
     }
     updateSortHeader();
   }
