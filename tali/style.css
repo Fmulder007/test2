@@ -142,6 +142,7 @@ h2 { margin: 0; font-size: 19px; }
 .action-label-mobile { display: none; }
 .list-header:not(.list-header--directory) { display: none; }
 .list-header:not(.list-header--directory) .sort-button { pointer-events: none; cursor: default; }
+.list-header:not(.list-header--directory) .sort-indicator { display: none; }
 .item-row--history > .entry-date, .item-row--playlist > .entry-date { display: none; }
 .item-row { min-height: 48px; padding: 5px 9px; border-bottom: 1px solid var(--line); }
 .item-row--history { display: grid; grid-template-columns: minmax(0, 1fr) 115px 105px; align-items: center; gap: 12px; }
