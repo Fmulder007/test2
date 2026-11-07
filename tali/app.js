@@ -8,14 +8,13 @@
     loginPanel: $('loginPanel'), appPanel: $('appPanel'), loginForm: $('loginForm'),
     nickname: $('nicknameInput'), remember: $('rememberInput'), loginError: $('loginError'),
     profileInfo: $('profileInfo'), logout: $('logoutButton'), theme: $('themeButton'),
-    welcome: $('welcomeText'), viewTitle: $('viewTitle'), refresh: $('refreshButton'),
     navButtons: [...document.querySelectorAll('.nav-button')],
     playerPanel: $('playerPanel'), stage: $('videoStage'), video: $('videoPlayer'), nowPlaying: $('nowPlaying'),
     resumeLabel: $('resumeLabel'), restart: $('restartButton'), previous: $('previousButton'),
     playPause: $('playPauseButton'), next: $('nextButton'), seek: $('seekInput'),
     currentTime: $('currentTime'), durationTime: $('durationTime'),
-    mute: $('volumeButton'), volume: $('volumeInput'), fullscreen: $('fullscreenButton'),
-    download: $('downloadButton'), playerStatus: $('playerStatus'),
+    mute: $('volumeButton'), volume: $('volumeInput'), fullscreen: $('fullscreenButton'), rotate: $('rotateButton'),
+    download: $('downloadButton'),
     browseToolbar: $('browseToolbar'), breadcrumbs: $('breadcrumbs'), listHeader: $('listHeader'),
     list: $('itemList'), empty: $('emptyMessage'), loading: $('loadingMessage'),
     playlistDialog: $('playlistDialog'), playlistDialogForm: $('playlistDialogForm'),
@@ -37,7 +36,8 @@
     playbackEnded: false,
     lastSaveAt: 0,
     ignoreNextPauseSave: false,
-    savePending: false,
+    saveChain: Promise.resolve(),
+    rotation: 0,
     lastTouchAt: 0,
     pendingPlaylistItem: null,
     toastTimer: null,
@@ -109,11 +109,7 @@
     el.appPanel.hidden = false;
     el.profileInfo.hidden = false;
     el.logout.hidden = false;
-    el.profileInfo.innerHTML = '';
-    const label = document.createElement('strong');
-    label.textContent = state.user.nickname;
-    el.profileInfo.append('Профиль: ', label);
-    el.welcome.textContent = `Привет, ${state.user.nickname}`;
+    el.profileInfo.textContent = state.user.nickname;
   }
 
   function setTheme(theme) {
@@ -138,16 +134,11 @@
     el.playerPanel.hidden = !state.currentItem;
     el.browseToolbar.hidden = view !== 'browse';
     el.listHeader.hidden = view !== 'browse';
-    el.refresh.hidden = view === 'playlists';
-
     if (view === 'browse') {
-      el.viewTitle.textContent = 'Видеотека';
       loadDirectory(state.path);
     } else if (view === 'history') {
-      el.viewTitle.textContent = 'История просмотра';
       loadHistory();
     } else if (view === 'playlists') {
-      el.viewTitle.textContent = 'Плейлисты';
       loadPlaylists();
     }
   }
@@ -180,6 +171,23 @@
     el.next.disabled = state.queueIndex < 0 || state.queueIndex >= state.queue.length - 1;
   }
 
+  function updateVideoRotation() {
+    const quarter = state.rotation === 90 || state.rotation === 270;
+    if (quarter) {
+      el.video.style.position='absolute'; el.video.style.width=el.stage.clientHeight+'px';
+      el.video.style.height=el.stage.clientWidth+'px'; el.video.style.left='50%'; el.video.style.top='50%';
+      el.video.style.transform=`translate(-50%, -50%) rotate(${state.rotation}deg)`;
+    } else {
+      el.video.style.position='relative'; el.video.style.width='100%'; el.video.style.height='100%';
+      el.video.style.left=''; el.video.style.top='';
+      el.video.style.transform=state.rotation===180?'rotate(180deg)':'';
+    }
+    el.rotate.textContent=state.rotation+'°';
+    el.rotate.title='Поворот видео: '+state.rotation+'°';
+    el.rotate.setAttribute('aria-label',el.rotate.title);
+  }
+  function rotateVideo() { state.rotation=(state.rotation+90)%360; updateVideoRotation(); }
+
   function updatePlaybackControls() {
     const duration = Number(el.video.duration);
     const position = Number(el.video.currentTime);
@@ -210,6 +218,7 @@
     el.fullscreen.setAttribute('aria-label', el.fullscreen.title);
 
     updateQueueControls();
+    updateVideoRotation();
   }
 
   function normalizePreferences(value) {
@@ -310,11 +319,57 @@
 
     const track = document.createElement('div');
     track.className = 'progress-track';
+    track.dataset.mediaPath = itemPath(item);
     const fill = document.createElement('div');
     fill.className = 'progress-fill';
     fill.style.width = `${Math.min(100, Number(watch.position) / Number(watch.duration) * 100)}%`;
     track.append(fill);
     el.list.append(track);
+  }
+
+  function updateVisibleProgress() {
+    if (!state.currentItem) return;
+    const path = itemPath(state.currentItem);
+    const duration = Number(el.video.duration), position = Number(el.video.currentTime);
+    if (!(duration > 0) || !Number.isFinite(position)) return;
+    const percent = Math.min(100, Math.max(0, position / duration * 100));
+    el.list.querySelectorAll('.item-row[data-media-path]').forEach((row) => {
+      if (row.dataset.mediaPath !== path) return;
+      let track = row.nextElementSibling;
+      if (!track || !track.classList.contains('progress-track')) {
+        track = document.createElement('div'); track.className = 'progress-track';
+        track.dataset.mediaPath = path; row.after(track);
+      }
+      let fill = track.querySelector('.progress-fill');
+      if (!fill) { fill = document.createElement('div'); fill.className = 'progress-fill'; track.append(fill); }
+      fill.style.width = percent + '%';
+    });
+  }
+
+  function enableNameDrag(element) {
+    let active = false, startX = 0, startScroll = 0, moved = false;
+    element.addEventListener('pointerdown', (event) => {
+      if (element.scrollWidth <= element.clientWidth || (event.pointerType === 'mouse' && event.button !== 0)) return;
+      active = true; moved = false; startX = event.clientX; startScroll = element.scrollLeft;
+      element.setPointerCapture(event.pointerId); element.classList.add('name-dragging');
+    });
+    element.addEventListener('pointermove', (event) => {
+      if (!active) return;
+      const delta = event.clientX - startX;
+      if (Math.abs(delta) > 3) moved = true;
+      element.scrollLeft = startScroll - delta;
+    });
+    const finish = () => {
+      if (!active) return;
+      active = false; element.classList.remove('name-dragging');
+      element.scrollTo({left:0, behavior:'smooth'});
+    };
+    element.addEventListener('pointerup', finish);
+    element.addEventListener('pointercancel', finish);
+    element.addEventListener('lostpointercapture', finish);
+    element.addEventListener('click', (event) => {
+      if (moved) { event.preventDefault(); event.stopImmediatePropagation(); }
+    }, true);
   }
 
   function setBreadcrumbs(path) {
@@ -353,7 +408,6 @@
     state.view = 'browse';
     state.activePlaylist = null;
     el.navButtons.forEach((button) => button.classList.toggle('active', button.dataset.view === 'browse'));
-    el.viewTitle.textContent = 'Видеотека';
     el.browseToolbar.hidden = false;
     el.listHeader.hidden = false;
     el.refresh.hidden = false;
@@ -427,6 +481,7 @@
       const name = document.createElement('span');
       name.className = 'entry-name';
       name.textContent = item.name || basename(item.media_path || item.path);
+      enableNameDrag(name);
       main.append(icon, name);
       main.addEventListener('click', () => {
         if (isDirectory) {
@@ -445,7 +500,14 @@
         const modified = document.createElement('time');
         modified.className = 'entry-date';
         const modifiedValue = Number(item.modified) || 0;
-        modified.textContent = formatModified(modifiedValue);
+        if (modifiedValue > 0) {
+          const date = new Date(modifiedValue * 1000);
+          const datePart = document.createElement('span'); datePart.className = 'entry-date-part';
+          datePart.textContent = new Intl.DateTimeFormat('ru-RU', {day:'2-digit',month:'2-digit',year:'numeric'}).format(date);
+          const timePart = document.createElement('span'); timePart.className = 'entry-time-part';
+          timePart.textContent = new Intl.DateTimeFormat('ru-RU', {hour:'2-digit',minute:'2-digit'}).format(date);
+          modified.append(datePart, timePart);
+        } else modified.textContent = '—';
         if (modifiedValue > 0) {
           modified.dateTime = new Date(modifiedValue * 1000).toISOString();
           modified.title = new Date(modifiedValue * 1000).toLocaleString('ru-RU');
@@ -651,6 +713,7 @@
       const name = document.createElement('span');
       name.className = 'entry-name';
       name.textContent = item.name;
+      enableNameDrag(name);
       main.append(icon, name);
       main.addEventListener('click', () => playFromQueue(items, index));
       row.append(main, document.createElement('span'));
@@ -715,9 +778,9 @@
     state.lastSaveAt = 0;
     el.playerPanel.hidden = false;
     el.nowPlaying.textContent = item.name;
+    el.nowPlaying.scrollLeft = 0;
     el.resumeLabel.hidden = true;
     el.restart.hidden = true;
-    el.playerStatus.textContent = '';
     el.download.href = item.url;
     el.download.download = basename(item.path);
     el.download.hidden = false;
@@ -741,11 +804,7 @@
     };
     el.video.addEventListener('loadedmetadata', onMetadata);
     const playPromise = el.video.play();
-    if (playPromise && typeof playPromise.catch === 'function') {
-      playPromise.catch(() => {
-        el.playerStatus.textContent = 'Нажми ▶ в панели управления на видео для начала воспроизведения.';
-      });
-    }
+    if (playPromise && typeof playPromise.catch === 'function') playPromise.catch(() => {});
   }
 
   function stopPlayer() {
@@ -774,16 +833,14 @@
       position,
       duration: Number.isFinite(duration) && duration > 0 ? duration : 0
     };
-    if (state.savePending) return;
-    state.savePending = true;
     state.lastSaveAt = Date.now();
+    const save = state.saveChain.catch(() => {}).then(() => api('save_position', payload));
+    state.saveChain = save;
     try {
-      await api('save_position', payload);
+      await save;
       if (showFeedback) showToast('Позиция просмотра сохранена');
     } catch (error) {
       if (showFeedback) showToast(error.message);
-    } finally {
-      state.savePending = false;
     }
   }
 
@@ -1041,7 +1098,10 @@
       updatePlaybackControls();
     });
     el.fullscreen.addEventListener('click', requestVideoFullscreen);
+    el.rotate.addEventListener('click', rotateVideo);
+    window.addEventListener('resize', updateVideoRotation);
 
+    enableNameDrag(el.nowPlaying);
     el.video.addEventListener('loadedmetadata', updatePlaybackControls);
     el.video.addEventListener('durationchange', updatePlaybackControls);
     el.video.addEventListener('play', () => {
@@ -1052,6 +1112,7 @@
     el.video.addEventListener('volumechange', updatePlaybackControls);
     el.video.addEventListener('timeupdate', () => {
       updatePlaybackControls();
+      updateVisibleProgress();
       if (!state.currentItem) return;
       if (Date.now() - state.lastSaveAt >= 15000) saveCurrentPosition(false);
     });
