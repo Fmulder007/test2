@@ -109,7 +109,13 @@
     el.appPanel.hidden = false;
     el.profileInfo.hidden = false;
     el.logout.hidden = false;
-    el.profileInfo.textContent = state.user.nickname;
+    el.profileInfo.replaceChildren();
+    const profileLabel = document.createElement('span');
+    profileLabel.className = 'profile-label';
+    profileLabel.textContent = 'Профиль: ';
+    const profileName = document.createElement('strong');
+    profileName.textContent = state.user.nickname;
+    el.profileInfo.append(profileLabel, profileName);
   }
 
   function setTheme(theme) {
