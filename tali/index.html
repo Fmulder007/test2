@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f4f5f7">
   <title>Tali Video</title>
-  <link rel="stylesheet" href="/style.css?v=2">
-  <script src="/app.js?v=2" defer></script>
+  <link rel="stylesheet" href="/style.css?v=3">
+  <script src="/app.js?v=3" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -71,10 +71,26 @@
                 <button id="restartButton" class="small-button" type="button" hidden>С начала</button>
               </div>
             </div>
-            <video id="videoPlayer" controls playsinline preload="metadata"></video>
-            <div class="player-transport" aria-label="Управление очередью воспроизведения">
-              <button id="previousButton" class="secondary-button transport-button" type="button" title="Предыдущее видео" aria-label="Предыдущее">|◀ Предыдущий</button>
-              <button id="nextButton" class="secondary-button transport-button" type="button" title="Следующее видео" aria-label="Следующее">Следующий ▶|</button>
+            <div id="videoStage" class="video-stage">
+              <video id="videoPlayer" playsinline preload="metadata"></video>
+              <div class="video-controls" aria-label="Управление воспроизведением">
+                <div class="player-seek-row">
+                  <input id="seekInput" class="player-seek" type="range" min="0" max="100" step="0.1" value="0" disabled aria-label="Позиция воспроизведения">
+                </div>
+                <div class="player-control-row">
+                  <button id="previousButton" class="player-control-button" type="button" title="Предыдущее видео" aria-label="Предыдущее" disabled>⏮</button>
+                  <button id="playPauseButton" class="player-control-button" type="button" title="Воспроизвести" aria-label="Воспроизвести">▶</button>
+                  <button id="nextButton" class="player-control-button" type="button" title="Следующее видео" aria-label="Следующее" disabled>⏭</button>
+                  <span id="currentTime" class="player-time">0:00</span>
+                  <span class="player-time-separator" aria-hidden="true">/</span>
+                  <span id="durationTime" class="player-time">--:--</span>
+                  <span class="player-control-spacer"></span>
+                  <button id="volumeButton" class="player-control-button" type="button" title="Выключить звук" aria-label="Выключить звук">🔊</button>
+                  <input id="volumeInput" class="player-volume" type="range" min="0" max="1" step="0.05" value="1" aria-label="Громкость">
+                  <button id="fullscreenButton" class="player-control-button" type="button" title="Во весь экран" aria-label="Во весь экран">⛶</button>
+                  <a id="downloadButton" class="player-download" href="#" title="Скачать видео" aria-label="Скачать видео" hidden>⇩</a>
+                </div>
+              </div>
             </div>
             <div id="playerStatus" class="player-status" aria-live="polite"></div>
           </section>

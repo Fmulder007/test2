@@ -937,7 +937,21 @@ try {
             apiError('Неизвестное действие API', 404);
     }
 } catch (Throwable $e) {
-    error_log('Tali API error: ' . $e->getMessage());
+    $logContext = [
+        'action' => $action ?? 'initialization',
+        'type' => get_class($e),
+        'message' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+    ];
+    if ($e instanceof PDOException && isset($e->errorInfo) && is_array($e->errorInfo)) {
+        $logContext['sqlstate'] = $e->errorInfo[0] ?? null;
+        $logContext['driver_code'] = $e->errorInfo[1] ?? null;
+    }
+    error_log(
+        'Tali API exception: ' .
+        json_encode($logContext, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)
+    );
     apiError('Внутренняя ошибка Tali API', 500);
 }
 

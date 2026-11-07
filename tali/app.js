@@ -10,9 +10,12 @@
     profileInfo: $('profileInfo'), logout: $('logoutButton'), theme: $('themeButton'),
     welcome: $('welcomeText'), viewTitle: $('viewTitle'), refresh: $('refreshButton'),
     navButtons: [...document.querySelectorAll('.nav-button')],
-    playerPanel: $('playerPanel'), video: $('videoPlayer'), nowPlaying: $('nowPlaying'),
+    playerPanel: $('playerPanel'), stage: $('videoStage'), video: $('videoPlayer'), nowPlaying: $('nowPlaying'),
     resumeLabel: $('resumeLabel'), restart: $('restartButton'), previous: $('previousButton'),
-    next: $('nextButton'), playerStatus: $('playerStatus'),
+    playPause: $('playPauseButton'), next: $('nextButton'), seek: $('seekInput'),
+    currentTime: $('currentTime'), durationTime: $('durationTime'),
+    mute: $('volumeButton'), volume: $('volumeInput'), fullscreen: $('fullscreenButton'),
+    download: $('downloadButton'), playerStatus: $('playerStatus'),
     browseToolbar: $('browseToolbar'), breadcrumbs: $('breadcrumbs'), listHeader: $('listHeader'),
     list: $('itemList'), empty: $('emptyMessage'), loading: $('loadingMessage'),
     playlistDialog: $('playlistDialog'), playlistDialogForm: $('playlistDialogForm'),
@@ -172,6 +175,37 @@
   function updateQueueControls() {
     el.previous.disabled = state.queueIndex <= 0;
     el.next.disabled = state.queueIndex < 0 || state.queueIndex >= state.queue.length - 1;
+  }
+
+  function updatePlaybackControls() {
+    const duration = Number(el.video.duration);
+    const position = Number(el.video.currentTime);
+    const hasDuration = Number.isFinite(duration) && duration > 0;
+
+    el.seek.disabled = !hasDuration;
+    el.seek.value = hasDuration
+      ? String(Math.min(100, Math.max(0, position / duration * 100)))
+      : '0';
+    el.currentTime.textContent = formatTime(Number.isFinite(position) ? position : 0);
+    el.durationTime.textContent = hasDuration ? formatTime(duration) : '--:--';
+
+    el.playPause.textContent = el.video.paused ? '▶' : 'Ⅱ';
+    el.playPause.title = el.video.paused ? 'Воспроизвести' : 'Приостановить';
+    el.playPause.setAttribute('aria-label', el.playPause.title);
+
+    const muted = el.video.muted || el.video.volume === 0;
+    el.mute.textContent = muted ? '🔇' : (el.video.volume < 0.5 ? '🔉' : '🔊');
+    el.mute.title = muted ? 'Включить звук' : 'Выключить звук';
+    el.mute.setAttribute('aria-label', el.mute.title);
+    el.volume.value = String(el.video.volume);
+
+    const fullscreen = document.fullscreenElement === el.stage ||
+      document.webkitFullscreenElement === el.stage;
+    el.fullscreen.textContent = fullscreen ? '⤡' : '⛶';
+    el.fullscreen.title = fullscreen ? 'Выйти из полноэкранного режима' : 'Во весь экран';
+    el.fullscreen.setAttribute('aria-label', el.fullscreen.title);
+
+    updateQueueControls();
   }
 
   function normalizePreferences(value) {
@@ -642,7 +676,10 @@
     el.resumeLabel.hidden = true;
     el.restart.hidden = true;
     el.playerStatus.textContent = '';
-    updateQueueControls();
+    el.download.href = item.url;
+    el.download.download = basename(item.path);
+    el.download.hidden = false;
+    updatePlaybackControls();
 
     el.video.src = item.url;
     el.video.load();
@@ -658,12 +695,13 @@
         el.resumeLabel.hidden = false;
         el.restart.hidden = false;
       }
+      updatePlaybackControls();
     };
     el.video.addEventListener('loadedmetadata', onMetadata);
     const playPromise = el.video.play();
     if (playPromise && typeof playPromise.catch === 'function') {
       playPromise.catch(() => {
-        el.playerStatus.textContent = 'Нажми ▶ в панели видео для начала воспроизведения.';
+        el.playerStatus.textContent = 'Нажми ▶ в панели управления на видео для начала воспроизведения.';
       });
     }
   }
@@ -672,6 +710,9 @@
     try { el.video.pause(); } catch (_) { /* ignore */ }
     el.video.removeAttribute('src');
     el.video.load();
+    el.download.removeAttribute('href');
+    el.download.removeAttribute('download');
+    el.download.hidden = true;
     state.currentItem = null;
     state.queue = [];
     state.queueIndex = -1;
@@ -823,14 +864,19 @@
 
   async function requestVideoFullscreen() {
     try {
-      if (el.video.webkitEnterFullscreen) {
+      if (el.stage.requestFullscreen) {
+        await el.stage.requestFullscreen();
+      } else if (el.stage.webkitRequestFullscreen) {
+        await el.stage.webkitRequestFullscreen();
+      } else if (el.video.webkitEnterFullscreen) {
+        // iOS Safari показывает собственную панель управления в полноэкранном режиме.
+        el.video.controls = true;
         el.video.webkitEnterFullscreen();
-      } else if (el.video.requestFullscreen) {
-        await el.video.requestFullscreen();
       } else {
         showToast('Полноэкранный режим недоступен в этом браузере');
       }
     } catch (_) {
+      el.video.controls = false;
       showToast('Полноэкранный режим недоступен');
     }
   }
@@ -906,17 +952,55 @@
       saveCurrentPosition(false);
     });
 
+    el.playPause.addEventListener('click', () => {
+      if (el.video.paused) el.video.play().catch(() => {});
+      else el.video.pause();
+    });
+    el.seek.addEventListener('input', () => {
+      const duration = Number(el.video.duration);
+      if (!Number.isFinite(duration) || duration <= 0) return;
+      el.video.currentTime = duration * (Number(el.seek.value) / 100);
+      updatePlaybackControls();
+    });
+    el.mute.addEventListener('click', () => {
+      if (el.video.muted || el.video.volume === 0) {
+        el.video.muted = false;
+        if (el.video.volume === 0) el.video.volume = 0.5;
+      } else {
+        el.video.muted = true;
+      }
+      updatePlaybackControls();
+    });
+    el.volume.addEventListener('input', () => {
+      el.video.volume = Number(el.volume.value);
+      el.video.muted = false;
+      updatePlaybackControls();
+    });
+    el.fullscreen.addEventListener('click', requestVideoFullscreen);
+
+    el.video.addEventListener('loadedmetadata', updatePlaybackControls);
+    el.video.addEventListener('durationchange', updatePlaybackControls);
+    el.video.addEventListener('play', updatePlaybackControls);
+    el.video.addEventListener('volumechange', updatePlaybackControls);
     el.video.addEventListener('timeupdate', () => {
+      updatePlaybackControls();
       if (!state.currentItem) return;
       if (Date.now() - state.lastSaveAt >= 15000) saveCurrentPosition(false);
     });
     el.video.addEventListener('pause', () => {
+      updatePlaybackControls();
       if (state.ignoreNextPauseSave) {
         state.ignoreNextPauseSave = false;
         return;
       }
       saveCurrentPosition(false);
     });
+    el.video.addEventListener('webkitendfullscreen', () => {
+      el.video.controls = false;
+      updatePlaybackControls();
+    });
+    document.addEventListener('fullscreenchange', updatePlaybackControls);
+    document.addEventListener('webkitfullscreenchange', updatePlaybackControls);
     el.video.addEventListener('ended', async () => {
       await saveCurrentPosition(false);
       if (state.queueIndex >= 0 && state.queueIndex < state.queue.length - 1) {
@@ -947,7 +1031,7 @@
     document.addEventListener('keydown', (event) => {
       if (!state.user || event.repeat) return;
       const target = event.target;
-      if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+      if (target && ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'].includes(target.tagName)) return;
       if (!state.currentItem) return;
       if (event.code === 'Space') {
         event.preventDefault();

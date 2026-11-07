@@ -174,9 +174,96 @@ h2 { margin: 0; font-size: 19px; }
 .player-title-wrap { min-width: 0; }
 .now-playing { overflow: hidden; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .resume-label { margin-top: 3px; color: var(--muted); font-size: 12px; }
-#videoPlayer { display: block; width: 100%; max-height: 68vh; aspect-ratio: 16 / 9; background: #000; border-radius: 7px; }
-.player-transport { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; }
-.transport-button { min-width: 132px; }
+.video-stage {
+  position: relative;
+  width: 100%;
+  max-height: 68vh;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 7px;
+  background: #000;
+}
+#videoPlayer {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  object-fit: contain;
+}
+.video-controls {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  padding: 34px 10px 8px;
+  color: #fff;
+  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, .28) 28%, rgba(0, 0, 0, .84));
+}
+.player-seek-row { display: flex; width: 100%; margin-bottom: 4px; }
+.player-seek, .player-volume {
+  display: block;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  accent-color: #fff;
+  cursor: pointer;
+}
+.player-seek { width: 100%; height: 14px; }
+.player-volume { width: 84px; flex: 0 1 84px; height: 14px; }
+.player-control-row { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; min-width: 0; }
+.player-control-button, .player-download {
+  display: inline-flex;
+  flex: 0 0 32px;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, .28);
+  border-radius: 7px;
+  background: rgba(15, 18, 22, .56);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+}
+.player-control-button:hover, .player-download:hover { background: rgba(70, 82, 96, .8); }
+.player-control-button:disabled { cursor: not-allowed; opacity: .38; }
+.player-control-button:focus-visible, .player-download:focus-visible, .player-seek:focus-visible, .player-volume:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.player-time {
+  min-width: 36px;
+  color: #fff;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  white-space: nowrap;
+}
+.player-time-separator { margin: 0 -4px; opacity: .7; }
+.player-control-spacer { flex: 1 1 4px; }
+.video-stage:fullscreen, .video-stage:-webkit-full-screen {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  max-height: none;
+  aspect-ratio: auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+}
+.video-stage:fullscreen #videoPlayer, .video-stage:-webkit-full-screen #videoPlayer {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: contain;
+}
+.video-stage:fullscreen .video-controls, .video-stage:-webkit-full-screen .video-controls {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
 .player-status { min-height: 17px; margin-top: 7px; color: var(--muted); font-size: 11px; }
 
 .empty-message, .loading-message { padding: 30px 12px; color: var(--muted); text-align: center; font-size: 13px; }
@@ -235,8 +322,11 @@ input[type="text"]:focus, select:focus { border-color: var(--accent); box-shadow
   .small-button { padding: 5px 6px; font-size: 10px; }
   .player-heading { align-items: flex-start; }
   .player-actions { gap: 4px; }
-  .player-transport { gap: 6px; }
-  .transport-button { min-width: 0; flex: 1; padding: 8px 6px; font-size: 12px; }
+  .video-controls { padding: 28px 7px 6px; }
+  .player-control-row { gap: 4px; }
+  .player-control-button, .player-download { flex-basis: 27px; width: 27px; height: 28px; font-size: 14px; }
+  .player-volume { width: 56px; flex-basis: 56px; }
+  .player-time { min-width: 30px; font-size: 10px; }
   .resume-label { max-width: 45vw; }
   .profile-info { max-width: 110px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 }
@@ -251,4 +341,8 @@ input[type="text"]:focus, select:focus { border-color: var(--accent); box-shadow
   .entry-main { gap: 4px; }
   .entry-icon { flex-basis: 15px; font-size: 12px; }
   .small-button { padding: 4px; font-size: 9px; }
+  .player-control-row { gap: 2px; }
+  .player-control-button, .player-download { flex-basis: 25px; width: 25px; height: 26px; font-size: 13px; }
+  .player-volume { width: 34px; flex-basis: 34px; }
+  .player-time { min-width: 25px; font-size: 9px; }
 }
