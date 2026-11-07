@@ -94,15 +94,17 @@
             <nav id="breadcrumbs" class="breadcrumbs" aria-label="Путь к каталогу"></nav>
           </div>
 
-          <div id="listHeader" class="list-header" aria-label="Сортировка видеотеки">
+          <div id="listHeader" class="list-header list-header--directory" aria-label="Таблица видеотеки">
             <button class="sort-button" type="button" data-sort="name" aria-label="Сортировать по имени">
-              <span>Имя</span><span class="sort-indicator" aria-hidden="true">↕</span>
+              <span class="column-label">Имя</span><span class="sort-indicator" aria-hidden="true">↕</span>
             </button>
-            <button class="sort-button" type="button" data-sort="modified" aria-label="Сортировать по дате изменения">
-              <span>Дата изменения</span><span class="sort-indicator" aria-hidden="true">↕</span>
+            <button class="sort-button" type="button" data-sort="modified" aria-label="Сортировать по дате">
+              <span class="column-label date-label-desktop">Дата изменения</span>
+              <span class="column-label date-label-mobile">Дата</span>
+              <span class="sort-indicator" aria-hidden="true">↕</span>
             </button>
-            <button class="sort-button sort-button-end" type="button" data-sort="size" aria-label="Сортировать по размеру">
-              <span>Размер</span><span class="sort-indicator" aria-hidden="true">↕</span>
+            <button class="sort-button sort-button-end" type="button" data-sort="size" aria-label="Информация о видео">
+              <span class="column-label info-label">Размер</span><span class="sort-indicator" aria-hidden="true">↕</span>
             </button>
             <span class="actions-heading" aria-hidden="true"></span>
           </div>
