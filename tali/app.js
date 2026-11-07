@@ -12,7 +12,7 @@
     navButtons: [...document.querySelectorAll('.nav-button')],
     playerPanel: $('playerPanel'), video: $('videoPlayer'), nowPlaying: $('nowPlaying'),
     resumeLabel: $('resumeLabel'), restart: $('restartButton'), previous: $('previousButton'),
-    next: $('nextButton'), fullscreen: $('fullscreenButton'), playerStatus: $('playerStatus'),
+    next: $('nextButton'), playerStatus: $('playerStatus'),
     browseToolbar: $('browseToolbar'), breadcrumbs: $('breadcrumbs'), listHeader: $('listHeader'),
     list: $('itemList'), empty: $('emptyMessage'), loading: $('loadingMessage'),
     playlistDialog: $('playlistDialog'), playlistDialogForm: $('playlistDialogForm'),
@@ -36,7 +36,9 @@
     savePending: false,
     lastTouchAt: 0,
     pendingPlaylistItem: null,
-    toastTimer: null
+    toastTimer: null,
+    preferences: { sort_by: 'name', sort_direction: 'asc' },
+    preferenceSaveChain: Promise.resolve()
   };
 
   async function api(action, data = {}, method = 'POST') {
@@ -129,7 +131,7 @@
     el.navButtons.forEach((button) => button.classList.toggle('active', button.dataset.view === view));
     el.playerPanel.hidden = !state.currentItem;
     el.browseToolbar.hidden = view !== 'browse';
-    el.listHeader.hidden = view === 'playlists';
+    el.listHeader.hidden = view !== 'browse';
     el.refresh.hidden = view === 'playlists';
 
     if (view === 'browse') {
@@ -151,6 +153,98 @@
     if (value < 1024 ** 2) return `${(value / 1024).toFixed(0)} КБ`;
     if (value < 1024 ** 3) return `${(value / 1024 ** 2).toFixed(1)} МБ`;
     return `${(value / 1024 ** 3).toFixed(2)} ГБ`;
+  }
+
+  function formatModified(timestamp) {
+    const value = Number(timestamp);
+    if (!Number.isFinite(value) || value <= 0) return '—';
+    const date = new Date(value * 1000);
+    return new Intl.DateTimeFormat('ru-RU', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    }).format(date);
+  }
+
+  function itemPath(item) {
+    return String(item?.path || item?.media_path || '');
+  }
+
+  function updateQueueControls() {
+    el.previous.disabled = state.queueIndex <= 0;
+    el.next.disabled = state.queueIndex < 0 || state.queueIndex >= state.queue.length - 1;
+  }
+
+  function normalizePreferences(value) {
+    const preferences = value && typeof value === 'object' ? value : {};
+    return {
+      sort_by: ['name', 'modified', 'size'].includes(preferences.sort_by)
+        ? preferences.sort_by : 'name',
+      sort_direction: ['asc', 'desc'].includes(preferences.sort_direction)
+        ? preferences.sort_direction : 'asc'
+    };
+  }
+
+  const nameCollator = new Intl.Collator('ru', { numeric: true, sensitivity: 'base' });
+
+  function sortDirectoryItems(items) {
+    const direction = state.preferences.sort_direction === 'desc' ? -1 : 1;
+    const field = state.preferences.sort_by;
+    return [...items].sort((a, b) => {
+      // Каталоги всегда остаются выше видеофайлов.
+      const aDirectory = a.type === 'directory';
+      const bDirectory = b.type === 'directory';
+      if (aDirectory !== bDirectory) return aDirectory ? -1 : 1;
+
+      let comparison = 0;
+      if (field === 'modified') {
+        comparison = (Number(a.modified) || 0) - (Number(b.modified) || 0);
+      } else if (field === 'size') {
+        comparison = (Number(a.size) || 0) - (Number(b.size) || 0);
+      } else {
+        comparison = nameCollator.compare(String(a.name || ''), String(b.name || ''));
+      }
+
+      if (comparison === 0) {
+        comparison = nameCollator.compare(String(a.name || ''), String(b.name || ''));
+      }
+      return comparison * direction;
+    });
+  }
+
+  function updateSortHeader() {
+    document.querySelectorAll('.sort-button').forEach((button) => {
+      const active = button.dataset.sort === state.preferences.sort_by;
+      const indicator = button.querySelector('.sort-indicator');
+      button.classList.toggle('sort-button-active', active);
+      button.setAttribute('aria-sort', active
+        ? (state.preferences.sort_direction === 'asc' ? 'ascending' : 'descending')
+        : 'none');
+      if (indicator) {
+        indicator.textContent = active
+          ? (state.preferences.sort_direction === 'asc' ? '▲' : '▼')
+          : '↕';
+      }
+    });
+  }
+
+  function saveSortPreferences() {
+    const preferences = { ...state.preferences };
+    state.preferenceSaveChain = state.preferenceSaveChain
+      .then(() => api('save_preferences', { preferences }))
+      .catch((error) => showToast(`Не удалось сохранить сортировку: ${error.message}`));
+  }
+
+  function changeSort(field) {
+    if (!['name', 'modified', 'size'].includes(field)) return;
+    if (state.preferences.sort_by === field) {
+      state.preferences.sort_direction = state.preferences.sort_direction === 'asc' ? 'desc' : 'asc';
+    } else {
+      state.preferences.sort_by = field;
+      state.preferences.sort_direction = field === 'name' ? 'asc' : 'desc';
+    }
+    updateSortHeader();
+    renderItems(state.directoryItems, 'directory');
+    saveSortPreferences();
   }
 
   function formatTime(seconds) {
@@ -229,20 +323,28 @@
     el.empty.hidden = items.length > 0;
     el.empty.textContent = items.length ? '' : 'В этом разделе пока ничего нет.';
 
-    const videos = items.filter((item) => item.type === 'video' || item.media_path || item.path);
+    const displayItems = mode === 'directory' ? sortDirectoryItems(items) : items;
     if (mode === 'directory') {
       state.directoryItems = items;
-      state.queue = items.filter((item) => item.type === 'video');
+      // Очередь воспроизведения соответствует видимому порядку файлов.
+      state.queue = displayItems.filter((item) => item.type === 'video');
+      updateSortHeader();
     } else if (mode === 'history') {
       state.queue = items;
     } else if (mode === 'playlist') {
       state.queue = items;
     }
 
-    items.forEach((item, index) => {
+    if (state.currentItem) {
+      const currentPath = itemPath(state.currentItem);
+      state.queueIndex = state.queue.findIndex((entry) => itemPath(entry) === currentPath);
+    }
+    updateQueueControls();
+
+    displayItems.forEach((item) => {
       const isDirectory = item.type === 'directory';
       const row = document.createElement('div');
-      row.className = 'item-row';
+      row.className = `item-row item-row--${mode}`;
 
       const main = document.createElement('button');
       main.type = 'button';
@@ -259,17 +361,35 @@
           loadDirectory(item.path);
         } else {
           const queue = mode === 'directory' ? state.queue : items;
-          const queueIndex = queue.findIndex((entry) => entry.path === item.path || entry.media_path === item.media_path);
-          playFromQueue(queue, queueIndex < 0 ? index : queueIndex);
+          const selectedPath = itemPath(item);
+          const queueIndex = queue.findIndex((entry) => itemPath(entry) === selectedPath);
+          // Не подменяем не найденный элемент индексом строки: каталоги не входят в очередь.
+          if (queueIndex >= 0) playFromQueue(queue, queueIndex);
         }
       });
       row.append(main);
 
+      if (mode === 'directory') {
+        const modified = document.createElement('time');
+        modified.className = 'entry-date';
+        const modifiedValue = Number(item.modified) || 0;
+        modified.textContent = formatModified(modifiedValue);
+        if (modifiedValue > 0) {
+          modified.dateTime = new Date(modifiedValue * 1000).toISOString();
+          modified.title = new Date(modifiedValue * 1000).toLocaleString('ru-RU');
+        }
+        row.append(modified);
+      }
+
       const size = document.createElement('span');
       size.className = 'entry-size';
-      if (isDirectory) size.textContent = 'Каталог';
-      else if (item.size !== undefined && item.size !== null) size.textContent = formatBytes(item.size);
-      else size.textContent = item.completed ? 'Просмотрено' : formatTime(item.position_seconds || 0);
+      if (mode === 'directory') {
+        size.textContent = isDirectory ? '—' : formatBytes(item.size);
+      } else if (item.size !== undefined && item.size !== null) {
+        size.textContent = formatBytes(item.size);
+      } else {
+        size.textContent = item.completed ? 'Просмотрено' : formatTime(item.position_seconds || 0);
+      }
       row.append(size);
 
       const actions = document.createElement('div');
@@ -317,7 +437,7 @@
     state.view = 'history';
     state.activePlaylist = null;
     el.browseToolbar.hidden = true;
-    el.listHeader.hidden = false;
+    el.listHeader.hidden = true;
     setLoading(true);
     try {
       const result = await api('history', { limit: 200 });
@@ -365,7 +485,7 @@
     el.empty.textContent = 'Плейлистов пока нет. Создай первый.';
 
     const createRow = document.createElement('div');
-    createRow.className = 'item-row';
+    createRow.className = 'item-row item-row--playlist';
     const createButton = document.createElement('button');
     createButton.type = 'button';
     createButton.className = 'entry-main';
@@ -378,7 +498,7 @@
 
     state.playlists.forEach((playlist) => {
       const row = document.createElement('div');
-      row.className = 'item-row';
+      row.className = 'item-row item-row--playlist';
       const main = document.createElement('button');
       main.type = 'button';
       main.className = 'entry-main';
@@ -424,7 +544,7 @@
     el.empty.textContent = 'В этом плейлисте пока нет видео.';
 
     const heading = document.createElement('div');
-    heading.className = 'item-row';
+    heading.className = 'item-row item-row--playlist';
     const back = document.createElement('button');
     back.type = 'button';
     back.className = 'entry-main';
@@ -440,10 +560,15 @@
       type: 'video'
     }));
     state.queue = items;
+    if (state.currentItem) {
+      const currentPath = itemPath(state.currentItem);
+      state.queueIndex = state.queue.findIndex((entry) => itemPath(entry) === currentPath);
+    }
+    updateQueueControls();
 
     items.forEach((item, index) => {
       const row = document.createElement('div');
-      row.className = 'item-row';
+      row.className = 'item-row item-row--playlist';
       const main = document.createElement('button');
       main.type = 'button';
       main.className = 'entry-main';
@@ -517,8 +642,7 @@
     el.resumeLabel.hidden = true;
     el.restart.hidden = true;
     el.playerStatus.textContent = '';
-    el.previous.disabled = state.queueIndex <= 0;
-    el.next.disabled = state.queueIndex >= state.queue.length - 1;
+    updateQueueControls();
 
     el.video.src = item.url;
     el.video.load();
@@ -697,6 +821,20 @@
     }
   }
 
+  async function requestVideoFullscreen() {
+    try {
+      if (el.video.webkitEnterFullscreen) {
+        el.video.webkitEnterFullscreen();
+      } else if (el.video.requestFullscreen) {
+        await el.video.requestFullscreen();
+      } else {
+        showToast('Полноэкранный режим недоступен в этом браузере');
+      }
+    } catch (_) {
+      showToast('Полноэкранный режим недоступен');
+    }
+  }
+
   function bindEvents() {
     el.loginForm.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -711,6 +849,7 @@
       try {
         const result = await api('login', { nickname, remember: el.remember.checked });
         state.user = result.user;
+        state.preferences = normalizePreferences(result.preferences);
         showApp();
         await loadDirectory(state.path);
         showToast(`Привет, ${state.user.nickname}!`);
@@ -737,6 +876,10 @@
       else if (state.view === 'history') loadHistory();
     });
 
+    document.querySelectorAll('.sort-button').forEach((button) => {
+      button.addEventListener('click', () => changeSort(button.dataset.sort));
+    });
+
     el.navButtons.forEach((button) => {
       button.addEventListener('click', () => setView(button.dataset.view));
     });
@@ -761,13 +904,6 @@
       el.resumeLabel.hidden = true;
       el.restart.hidden = true;
       saveCurrentPosition(false);
-    });
-
-    el.fullscreen.addEventListener('click', async () => {
-      try {
-        if (el.video.requestFullscreen) await el.video.requestFullscreen();
-        else if (el.video.webkitEnterFullscreen) el.video.webkitEnterFullscreen();
-      } catch (_) { showToast('Полноэкранный режим недоступен'); }
     });
 
     el.video.addEventListener('timeupdate', () => {
@@ -826,7 +962,7 @@
       } else if (event.code === 'ArrowDown') {
         event.preventDefault(); el.video.volume = Math.max(0, el.video.volume - .05);
       } else if (event.code === 'KeyF') {
-        event.preventDefault(); el.fullscreen.click();
+        event.preventDefault(); requestVideoFullscreen();
       }
     });
     window.addEventListener('pagehide', savePositionBeacon);
@@ -844,6 +980,7 @@
     try {
       const result = await api('me', {}, 'GET');
       state.user = result.user;
+      state.preferences = normalizePreferences(result.preferences);
       showApp();
       await loadDirectory(state.path);
     } catch (_) {

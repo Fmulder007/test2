@@ -245,6 +245,74 @@ function touchUser(PDO $pdo, array $user): void
     $stmt->execute(['seen' => utcNow(), 'id' => (int)$user['id']]);
 }
 
+/**
+ * Настройки интерфейса хранятся в резервном поле users.extra_1.
+ * JSON-объект допускает дальнейшее расширение без изменения схемы БД.
+ */
+function readUserExtraSettings(PDO $pdo, int $userId): array
+{
+    $stmt = $pdo->prepare('SELECT extra_1 FROM users WHERE id = :id LIMIT 1');
+    $stmt->execute(['id' => $userId]);
+    $raw = $stmt->fetchColumn();
+
+    if (!is_string($raw) || trim($raw) === '') {
+        return [];
+    }
+
+    $settings = json_decode($raw, true);
+    return is_array($settings) ? $settings : [];
+}
+
+function userPreferences(PDO $pdo, int $userId): array
+{
+    $settings = readUserExtraSettings($pdo, $userId);
+
+    return [
+        'sort_by' => in_array($settings['sort_by'] ?? null, ['name', 'modified', 'size'], true)
+            ? $settings['sort_by'] : 'name',
+        'sort_direction' => in_array($settings['sort_direction'] ?? null, ['asc', 'desc'], true)
+            ? $settings['sort_direction'] : 'asc',
+    ];
+}
+
+function saveUserPreferences(PDO $pdo, int $userId, array $input): array
+{
+    $settings = readUserExtraSettings($pdo, $userId);
+
+    $sortBy = $input['sort_by'] ?? $settings['sort_by'] ?? 'name';
+    $sortDirection = $input['sort_direction'] ?? $settings['sort_direction'] ?? 'asc';
+
+    if (!in_array($sortBy, ['name', 'modified', 'size'], true)) {
+        apiError('Некорректный столбец сортировки');
+    }
+    if (!in_array($sortDirection, ['asc', 'desc'], true)) {
+        apiError('Некорректное направление сортировки');
+    }
+
+    // Обновляем только известные ключи, остальные будущие настройки сохраняем.
+    $settings['sort_by'] = $sortBy;
+    $settings['sort_direction'] = $sortDirection;
+
+    $json = json_encode(
+        $settings,
+        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
+    );
+
+    $stmt = $pdo->prepare(
+        'UPDATE users SET extra_1 = :extra_1, updated_at = :updated_at WHERE id = :id'
+    );
+    $stmt->execute([
+        'extra_1' => $json,
+        'updated_at' => utcNow(),
+        'id' => $userId,
+    ]);
+
+    return [
+        'sort_by' => $sortBy,
+        'sort_direction' => $sortDirection,
+    ];
+}
+
 /* --------------------------------------------------------------------------
  * Проверка путей видеотеки
  * ----------------------------------------------------------------------- */
@@ -662,6 +730,7 @@ try {
                 'id' => (int)$user['id'],
                 'nickname' => $user['nickname'],
             ],
+            'preferences' => userPreferences($pdo, (int)$user['id']),
             'remember' => $remember,
         ]);
     }
@@ -688,11 +757,20 @@ try {
                     'id' => (int)$user['id'],
                     'nickname' => $user['nickname'],
                 ],
+                'preferences' => userPreferences($pdo, (int)$user['id']),
                 'remember' => ($_COOKIE[TALI_REMEMBER_COOKIE] ?? '0') === '1',
             ]);
 
         case 'touch':
             apiResponse(['ok' => true]);
+
+        case 'save_preferences':
+            $preferences = $input['preferences'] ?? null;
+            if (!is_array($preferences)) {
+                apiError('Некорректные настройки пользователя');
+            }
+            $savedPreferences = saveUserPreferences($pdo, (int)$user['id'], $preferences);
+            apiResponse(['ok' => true, 'preferences' => $savedPreferences]);
 
         case 'browse':
             $path = (string)requestValue($input, 'path', '');
