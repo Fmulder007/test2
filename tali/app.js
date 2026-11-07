@@ -182,9 +182,9 @@
     if (!raw) return null;
 
     let normalized = raw;
-    if (/^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/.test(raw)) {
+    if (/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/.test(raw)) {
       normalized = raw.replace(' ', 'T') + 'Z';
-    } else if (/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$/.test(raw)) {
+    } else if (/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}$/.test(raw)) {
       normalized = raw + 'Z';
     }
 
