@@ -10,14 +10,19 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/" aria-label="Tali Video — главная">
-      <span class="brand-mark">T</span>
-      <span>TALI <span class="brand-light">VIDEO</span></span>
+    <a class="brand" href="/" aria-label="Tali — главная">
+      <span>TALI</span>
     </a>
     <div class="top-actions">
       <span id="profileInfo" class="profile-info" hidden></span>
       <button id="themeButton" class="icon-button" type="button" title="Сменить тему" aria-label="Сменить тему">◐</button>
-      <button id="logoutButton" class="text-button" type="button" hidden>Выйти</button>
+      <button id="logoutButton" class="icon-button" type="button" title="Выйти" aria-label="Выйти" hidden>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <path d="M16 17l5-5-5-5"/>
+          <path d="M21 12H9"/>
+        </svg>
+      </button>
     </div>
   </header>
 
