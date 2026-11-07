@@ -138,6 +138,10 @@ h2 { margin: 0; font-size: 19px; }
   gap: 10px;
 }
 .list-header { padding: 8px 11px; color: var(--muted); border-bottom: 1px solid var(--line); font-size: 11px; text-transform: uppercase; letter-spacing: .07em; }
+.column-label-mobile { display: none; }
+.list-header:not(.list-header--directory) { display: none; }
+.list-header:not(.list-header--directory) .sort-button { pointer-events: none; cursor: default; }
+.item-row--history > .entry-date, .item-row--playlist > .entry-date { display: none; }
 .item-row { min-height: 48px; padding: 5px 9px; border-bottom: 1px solid var(--line); }
 .item-row--history { display: grid; grid-template-columns: minmax(0, 1fr) 115px 105px; align-items: center; gap: 12px; }
 .item-row--playlist { display: grid; grid-template-columns: minmax(0, 1fr) 90px 130px; align-items: center; gap: 12px; }
@@ -316,18 +320,46 @@ input[type="text"]:focus, select:focus { border-color: var(--accent); box-shadow
   .nav-icon { width: auto; font-size: 15px; }
   .sidebar-note { display: none; }
   .content-column { padding: 10px; border-right: 0; border-left: 0; border-radius: 0; }
-  .list-header, .item-row--directory { grid-template-columns: minmax(0, 1fr) 112px 66px 70px; gap: 5px; }
-  .item-row--history { grid-template-columns: minmax(0, 1fr) 100px 90px; gap: 5px; }
-  .item-row--playlist { grid-template-columns: minmax(0, 1fr) 65px 105px; gap: 5px; }
+  .list-header:not(.list-header--directory) { display: grid; }
+  .column-label-desktop { display: none; }
+  .column-label-mobile { display: inline; }
+  .list-header, .item-row--directory, .item-row--history, .item-row--playlist {
+    grid-template-columns: minmax(0, 1fr) 76px 56px 68px;
+    gap: 5px;
+  }
+  .list-header .sort-button[data-sort="modified"],
+  .list-header .sort-button[data-sort="size"] { justify-content: center; }
+  .item-row--history > .entry-date, .item-row--playlist > .entry-date { display: flex; }
   .list-header { padding: 7px 6px; font-size: 9px; }
   .item-row { min-height: 45px; padding: 4px 5px; }
   .entry-main { gap: 6px; }
   .entry-icon { flex-basis: 18px; font-size: 14px; }
   .entry-name { font-size: 13px; }
   .entry-size, .entry-date { font-size: 9px; }
-  .entry-date { display:flex; flex-direction:column; justify-content:center; gap:0; line-height:1.05; white-space:normal; }
-  .entry-date-part, .entry-time-part {display:block}
-  .row-actions { gap: 3px; }
+  .entry-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    width: 100%;
+    line-height: 1.05;
+    white-space: normal;
+    text-align: center;
+    overflow: visible;
+  }
+  .entry-date-part, .entry-time-part { display: block; }
+  .entry-size {
+    min-width: 0;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+  }
+  .row-actions { justify-content: center; flex-wrap: nowrap; gap: 2px; width: 100%; }
+  .row-actions .small-button { width: 20px; min-width: 20px; height: 22px; padding: 2px; }
+  .action-label-mobile { display: inline; }
+  .action-label-full { display: none; }
   .small-button { padding: 5px 6px; font-size: 10px; }
   .player-panel {
     margin-left: -10px;
@@ -354,15 +386,17 @@ input[type="text"]:focus, select:focus { border-color: var(--accent); box-shadow
 
 @media (max-width: 390px) {
   .nav-button { font-size: 11px; }
-  .list-header, .item-row--directory { grid-template-columns: minmax(0, 1fr) 88px 48px 52px; gap: 3px; }
-  .item-row--history { grid-template-columns: minmax(0, 1fr) 82px 76px; gap: 4px; }
-  .item-row--playlist { grid-template-columns: minmax(0, 1fr) 55px 92px; gap: 4px; }
+  .list-header, .item-row--directory, .item-row--history, .item-row--playlist {
+    grid-template-columns: minmax(0, 1fr) 68px 48px 62px;
+    gap: 3px;
+  }
   .list-header { padding-left: 4px; padding-right: 4px; font-size: 8px; letter-spacing: 0; }
   .entry-date, .entry-size { font-size: 8px; }
   .entry-date {line-height:1.05}
   .entry-main { gap: 4px; }
   .entry-icon { flex-basis: 15px; font-size: 12px; }
   .small-button { padding: 4px; font-size: 9px; }
+  .row-actions .small-button { width: 18px; min-width: 18px; height: 20px; padding: 1px; }
   .player-control-row { gap: 2px; }
   .player-control-button, .player-download { flex-basis: 25px; width: 25px; height: 26px; font-size: 13px; }
   .player-volume { width: 34px; flex-basis: 34px; }
