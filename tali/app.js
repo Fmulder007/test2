@@ -84,6 +84,7 @@
   }
 
   function showToast(message) {
+    if (el.toast.classList.contains('toast-error')) return;
     clearTimeout(state.toastTimer);
     el.toast.classList.remove('toast-error');
     el.toast.replaceChildren(document.createTextNode(String(message)));
