@@ -44,6 +44,7 @@ uint16_t val_sm = 0;
 uint16_t val_sm_old = 1;
 bool rx_tx;
 bool rx_tx_old;
+bool IF2_PIN_PREV;
 //---------------------------------------------------------------------------------------------------------
 void setup() {
   pinMode(SW_STEP, INPUT_PULLUP);        // вход с инверсией (включается землей)
@@ -65,6 +66,7 @@ void setup() {
   attachInterrupt(1, rotary_encoder, CHANGE);
 
   si5351.init(SI5351_CRYSTAL_LOAD_8PF, 0, 26430);           // crystal 25.000 MHz, последние цифры - коррекция частоты кварца
+  IF2_PIN_PREV = !digitalRead(LSB_USB_PIN);               // гарантируем первую настройку CLK0
   IF2_SET();                                             // установка второй ПЧ на выходе CLK0
   si5351.set_freq(60000000*SI5351_FREQ_MULT,SI5351_CLK1);  // частота на выходе 1
  
@@ -87,10 +89,14 @@ void setup() {
 void IF2_SET() {
   bool IF2_PIN_STATUS = digitalRead(LSB_USB_PIN);
 
-  if (IF2_PIN_STATUS)
-    si5351.set_freq(IF2_LSB_FREQ * SI5351_FREQ_MULT, SI5351_CLK0);
-  else
-    si5351.set_freq(IF2_USB_FREQ * SI5351_FREQ_MULT, SI5351_CLK0);
+  if (IF2_PIN_STATUS != IF2_PIN_PREV) {
+    if (IF2_PIN_STATUS)
+      si5351.set_freq(IF2_LSB_FREQ * SI5351_FREQ_MULT, SI5351_CLK0);
+    else
+      si5351.set_freq(IF2_USB_FREQ * SI5351_FREQ_MULT, SI5351_CLK0);
+  }
+
+  IF2_PIN_PREV = IF2_PIN_STATUS;
 }
 //---------------------------------------------------------------------------------------------------------
 void loop() {
