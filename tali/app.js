@@ -47,6 +47,7 @@
     pendingPlaylistBatch: null,
     toastTimer: null,
     preferences: { sort_by: 'name', sort_direction: 'asc' },
+    playlistSort: null,
     preferenceSaveChain: Promise.resolve()
   };
 
@@ -349,26 +350,61 @@
     });
   }
 
+  function sortPlaylistItems(items) {
+    if (!state.playlistSort) return [...items];
+
+    const { sort_by: field, sort_direction: directionValue } = state.playlistSort;
+    const direction = directionValue === 'desc' ? -1 : 1;
+
+    return [...items].sort((a, b) => {
+      const aName = String(a.name || basename(a.media_path || a.path || ''));
+      const bName = String(b.name || basename(b.media_path || b.path || ''));
+      let comparison = 0;
+
+      if (field === 'modified') {
+        comparison = (Number(a.modified) || 0) - (Number(b.modified) || 0);
+      } else if (field === 'size') {
+        comparison = (Number(a.size) || 0) - (Number(b.size) || 0);
+      } else {
+        comparison = nameCollator.compare(aName, bName);
+      }
+
+      if (comparison === 0) comparison = nameCollator.compare(aName, bName);
+      return comparison * direction;
+    });
+  }
+
   function updateSortHeader() {
+    const playlistSorting = state.view === 'playlists' && state.activePlaylist && state.playlistSort
+      ? state.playlistSort : null;
+
     document.querySelectorAll('.sort-button').forEach((button) => {
-      const active = state.view === 'browse' && button.dataset.sort === state.preferences.sort_by;
+      const field = button.dataset.sort;
+      const directoryActive = state.view === 'browse' && field === state.preferences.sort_by;
+      const playlistActive = Boolean(playlistSorting) && field === playlistSorting.sort_by;
+      const active = directoryActive || playlistActive;
+      const direction = playlistActive
+        ? playlistSorting.sort_direction
+        : state.preferences.sort_direction;
       const indicator = button.querySelector('.sort-indicator');
+
       button.classList.toggle('sort-button-active', active);
       button.setAttribute('aria-sort', active
-        ? (state.preferences.sort_direction === 'asc' ? 'ascending' : 'descending')
+        ? (direction === 'asc' ? 'ascending' : 'descending')
         : 'none');
+
       if (indicator) {
-        indicator.textContent = active
-          ? (state.preferences.sort_direction === 'asc' ? '▲' : '▼')
-          : '↕';
+        indicator.textContent = active ? (direction === 'asc' ? '▲' : '▼') : '↕';
       }
     });
   }
 
   function updateListHeader(mode) {
     const isDirectory = mode === 'directory';
+    const isPlaylist = mode === 'playlist';
     el.listHeader.hidden = false;
     el.listHeader.classList.toggle('list-header--directory', isDirectory);
+    el.listHeader.classList.toggle('list-header--playlist', isPlaylist);
 
     const dateDesktop = el.listHeader.querySelector('.date-label-desktop');
     const dateMobileSecond = el.listHeader.querySelector('.date-label-second');
@@ -391,7 +427,7 @@
     }
 
     const actionColumns = mode === 'playlist-index' ? 2
-      : mode === 'playlist' ? 3
+      : mode === 'playlist' ? (state.playlistSort ? 1 : 3)
       : 1;
     el.listHeader.dataset.actionCount = String(actionColumns);
     el.list.dataset.actionCount = String(actionColumns);
@@ -401,9 +437,10 @@
       dateButton.setAttribute('aria-label', 'Сортировать по: ' + labels.desktop.toLowerCase());
     }
 
-    const directoryActionsHeading = el.listHeader.querySelector('.actions-heading');
-    if (directoryActionsHeading) {
-      directoryActionsHeading.replaceChildren();
+    const actionsHeading = el.listHeader.querySelector('.actions-heading');
+    if (actionsHeading) {
+      actionsHeading.replaceChildren();
+
       if (isDirectory) {
         const addAll = document.createElement('button');
         addAll.type = 'button';
@@ -412,7 +449,19 @@
         addAll.title = 'Добавить все видео из этого каталога в плейлист';
         addAll.setAttribute('aria-label', addAll.title);
         addAll.addEventListener('click', openDirectoryAddToPlaylist);
-        directoryActionsHeading.append(addAll);
+        actionsHeading.append(addAll);
+      } else if (isPlaylist && state.playlistSort) {
+        const manualOrder = document.createElement('button');
+        manualOrder.type = 'button';
+        manualOrder.className = 'small-button';
+        manualOrder.innerHTML = '<span class="action-label-full">Ручной порядок</span><span class="action-label-mobile">↩</span>';
+        manualOrder.title = 'Вернуться к сохранённому ручному порядку плейлиста';
+        manualOrder.setAttribute('aria-label', manualOrder.title);
+        manualOrder.addEventListener('click', () => {
+          state.playlistSort = null;
+          renderPlaylist(state.activePlaylist);
+        });
+        actionsHeading.append(manualOrder);
       }
     }
 
@@ -437,6 +486,21 @@
     updateSortHeader();
     renderItems(state.directoryItems, 'directory');
     saveSortPreferences();
+  }
+
+  function changePlaylistSort(field) {
+    if (!state.activePlaylist || !['name', 'modified', 'size'].includes(field)) return;
+
+    if (state.playlistSort && state.playlistSort.sort_by === field) {
+      state.playlistSort.sort_direction = state.playlistSort.sort_direction === 'asc' ? 'desc' : 'asc';
+    } else {
+      state.playlistSort = {
+        sort_by: field,
+        sort_direction: field === 'name' ? 'asc' : 'desc'
+      };
+    }
+
+    renderPlaylist(state.activePlaylist);
   }
 
   function formatTime(seconds) {
@@ -721,6 +785,10 @@
   }
 
   async function loadPlaylists(openId = null) {
+    const samePlaylist = openId !== null && state.activePlaylist &&
+      Number(state.activePlaylist.id) === Number(openId);
+    if (!samePlaylist) state.playlistSort = null;
+
     sessionStorage.setItem('tali_view', 'playlists');
     if (openId === null) sessionStorage.removeItem('tali_playlist');
     else sessionStorage.setItem('tali_playlist', String(openId));
@@ -857,26 +925,31 @@
     heading.append(headingActions);
     el.list.append(heading);
 
-    const items = (playlist.items || []).map((item) => ({
+    // manualItems сохраняет исходную последовательность из БД.
+    // displayItems используется только для показа и локальной очереди проигрывателя.
+    const manualItems = (playlist.items || []).map((item) => ({
       ...item,
       path: item.media_path,
       name: basename(item.media_path),
       type: 'video'
     }));
-    state.queue = items;
+    const displayItems = sortPlaylistItems(manualItems);
+
+    state.queue = displayItems;
     if (state.currentItem) {
       const currentPath = itemPath(state.currentItem);
       state.queueIndex = state.queue.findIndex((entry) => itemPath(entry) === currentPath);
     }
     updateQueueControls();
 
-    items.forEach((item, index) => {
+    displayItems.forEach((item, index) => {
       const row = document.createElement('div');
       row.className = 'item-row item-row--playlist';
       row.dataset.mediaPath = itemPath(item);
       if (!state.playbackEnded && state.currentItem && itemPath(state.currentItem) === itemPath(item)) {
         row.classList.add('item-row--current');
       }
+
       const main = document.createElement('button');
       main.type = 'button';
       main.className = 'entry-main';
@@ -888,7 +961,7 @@
       name.textContent = item.name;
       enableNameDrag(name);
       main.append(icon, name);
-      main.addEventListener('click', () => playFromQueue(items, index));
+      main.addEventListener('click', () => playFromQueue(displayItems, index));
       row.append(main);
       appendDateCell(row, Number(item.modified) || 0, true);
 
@@ -900,31 +973,46 @@
 
       const actions = document.createElement('div');
       actions.className = 'row-actions';
-      const up = document.createElement('button');
-      up.className = 'small-button'; up.type = 'button'; up.textContent = '↑'; up.title = 'Выше';
-      if (index > 0) {
-        up.addEventListener('click', () => reorderPlaylist(playlist, items, index, index - 1));
-      } else {
-        up.disabled = true;
-        up.style.visibility = 'hidden';
-        up.setAttribute('aria-hidden', 'true');
-      }
-      actions.append(up);
 
-      const down = document.createElement('button');
-      down.className = 'small-button'; down.type = 'button'; down.textContent = '↓'; down.title = 'Ниже';
-      if (index < items.length - 1) {
-        down.addEventListener('click', () => reorderPlaylist(playlist, items, index, index + 1));
-      } else {
-        down.disabled = true;
-        down.style.visibility = 'hidden';
-        down.setAttribute('aria-hidden', 'true');
+      // Перемещение вверх/вниз доступно только в сохранённом ручном порядке.
+      if (!state.playlistSort) {
+        const up = document.createElement('button');
+        up.className = 'small-button';
+        up.type = 'button';
+        up.textContent = '↑';
+        up.title = 'Выше';
+        if (index > 0) {
+          up.addEventListener('click', () => reorderPlaylist(playlist, manualItems, index, index - 1));
+        } else {
+          up.disabled = true;
+          up.style.visibility = 'hidden';
+          up.setAttribute('aria-hidden', 'true');
+        }
+        actions.append(up);
+
+        const down = document.createElement('button');
+        down.className = 'small-button';
+        down.type = 'button';
+        down.textContent = '↓';
+        down.title = 'Ниже';
+        if (index < manualItems.length - 1) {
+          down.addEventListener('click', () => reorderPlaylist(playlist, manualItems, index, index + 1));
+        } else {
+          down.disabled = true;
+          down.style.visibility = 'hidden';
+          down.setAttribute('aria-hidden', 'true');
+        }
+        actions.append(down);
       }
-      actions.append(down);
+
       const remove = document.createElement('button');
-      remove.className = 'small-button'; remove.type = 'button'; remove.textContent = '×'; remove.title = 'Убрать из плейлиста';
+      remove.className = 'small-button';
+      remove.type = 'button';
+      remove.textContent = '×';
+      remove.title = 'Убрать из плейлиста';
       remove.addEventListener('click', () => removePlaylistItem(playlist.id, item.id));
       actions.append(remove);
+
       row.append(actions);
       el.list.append(row);
       appendProgressTrack(item);
@@ -1395,7 +1483,11 @@
 
     document.querySelectorAll('.sort-button').forEach((button) => {
       button.addEventListener('click', () => {
-        if (state.view === 'browse') changeSort(button.dataset.sort);
+        if (state.view === 'browse') {
+          changeSort(button.dataset.sort);
+        } else if (state.view === 'playlists' && state.activePlaylist) {
+          changePlaylistSort(button.dataset.sort);
+        }
       });
     });
 
