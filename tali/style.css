@@ -166,7 +166,8 @@ h2 { margin: 0; font-size: 19px; }
 .sort-button:hover, .sort-button-active { color: var(--accent); }
 .sort-button-end { justify-content: flex-end; }
 .sort-indicator { min-width: 10px; font-size: 10px; }
-.actions-heading { min-height: 1px; }
+.actions-heading { min-height: 1px; display: flex; justify-content: flex-end; align-items: center; }
+.actions-heading .small-button { white-space: nowrap; }
 .row-actions { display: flex; justify-content: flex-end; align-items: center; gap: 5px; }
 .small-button, .icon-button, .text-button, .secondary-button, .primary-button {
   border: 1px solid var(--line);
@@ -408,6 +409,7 @@ input[type="text"]:focus, select:focus { border-color: var(--accent); box-shadow
     white-space: nowrap;
   }
   .row-actions { justify-content: center; align-items: center; flex-wrap: nowrap; gap: 1px; width: 100%; }
+  .actions-heading .small-button { width: 18px; min-width: 18px; height: 22px; padding: 1px; }
   .row-actions .small-button { width: 18px; min-width: 18px; height: 22px; padding: 1px; }
   .action-label-mobile { display: inline; }
   .action-label-full { display: none; }
