@@ -17,6 +17,8 @@ return [
 Ограничь доступ к файлу и дай PHP-FPM (пользователь `www`) право чтения:
 
 ```sh
+jexec tali chgrp www /usr/local/etc/tali-vlc
+jexec tali chmod 750 /usr/local/etc/tali-vlc
 jexec tali chown root:www /usr/local/etc/tali-vlc/tali-api.php
 jexec tali chmod 640 /usr/local/etc/tali-vlc/tali-api.php
 ```
