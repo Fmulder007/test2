@@ -343,21 +343,30 @@
     el.listHeader.classList.toggle('list-header--directory', isDirectory);
 
     const dateDesktop = el.listHeader.querySelector('.date-label-desktop');
-    const dateMobile = el.listHeader.querySelector('.date-label-mobile');
+    const dateMobileSecond = el.listHeader.querySelector('.date-label-second');
     const infoLabel = el.listHeader.querySelector('.info-label');
 
-    if (dateDesktop) {
-      dateDesktop.textContent = mode === 'history' ? 'Просмотрено'
-        : mode === 'playlist' ? 'Добавлено'
-        : mode === 'playlist-index' ? 'Обновлён'
-        : 'Дата изменения';
-    }
-    if (dateMobile) dateMobile.textContent = 'Дата';
+    const dateLabels = {
+      directory: { desktop: 'Дата изменения', mobileSecond: 'ИЗМЕНЕНИЯ' },
+      history: { desktop: 'Дата просмотра', mobileSecond: 'ПРОСМОТРА' },
+      playlist: { desktop: 'Дата добавления', mobileSecond: 'ДОБАВЛЕНИЯ' },
+      'playlist-index': { desktop: 'Дата изменения', mobileSecond: 'ИЗМЕНЕНИЯ' }
+    };
+    const labels = dateLabels[mode] || dateLabels.directory;
+
+    if (dateDesktop) dateDesktop.textContent = labels.desktop;
+    if (dateMobileSecond) dateMobileSecond.textContent = labels.mobileSecond;
     if (infoLabel) {
       infoLabel.textContent = mode === 'directory' ? 'Размер'
         : mode === 'playlist-index' ? 'Видео'
         : 'Статус';
     }
+
+    const dateButton = el.listHeader.querySelector('[data-sort="modified"]');
+    if (dateButton) {
+      dateButton.setAttribute('aria-label', 'Сортировать по: ' + labels.desktop.toLowerCase());
+    }
+
     updateSortHeader();
   }
 
@@ -595,7 +604,13 @@
       } else if (item.size !== undefined && item.size !== null) {
         size.textContent = formatBytes(item.size);
       } else {
-        size.textContent = item.completed ? 'Просмотрено' : formatTime(item.position_seconds || 0);
+        const completed = Boolean(item.completed);
+        const position = Number(item.position_seconds) || 0;
+        size.textContent = completed ? '✓' : position > 0 ? formatTime(position) : '—';
+        size.title = completed ? 'Просмотрено'
+          : position > 0 ? 'Позиция просмотра: ' + formatTime(position)
+          : 'Просмотр ещё не начат';
+        size.setAttribute('aria-label', size.title);
       }
       row.append(size);
 
@@ -726,7 +741,10 @@
 
       const count = document.createElement('span');
       count.className = 'entry-size';
-      count.textContent = `${(playlist.items || []).length} видео`;
+      const videoCount = (playlist.items || []).length;
+      count.textContent = String(videoCount);
+      count.title = videoCount + ' видео';
+      count.setAttribute('aria-label', count.title);
       row.append(count);
 
       const actions = document.createElement('div');
@@ -813,8 +831,13 @@
       itemInfo.className = 'entry-size';
       const itemCompleted = Number(item.duration_seconds) > 0 &&
         Number(item.position_seconds) >= Number(item.duration_seconds) - 15;
-      itemInfo.textContent = itemCompleted ? 'Просмотрено'
-        : Number(item.position_seconds) > 0 ? formatTime(item.position_seconds) : '—';
+      const itemPosition = Number(item.position_seconds) || 0;
+      itemInfo.textContent = itemCompleted ? '✓'
+        : itemPosition > 0 ? formatTime(itemPosition) : '—';
+      itemInfo.title = itemCompleted ? 'Просмотрено'
+        : itemPosition > 0 ? 'Позиция просмотра: ' + formatTime(itemPosition)
+        : 'Просмотр ещё не начат';
+      itemInfo.setAttribute('aria-label', itemInfo.title);
       row.append(itemInfo);
 
       const actions = document.createElement('div');
