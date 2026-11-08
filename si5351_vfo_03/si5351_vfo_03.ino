@@ -45,6 +45,7 @@ uint16_t val_sm_old = 1;
 bool rx_tx;
 bool rx_tx_old;
 bool IF2_PIN_PREV;						// статус предыдущего состояния LSB/USB пина
+uint32_t IF2_TIMER = 0;             // таймер опроса LSB/USB
 //---------------------------------------------------------------------------------------------------------
 void setup() {
   pinMode(SW_STEP, INPUT_PULLUP);        // вход с инверсией (включается землей)
@@ -87,10 +88,7 @@ void setup() {
 }
 //---------------------------------------------------------------------------------------------------------
 void IF2_SET() {
-  static uint32_t IF2_TIMER = 0;
-
   if (millis() - IF2_TIMER >= 100) {
-    IF2_TIMER = millis();
     bool IF2_PIN_STATUS = digitalRead(LSB_USB_PIN);
 
     if (IF2_PIN_STATUS != IF2_PIN_PREV) {
@@ -101,6 +99,7 @@ void IF2_SET() {
     }
 
     IF2_PIN_PREV = IF2_PIN_STATUS;
+    IF2_TIMER = millis();
   }
 }
 //---------------------------------------------------------------------------------------------------------
