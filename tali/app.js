@@ -44,6 +44,7 @@
     nativeFullscreenActive: false,
     lastTouchAt: 0,
     pendingPlaylistItem: null,
+    pendingPlaylistBatch: null,
     toastTimer: null,
     preferences: { sort_by: 'name', sort_direction: 'asc' },
     preferenceSaveChain: Promise.resolve()
@@ -371,6 +372,21 @@
     const dateButton = el.listHeader.querySelector('[data-sort="modified"]');
     if (dateButton) {
       dateButton.setAttribute('aria-label', 'Сортировать по: ' + labels.desktop.toLowerCase());
+    }
+
+    const directoryActionsHeading = el.listHeader.querySelector('.actions-heading');
+    if (directoryActionsHeading) {
+      directoryActionsHeading.replaceChildren();
+      if (isDirectory) {
+        const addAll = document.createElement('button');
+        addAll.type = 'button';
+        addAll.className = 'small-button';
+        addAll.innerHTML = '<span class="action-label-full">+ список</span><span class="action-label-mobile">＋</span>';
+        addAll.title = 'Добавить все видео из этого каталога в плейлист';
+        addAll.setAttribute('aria-label', addAll.title);
+        addAll.addEventListener('click', openDirectoryAddToPlaylist);
+        directoryActionsHeading.append(addAll);
+      }
     }
 
     updateSortHeader();
@@ -1051,6 +1067,7 @@
   }
 
   async function openAddToPlaylist(item) {
+    state.pendingPlaylistBatch = null;
     state.pendingPlaylistItem = normalizeQueueItem(item);
     el.playlistDialogFile.textContent = state.pendingPlaylistItem.name;
     el.playlistDialogError.textContent = '';
@@ -1078,7 +1095,64 @@
     }
   }
 
+  async function openDirectoryAddToPlaylist() {
+    const items = sortDirectoryItems(state.directoryItems)
+      .filter((item) => item.type === 'video')
+      .map(normalizeQueueItem);
+    if (!items.length) {
+      showToast('В этом каталоге нет видеофайлов');
+      return;
+    }
+
+    state.pendingPlaylistItem = null;
+    state.pendingPlaylistBatch = items;
+    el.playlistDialogFile.textContent = 'Все видеофайлы из каталога · ' + items.length;
+    el.playlistDialogError.textContent = '';
+    try {
+      const result = await api('playlists');
+      state.playlists = result.items || [];
+      if (!state.playlists.length) {
+        const create = window.confirm('Плейлистов пока нет. Создать новый?');
+        if (create) await createPlaylist();
+        const refreshed = await api('playlists');
+        state.playlists = refreshed.items || [];
+      }
+      if (!state.playlists.length) return;
+      el.playlistSelect.replaceChildren();
+      state.playlists.forEach((playlist) => {
+        const option = document.createElement('option');
+        option.value = String(playlist.id);
+        option.textContent = playlist.name;
+        el.playlistSelect.append(option);
+      });
+      if (typeof el.playlistDialog.showModal === 'function') el.playlistDialog.showModal();
+      else await addToSelectedPlaylist();
+    } catch (error) {
+      showToast(error.message);
+    }
+  }
+
   async function addToSelectedPlaylist() {
+    if (state.pendingPlaylistBatch) {
+      const playlistId = Number(el.playlistSelect.value);
+      if (!playlistId) {
+        el.playlistDialogError.textContent = 'Сначала создай плейлист.';
+        return;
+      }
+      try {
+        for (const item of state.pendingPlaylistBatch) {
+          await api('playlist_add', { playlist_id: playlistId, path: item.path });
+        }
+        const count = state.pendingPlaylistBatch.length;
+        state.pendingPlaylistBatch = null;
+        if (el.playlistDialog.open) el.playlistDialog.close();
+        showToast('Добавлено в плейлист: ' + count + ' видео');
+        if (state.view === 'playlists') await loadPlaylists();
+      } catch (error) {
+        el.playlistDialogError.textContent = error.message;
+      }
+      return;
+    }
     if (!state.pendingPlaylistItem) return;
     const playlistId = Number(el.playlistSelect.value);
     if (!playlistId) {
