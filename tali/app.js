@@ -889,6 +889,16 @@
 
   function renderPlaylist(playlist) {
     state.activePlaylist = playlist;
+
+    // Ручной порядок берём из базы, а displayItems — из текущей сортировки интерфейса.
+    const manualItems = (playlist.items || []).map((item) => ({
+      ...item,
+      path: item.media_path,
+      name: basename(item.media_path),
+      type: 'video'
+    }));
+    const displayItems = sortPlaylistItems(manualItems);
+
     updateListHeader('playlist');
     el.list.replaceChildren();
     el.empty.hidden = (playlist.items || []).length > 0;
@@ -921,21 +931,11 @@
       broadcast.className = 'primary-button';
       broadcast.textContent = 'В эфир';
       broadcast.title = 'Отправить этот плейлист в общий эфир';
-      broadcast.addEventListener('click', () => sendPlaylistToStream(playlist, broadcast));
+      broadcast.addEventListener('click', () => sendPlaylistToStream(playlist, broadcast, displayItems));
       headingActions.append(broadcast);
     }
     heading.append(headingActions);
     el.list.append(heading);
-
-    // manualItems сохраняет исходную последовательность из БД.
-    // displayItems используется только для показа и локальной очереди проигрывателя.
-    const manualItems = (playlist.items || []).map((item) => ({
-      ...item,
-      path: item.media_path,
-      name: basename(item.media_path),
-      type: 'video'
-    }));
-    const displayItems = sortPlaylistItems(manualItems);
 
     state.queue = displayItems;
     if (state.currentItem) {
@@ -1021,17 +1021,30 @@
     });
   }
 
-  async function sendPlaylistToStream(playlist, button) {
+  async function sendPlaylistToStream(playlist, button, orderedItems) {
     if (!playlist || !Array.isArray(playlist.items) || !playlist.items.length) {
       showToast('Плейлист пуст');
       return;
     }
+
+    const itemIds = Array.isArray(orderedItems)
+      ? orderedItems.map((item) => Number(item.id))
+      : [];
+    if (itemIds.length !== playlist.items.length ||
+        itemIds.some((id) => !Number.isSafeInteger(id) || id < 1)) {
+      showError('Не удалось определить текущий порядок элементов плейлиста');
+      return;
+    }
+
     if (button.disabled) return;
     const oldLabel = button.textContent;
     button.disabled = true;
     button.textContent = 'Отправляем…';
     try {
-      await api('playlist_broadcast', { playlist_id: playlist.id });
+      await api('playlist_broadcast', {
+        playlist_id: playlist.id,
+        item_ids: itemIds
+      });
       showToast('Плейлист «' + playlist.name + '» отправлен в эфир');
     } catch (error) {
       showError(error.message);
