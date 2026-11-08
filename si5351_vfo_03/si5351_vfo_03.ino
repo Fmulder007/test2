@@ -11,7 +11,7 @@
 #define IF_FREQ       62496500       // частота ПЧ
 #define IF2_LSB_FREQ  2496500        // вторая ПЧ, LSB — 2496,5 кГц
 #define IF2_USB_FREQ  2500000        // вторая ПЧ, USB — 2500 кГц
-#define LSB_USB_PIN   A3             // выбор LSB/USB
+#define LSB_USB_PIN   A3             // пин выбора LSB/USB
 #define SW_STEP       A0             // выбор шага
 #define PIN_SM        A1             // вход S-метра
 #define PIN_RX_TX     A2             // RX/TX педаль
@@ -44,11 +44,12 @@ uint16_t val_sm = 0;
 uint16_t val_sm_old = 1;
 bool rx_tx;
 bool rx_tx_old;
-bool IF2_PIN_PREV;
+bool IF2_PIN_PREV;						// статус предыдущего состояния LSB/USB пина
 //---------------------------------------------------------------------------------------------------------
 void setup() {
   pinMode(SW_STEP, INPUT_PULLUP);        // вход с инверсией (включается землей)
   pinMode(PIN_RX_TX, INPUT_PULLUP);      // вход с инверсией (включается землей)
+  
   pinMode(LSB_USB_PIN, INPUT_PULLUP);     // выбор LSB/USB с внутренней подтяжкой
   
   //pinMode(BAND1, OUTPUT);                // при управлении ДПФ напрямую, "1"-5В, "0"-земля, если закомментировать, выход будет с внутренним резистором
@@ -66,14 +67,14 @@ void setup() {
   attachInterrupt(1, rotary_encoder, CHANGE);
 
   si5351.init(SI5351_CRYSTAL_LOAD_8PF, 0, 26430);           // crystal 25.000 MHz, последние цифры - коррекция частоты кварца
-  IF2_PIN_PREV = !digitalRead(LSB_USB_PIN);               // гарантируем первую настройку CLK0
-  IF2_SET();                                             // установка второй ПЧ на выходе CLK0
-  si5351.set_freq(60000000*SI5351_FREQ_MULT,SI5351_CLK1);  // частота на выходе 1
- 
   //si5351.drive_strength(SI5351_CLK0,SI5351_DRIVE_4MA);    // регулировка выхода CLK0, регулируется током 2,4,6,8 МА ???
   si5351.drive_strength(SI5351_CLK1,SI5351_DRIVE_4MA);    // регулировка выхода CLK1, регулируется током 2,4,6,8 МА ???
   si5351.drive_strength(SI5351_CLK2,SI5351_DRIVE_4MA);    // регулировка выхода CLK2, регулируется током 2,4,6,8 МА ???
   
+  IF2_PIN_PREV = !digitalRead(LSB_USB_PIN);               // гарантируем первую настройку CLK0
+  IF2_SET();                                             // установка второй ПЧ на выходе CLK0
+  
+  si5351.set_freq(60000000*SI5351_FREQ_MULT,SI5351_CLK1);  // частота на выходе 1
   oled.begin(&Adafruit128x32, OLED_I2C_ADDR);
 
   rx = DEFAULT_RX;
