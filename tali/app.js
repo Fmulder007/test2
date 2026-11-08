@@ -795,6 +795,15 @@
     heading.append(headingInfo);
     const headingActions = document.createElement('div');
     headingActions.className = 'row-actions';
+    if ((playlist.items || []).length > 0) {
+      const broadcast = document.createElement('button');
+      broadcast.type = 'button';
+      broadcast.className = 'primary-button';
+      broadcast.textContent = 'В эфир';
+      broadcast.title = 'Отправить этот плейлист в общий эфир';
+      broadcast.addEventListener('click', () => sendPlaylistToStream(playlist, broadcast));
+      headingActions.append(broadcast);
+    }
     heading.append(headingActions);
     el.list.append(heading);
 
@@ -868,6 +877,26 @@
       el.list.append(row);
       appendProgressTrack(item);
     });
+  }
+
+  async function sendPlaylistToStream(playlist, button) {
+    if (!playlist || !Array.isArray(playlist.items) || !playlist.items.length) {
+      showToast('Плейлист пуст');
+      return;
+    }
+    if (button.disabled) return;
+    const oldLabel = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Отправляем…';
+    try {
+      await api('playlist_broadcast', { playlist_id: playlist.id });
+      showToast('Плейлист «' + playlist.name + '» отправлен в эфир');
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      button.disabled = false;
+      button.textContent = oldLabel;
+    }
   }
 
   function normalizeQueueItem(item) {
