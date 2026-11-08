@@ -312,6 +312,10 @@ input[type="text"]:focus, select:focus { border-color: var(--accent); box-shadow
 .dialog-actions { justify-content: space-between; margin-top: 18px; }
 .toast { position: fixed; right: 20px; bottom: 20px; z-index: 20; max-width: min(380px, calc(100% - 40px)); padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text); box-shadow: var(--shadow); opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity .18s ease, transform .18s ease; font-size: 13px; }
 .toast.visible { opacity: 1; transform: translateY(0); }
+.toast, .error-text, .empty-message { user-select: text; -webkit-user-select: text; }
+.toast.toast-error { padding-right: 38px; pointer-events: auto; cursor: text; }
+.toast-error-close { position: absolute; top: 4px; right: 6px; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; }
+.toast-error-close:hover { background: var(--surface-2); color: var(--text); }
 .progress-track { height: 3px; margin: -2px 0 2px; overflow: hidden; border-radius: 3px; background: var(--line); }
 .progress-fill { height: 100%; background: var(--accent); }
 
