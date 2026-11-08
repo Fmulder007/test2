@@ -294,7 +294,7 @@ void show_freq(uint32_t sf_rx) {
 }
 //---------------------------------------------------------------------------------------------------------
 void show_state() {
-  oled.setCursor(2, 3);
+  oled.setCursor(0, 3);
   oled.setFont(labels);
   if (rx_tx)
     oled.print("1");                 // "1" is "RX" in labels.h
@@ -308,7 +308,7 @@ void show_sm() {
 
   a = (val_sm + 3) / 113;            // 1024 / 9 characters for S = 1,3,5,7,8,9,+10,+20,+30
   oled.setFont(pixels);
-  oled.setCursor(24, 3);
+  oled.setCursor(29, 3);
   for (m = 0; m < a; m++)
     if (m < 6)
       oled.print('7');               // '5' - hollow rectangle, 6px
