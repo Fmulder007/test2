@@ -757,17 +757,15 @@ function broadcastPlaylist(PDO $pdo, array $user, mixed $playlistId): array
         }
         vlcReadUntil($socket, '>');
 
-        // Пересоздаём канал целиком: уже идущий эфир заменяется новым снимком.
-        fwrite($socket, "del tali\r\n");
-        vlcReadUntil($socket, '>');
-        vlcCommand($socket, 'new tali broadcast enabled');
-        vlcCommand($socket, 'setup tali output #http{mux=ts,dst=:8090/stream}');
-        vlcCommand($socket, 'setup tali option sout-keep');
+        // Сохраняем VLM-канал и HTTP-выход. Заменяем только список входов.
+        vlcCommand($socket, 'setup tali inputdel all');
         foreach ($paths as $path) {
             $escapedPath = str_replace(['\\\\', '"'], ['\\\\\\\\', '\\"'], '/data/video/' . $path);
             vlcCommand($socket, 'setup tali input "file://' . $escapedPath . '"');
         }
-        vlcCommand($socket, 'control tali play');
+        vlcCommand($socket, 'setup tali loop');
+        // Явный номер входа переключает уже работающий broadcast без stop.
+        vlcCommand($socket, 'control tali play 1');
     } catch (Throwable $e) {
         fclose($socket);
         apiError('Не удалось запустить эфир VLC: ' . $e->getMessage(), 503);
