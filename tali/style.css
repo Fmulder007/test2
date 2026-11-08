@@ -330,6 +330,7 @@ input[type="text"]:focus, select:focus { border-color: var(--accent); box-shadow
   .sidebar-note { display: none; }
   .content-column { padding: 10px; border-right: 0; border-left: 0; border-radius: 0; }
   .list-header:not(.list-header--directory) { display: grid; }
+  .list-header:not(.list-header--directory):not(.list-header--playlist) { display: grid; }
   .column-label-desktop { display: none; }
   .column-label-mobile { display: inline; }
   .list-header,
