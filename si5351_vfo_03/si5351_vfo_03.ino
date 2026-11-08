@@ -92,10 +92,18 @@ void IF2_SET() {
     bool IF2_PIN_STATUS = digitalRead(LSB_USB_PIN);
 
     if (IF2_PIN_STATUS != IF2_PIN_PREV) {
-      if (IF2_PIN_STATUS)
+      if (IF2_PIN_STATUS) {
         si5351.set_freq(IF2_LSB_FREQ * SI5351_FREQ_MULT, SI5351_CLK0);
-      else
+        oled.setFont(labels_UL);
+        oled.setCursor(20, 3);
+        oled.print('L');
+      }
+      else {
         si5351.set_freq(IF2_USB_FREQ * SI5351_FREQ_MULT, SI5351_CLK0);
+        oled.setFont(labels_UL);
+        oled.setCursor(20, 3);
+        oled.print('U');
+      }
     }
 
     IF2_PIN_PREV = IF2_PIN_STATUS;
