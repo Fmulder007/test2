@@ -714,19 +714,56 @@ function vlcCommand($socket, string $command): string
     return $response;
 }
 
-function broadcastPlaylist(PDO $pdo, array $user, mixed $playlistId): array
+function broadcastPlaylist(PDO $pdo, array $user, mixed $playlistId, mixed $orderedItemIds = null): array
 {
     $id = filter_var($playlistId, FILTER_VALIDATE_INT);
     if (!$id || $id < 1) {
         apiError('Некорректный номер плейлиста');
     }
     ownedPlaylist($pdo, $user, (int)$id);
-    $items = playlistItems($pdo, (int)$id, (int)$user['id']);
-    if (!$items) {
+    $storedItems = playlistItems($pdo, (int)$id, (int)$user['id']);
+    if (!$storedItems) {
         apiError('Нельзя отправить в эфир пустой плейлист');
     }
-    if (count($items) > 500) {
+    if (count($storedItems) > 500) {
         apiError('В плейлисте слишком много файлов (максимум 500)');
+    }
+
+    // Клиент передаёт ID в текущем порядке отображения (с учётом сортировки).
+    // Проверяем, что это полный и точный набор элементов данного плейлиста.
+    $items = $storedItems;
+    if ($orderedItemIds !== null) {
+        if (!is_array($orderedItemIds) || count($orderedItemIds) !== count($storedItems)) {
+            apiError('Получен неполный или некорректный порядок плейлиста');
+        }
+
+        $itemsById = [];
+        foreach ($storedItems as $storedItem) {
+            $itemsById[(string)(int)$storedItem['id']] = $storedItem;
+        }
+
+        $orderedItems = [];
+        $seenIds = [];
+        foreach ($orderedItemIds as $rawItemId) {
+            $itemId = filter_var($rawItemId, FILTER_VALIDATE_INT);
+            if ($itemId === false || $itemId < 1) {
+                apiError('Некорректный элемент в порядке плейлиста');
+            }
+
+            $key = (string)$itemId;
+            if (!isset($itemsById[$key]) || isset($seenIds[$key])) {
+                apiError('Порядок содержит чужой или повторяющийся элемент плейлиста');
+            }
+
+            $seenIds[$key] = true;
+            $orderedItems[] = $itemsById[$key];
+        }
+
+        if (count($orderedItems) !== count($storedItems)) {
+            apiError('Получен неполный порядок плейлиста');
+        }
+
+        $items = $orderedItems;
     }
 
     $paths = [];
@@ -925,7 +962,12 @@ try {
             apiResponse(['ok' => true, 'items' => listPlaylists($pdo, $user)]);
 
         case 'playlist_broadcast':
-            apiResponse(['ok' => true, 'broadcast' => broadcastPlaylist($pdo, $user, $input['playlist_id'] ?? null)]);
+            apiResponse(['ok' => true, 'broadcast' => broadcastPlaylist(
+                $pdo,
+                $user,
+                $input['playlist_id'] ?? null,
+                $input['item_ids'] ?? null
+            )]);
 
         case 'playlist_create':
             $name = trim((string)($input['name'] ?? ''));
