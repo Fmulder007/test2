@@ -671,6 +671,112 @@ function listPlaylists(PDO $pdo, array $user): array
 }
 
 /* --------------------------------------------------------------------------
+ * VLC: отправка снимка плейлиста в общий эфир
+ * ----------------------------------------------------------------------- */
+
+function vlcReadUntil($socket, string $marker, int $limit = 65536): string
+{
+    $buffer = '';
+    while (strlen($buffer) < $limit && !str_contains($buffer, $marker)) {
+        $char = fread($socket, 1);
+        if ($char === false || $char === '') {
+            $meta = stream_get_meta_data($socket);
+            if (!empty($meta['timed_out'])) {
+                throw new RuntimeException('Истекло время ожидания ответа VLC');
+            }
+            if (feof($socket)) {
+                throw new RuntimeException('VLC закрыл соединение управления');
+            }
+            continue;
+        }
+        $buffer .= $char;
+    }
+    if (!str_contains($buffer, $marker)) {
+        throw new RuntimeException('Не получен ожидаемый ответ VLC');
+    }
+    return $buffer;
+}
+
+function vlcCommand($socket, string $command): string
+{
+    if (fwrite($socket, $command . "\r\n") === false) {
+        throw new RuntimeException('Не удалось отправить команду VLC');
+    }
+    $response = vlcReadUntil($socket, '>');
+    if (preg_match('/(?:^|\\n)\\s*(?:error|unable|failed)\\b/i', $response)) {
+        throw new RuntimeException('VLC отклонил команду: ' . trim($response));
+    }
+    return $response;
+}
+
+function broadcastPlaylist(PDO $pdo, array $user, mixed $playlistId): array
+{
+    $id = filter_var($playlistId, FILTER_VALIDATE_INT);
+    if (!$id || $id < 1) {
+        apiError('Некорректный номер плейлиста');
+    }
+    ownedPlaylist($pdo, $user, (int)$id);
+    $items = playlistItems($pdo, (int)$id, (int)$user['id']);
+    if (!$items) {
+        apiError('Нельзя отправить в эфир пустой плейлист');
+    }
+    if (count($items) > 500) {
+        apiError('В плейлисте слишком много файлов (максимум 500)');
+    }
+
+    $paths = [];
+    foreach ($items as $item) {
+        $path = validMediaRelativePath($item['media_path'] ?? null);
+        if (preg_match('/[\\x00-\\x1F\\x7F]/', $path)) {
+            apiError('В имени файла есть недопустимые управляющие символы');
+        }
+        $paths[] = $path;
+    }
+
+    $configPath = '/usr/local/etc/tali-vlc/tali-api.php';
+    if (!is_file($configPath) || !is_readable($configPath)) {
+        apiError('Не настроено соединение TALI с VLC: отсутствует /usr/local/etc/tali-vlc/tali-api.php', 503);
+    }
+    $config = require $configPath;
+    $password = is_array($config) ? ($config['password'] ?? '') : '';
+    if (!is_string($password) || $password === '') {
+        apiError('Не задан пароль управления VLC в tali-api.php', 503);
+    }
+
+    $errno = 0;
+    $error = '';
+    $socket = @stream_socket_client('tcp://127.0.0.1:4212', $errno, $error, 5, STREAM_CLIENT_CONNECT);
+    if ($socket === false) {
+        apiError('Не удалось подключиться к VLC: ' . ($error !== '' ? $error : 'порт 4212 недоступен'), 503);
+    }
+    stream_set_timeout($socket, 5);
+    try {
+        vlcReadUntil($socket, 'Password:');
+        if (fwrite($socket, $password . "\r\n") === false) {
+            throw new RuntimeException('Не удалось передать пароль VLC');
+        }
+        vlcReadUntil($socket, '>');
+
+        // Пересоздаём канал целиком: уже идущий эфир заменяется новым снимком.
+        fwrite($socket, "del tali\r\n");
+        vlcReadUntil($socket, '>');
+        vlcCommand($socket, 'new tali broadcast enabled');
+        vlcCommand($socket, 'setup tali output #http{mux=ts,dst=:8090/stream}');
+        vlcCommand($socket, 'setup tali option sout-keep');
+        foreach ($paths as $path) {
+            $escapedPath = str_replace(['\\\\', '"'], ['\\\\\\\\', '\\"'], '/data/video/' . $path);
+            vlcCommand($socket, 'setup tali input "file://' . $escapedPath . '"');
+        }
+        vlcCommand($socket, 'control tali play');
+    } catch (Throwable $e) {
+        fclose($socket);
+        apiError('Не удалось запустить эфир VLC: ' . $e->getMessage(), 503);
+    }
+    fclose($socket);
+    return ['playlist_id' => (int)$id, 'items' => count($paths)];
+}
+
+/* --------------------------------------------------------------------------
  * Выполнение API
  * ----------------------------------------------------------------------- */
 
@@ -796,6 +902,9 @@ try {
 
         case 'playlists':
             apiResponse(['ok' => true, 'items' => listPlaylists($pdo, $user)]);
+
+        case 'playlist_broadcast':
+            apiResponse(['ok' => true, 'broadcast' => broadcastPlaylist($pdo, $user, $input['playlist_id'] ?? null)]);
 
         case 'playlist_create':
             $name = trim((string)($input['name'] ?? ''));
