@@ -426,8 +426,10 @@
         : 'Статус';
     }
 
+    // Three action slots also reserve enough room for the "В эфир" button
+    // in the playlist heading row on narrow screens.
     const actionColumns = mode === 'playlist-index' ? 2
-      : mode === 'playlist' ? (state.playlistSort ? 1 : 3)
+      : mode === 'playlist' ? 3
       : 1;
     el.listHeader.dataset.actionCount = String(actionColumns);
     el.list.dataset.actionCount = String(actionColumns);
