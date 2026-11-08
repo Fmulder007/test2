@@ -639,6 +639,11 @@ function playlistItems(PDO $pdo, int $playlistId, int $userId): array
     $items = $stmt->fetchAll();
     foreach ($items as &$item) {
         $item['url'] = mediaUrl($item['media_path']);
+        $fullPath = resolveMediaPath($item['media_path']);
+        $item['size'] = ($fullPath !== null && is_file($fullPath))
+            ? (int)(filesize($fullPath) ?: 0) : null;
+        $item['modified'] = ($fullPath !== null && is_file($fullPath))
+            ? (int)(filemtime($fullPath) ?: 0) : 0;
         $item['id'] = (int)$item['id'];
         $item['sort_order'] = (int)$item['sort_order'];
         $item['position_seconds'] = $item['position_seconds'] === null
