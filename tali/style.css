@@ -140,9 +140,9 @@ h2 { margin: 0; font-size: 19px; }
 .list-header { padding: 8px 11px; color: var(--muted); border-bottom: 1px solid var(--line); font-size: 11px; text-transform: uppercase; letter-spacing: .07em; }
 .column-label-mobile { display: none; }
 .action-label-mobile { display: none; }
-.list-header:not(.list-header--directory) { display: none; }
-.list-header:not(.list-header--directory) .sort-button { pointer-events: none; cursor: default; }
-.list-header:not(.list-header--directory) .sort-indicator { display: none; }
+.list-header:not(.list-header--directory):not(.list-header--playlist) { display: none; }
+.list-header:not(.list-header--directory):not(.list-header--playlist) .sort-button { pointer-events: none; cursor: default; }
+.list-header:not(.list-header--directory):not(.list-header--playlist) .sort-indicator { display: none; }
 .item-row--history > .entry-date { display: none; }
 .item-row { min-height: 48px; padding: 5px 9px; border-bottom: 1px solid var(--line); }
 .item-row--history { display: grid; grid-template-columns: minmax(0, 1fr) 115px 105px; align-items: center; gap: 12px; }
