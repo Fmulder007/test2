@@ -84,10 +84,36 @@
   }
 
   function showToast(message) {
-    el.toast.textContent = message;
-    el.toast.classList.add('visible');
     clearTimeout(state.toastTimer);
+    el.toast.classList.remove('toast-error');
+    el.toast.replaceChildren(document.createTextNode(String(message)));
+    el.toast.setAttribute('role', 'status');
+    el.toast.classList.add('visible');
     state.toastTimer = setTimeout(() => el.toast.classList.remove('visible'), 2600);
+  }
+
+  function showError(message) {
+    clearTimeout(state.toastTimer);
+    state.toastTimer = null;
+
+    const text = document.createElement('span');
+    text.className = 'toast-message';
+    text.textContent = String(message);
+
+    const close = document.createElement('button');
+    close.className = 'toast-error-close';
+    close.type = 'button';
+    close.textContent = '×';
+    close.setAttribute('aria-label', 'Закрыть сообщение об ошибке');
+    close.addEventListener('click', () => {
+      el.toast.classList.remove('visible', 'toast-error');
+      el.toast.replaceChildren();
+      el.toast.setAttribute('role', 'status');
+    });
+
+    el.toast.replaceChildren(text, close);
+    el.toast.setAttribute('role', 'alert');
+    el.toast.classList.add('toast-error', 'visible');
   }
 
   function setLoading(loading) {
@@ -396,7 +422,7 @@
     const preferences = { ...state.preferences };
     state.preferenceSaveChain = state.preferenceSaveChain
       .then(() => api('save_preferences', { preferences }))
-      .catch((error) => showToast(`Не удалось сохранить сортировку: ${error.message}`));
+      .catch((error) => showError(`Не удалось сохранить сортировку: ${error.message}`));
   }
 
   function changeSort(field) {
@@ -917,7 +943,7 @@
       await api('playlist_broadcast', { playlist_id: playlist.id });
       showToast('Плейлист «' + playlist.name + '» отправлен в эфир');
     } catch (error) {
-      showToast(error.message);
+      showError(error.message);
     } finally {
       button.disabled = false;
       button.textContent = oldLabel;
@@ -1022,7 +1048,7 @@
       await save;
       if (showFeedback) showToast('Позиция просмотра сохранена');
     } catch (error) {
-      if (showFeedback) showToast(error.message);
+      if (showFeedback) showError(error.message);
     }
   }
 
@@ -1048,7 +1074,7 @@
       await loadPlaylists();
       showToast('Плейлист создан');
     } catch (error) {
-      showToast(error.message);
+      showError(error.message);
     }
   }
 
@@ -1060,7 +1086,7 @@
       await loadPlaylists();
       showToast('Название изменено');
     } catch (error) {
-      showToast(error.message);
+      showError(error.message);
     }
   }
 
@@ -1071,7 +1097,7 @@
       await loadPlaylists();
       showToast('Плейлист удалён');
     } catch (error) {
-      showToast(error.message);
+      showError(error.message);
     }
   }
 
@@ -1100,7 +1126,7 @@
       if (typeof el.playlistDialog.showModal === 'function') el.playlistDialog.showModal();
       else await addToSelectedPlaylist();
     } catch (error) {
-      showToast(error.message);
+      showError(error.message);
     }
   }
 
@@ -1137,7 +1163,7 @@
       if (typeof el.playlistDialog.showModal === 'function') el.playlistDialog.showModal();
       else await addToSelectedPlaylist();
     } catch (error) {
-      showToast(error.message);
+      showError(error.message);
     }
   }
 
@@ -1184,7 +1210,7 @@
       await loadPlaylists(playlistId);
       showToast('Видео убрано из плейлиста');
     } catch (error) {
-      showToast(error.message);
+      showError(error.message);
     }
   }
 
@@ -1199,7 +1225,7 @@
       });
       await loadPlaylists(playlist.id);
     } catch (error) {
-      showToast(error.message);
+      showError(error.message);
     }
   }
 
@@ -1315,11 +1341,11 @@
         el.video.controls = true;
         el.video.webkitEnterFullscreen();
       } else {
-        showToast('Полноэкранный режим недоступен в этом браузере');
+        showError('Полноэкранный режим недоступен в этом браузере');
       }
     } catch (_) {
       el.video.controls = false;
-      showToast('Полноэкранный режим недоступен');
+      showError('Полноэкранный режим недоступен');
     } finally {
       state.fullscreenEntryPending = false;
       if (!isStageFullscreen() && state.fullscreenActive) {
