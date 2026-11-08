@@ -72,7 +72,6 @@ void setup() {
   si5351.drive_strength(SI5351_CLK2,SI5351_DRIVE_4MA);    // регулировка выхода CLK2, регулируется током 2,4,6,8 МА ???
   
   IF2_PIN_PREV = !digitalRead(LSB_USB_PIN);               // гарантируем первую настройку CLK0
-  IF2_SET();                                             // установка второй ПЧ на выходе CLK0
   
   si5351.set_freq(60000000*SI5351_FREQ_MULT,SI5351_CLK1);  // частота на выходе 1
   oled.begin(&Adafruit128x32, OLED_I2C_ADDR);
@@ -88,19 +87,26 @@ void setup() {
 }
 //---------------------------------------------------------------------------------------------------------
 void IF2_SET() {
-  bool IF2_PIN_STATUS = digitalRead(LSB_USB_PIN);
+  static uint32_t IF2_TIMER = 0;
 
-  if (IF2_PIN_STATUS != IF2_PIN_PREV) {
-    if (IF2_PIN_STATUS)
-      si5351.set_freq(IF2_LSB_FREQ * SI5351_FREQ_MULT, SI5351_CLK0);
-    else
-      si5351.set_freq(IF2_USB_FREQ * SI5351_FREQ_MULT, SI5351_CLK0);
+  if (millis() - IF2_TIMER >= 100) {
+    IF2_TIMER = millis();
+    bool IF2_PIN_STATUS = digitalRead(LSB_USB_PIN);
+
+    if (IF2_PIN_STATUS != IF2_PIN_PREV) {
+      if (IF2_PIN_STATUS)
+        si5351.set_freq(IF2_LSB_FREQ * SI5351_FREQ_MULT, SI5351_CLK0);
+      else
+        si5351.set_freq(IF2_USB_FREQ * SI5351_FREQ_MULT, SI5351_CLK0);
+    }
+
+    IF2_PIN_PREV = IF2_PIN_STATUS;
   }
-
-  IF2_PIN_PREV = IF2_PIN_STATUS;
 }
 //---------------------------------------------------------------------------------------------------------
 void loop() {
+  IF2_SET();
+
   if (ch_flag) {
     ch_flag = false;
     rx += enc_dir * enc_inc;
