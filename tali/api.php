@@ -765,8 +765,11 @@ function broadcastPlaylist(PDO $pdo, array $user, mixed $playlistId): array
         // Сохраняем VLM-канал и HTTP-выход. Заменяем только список входов.
         // Для одного файла добавляем второй такой же вход: VLM должен
         // сначала уйти с текущего индекса, иначе play 1 может стать no-op.
+        $needsTemporaryInput = count($paths) === 1;
         $vlcPaths = $paths;
-        if (count($vlcPaths) === 1) {
+        if ($needsTemporaryInput) {
+            // Для одноэлементного списка временно добавляем второй слот,
+            // чтобы сменить индекс активного входа в VLC.
             $vlcPaths[] = $vlcPaths[0];
         }
 
@@ -777,12 +780,15 @@ function broadcastPlaylist(PDO $pdo, array $user, mixed $playlistId): array
         }
         vlcCommand($socket, 'setup tali loop');
 
-        // В VLC 3.0.x play N не перезапускает вход, если N уже выбран,
-        // даже если список входов только что заменили. Поэтому сначала
-        // выбираем слот 2, затем слот 1 с первым файлом нового плейлиста.
-        // Канал и sout-keep остаются теми же — stop broadcast не вызывается.
+        // Сначала уходим на слот 2, затем включаем первый файл нового списка.
+        // Сам broadcast и sout-keep не останавливаются.
         vlcCommand($socket, 'control tali play 2');
         vlcCommand($socket, 'control tali play 1');
+
+        if ($needsTemporaryInput) {
+            // Удаляем временный слот: в VLM остаётся ровно один реальный вход.
+            vlcCommand($socket, 'setup tali inputdeln 2');
+        }
     } catch (Throwable $e) {
         fclose($socket);
         apiError('Не удалось запустить эфир VLC: ' . $e->getMessage(), 503);
