@@ -362,6 +362,12 @@
         : 'Статус';
     }
 
+    const actionColumns = mode === 'playlist-index' ? 2
+      : mode === 'playlist' ? 3
+      : 1;
+    el.listHeader.dataset.actionCount = String(actionColumns);
+    el.list.dataset.actionCount = String(actionColumns);
+
     const dateButton = el.listHeader.querySelector('[data-sort="modified"]');
     if (dateButton) {
       dateButton.setAttribute('aria-label', 'Сортировать по: ' + labels.desktop.toLowerCase());
