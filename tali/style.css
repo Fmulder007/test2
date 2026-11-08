@@ -143,10 +143,12 @@ h2 { margin: 0; font-size: 19px; }
 .list-header:not(.list-header--directory) { display: none; }
 .list-header:not(.list-header--directory) .sort-button { pointer-events: none; cursor: default; }
 .list-header:not(.list-header--directory) .sort-indicator { display: none; }
-.item-row--history > .entry-date, .item-row--playlist > .entry-date { display: none; }
+.item-row--history > .entry-date { display: none; }
 .item-row { min-height: 48px; padding: 5px 9px; border-bottom: 1px solid var(--line); }
 .item-row--history { display: grid; grid-template-columns: minmax(0, 1fr) 115px 105px; align-items: center; gap: 12px; }
-.item-row--playlist { display: grid; grid-template-columns: minmax(0, 1fr) 90px 130px; align-items: center; gap: 12px; }
+.item-row--playlist { display: grid; grid-template-columns: minmax(0, 1fr) minmax(135px, 165px) 92px 105px; align-items: center; gap: 10px; }
+.playlist-heading-main { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.playlist-heading-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 650; }
 .item-row:last-child { border-bottom: 0; }
 .item-row:hover { background: var(--surface-2); }
 .item-row.item-row--current { background: var(--accent-soft); }
