@@ -350,7 +350,7 @@
     const dateLabels = {
       directory: { desktop: 'Дата изменения', mobileSecond: 'ИЗМЕНЕНИЯ' },
       history: { desktop: 'Дата просмотра', mobileSecond: 'ПРОСМОТРА' },
-      playlist: { desktop: 'Дата добавления', mobileSecond: 'ДОБАВЛЕНИЯ' },
+      playlist: { desktop: 'Дата изменения', mobileSecond: 'ИЗМЕНЕНИЯ' },
       'playlist-index': { desktop: 'Дата изменения', mobileSecond: 'ИЗМЕНЕНИЯ' }
     };
     const labels = dateLabels[mode] || dateLabels.directory;
@@ -358,7 +358,7 @@
     if (dateDesktop) dateDesktop.textContent = labels.desktop;
     if (dateMobileSecond) dateMobileSecond.textContent = labels.mobileSecond;
     if (infoLabel) {
-      infoLabel.textContent = mode === 'directory' ? 'Размер'
+      infoLabel.textContent = mode === 'directory' || mode === 'playlist' ? 'Размер'
         : mode === 'playlist-index' ? 'Видео'
         : 'Статус';
     }
@@ -804,7 +804,14 @@
     back.className = 'entry-main';
     back.innerHTML = '<span class="entry-icon">‹</span><span class="entry-name">Все плейлисты</span>';
     back.addEventListener('click', renderPlaylistIndex);
-    heading.append(back);
+    const headingMain = document.createElement('div');
+    headingMain.className = 'playlist-heading-main';
+    headingMain.append(back);
+    const playlistName = document.createElement('strong');
+    playlistName.className = 'playlist-heading-name';
+    playlistName.textContent = playlist.name;
+    headingMain.append(playlistName);
+    heading.append(headingMain);
     appendDateCell(heading, null);
     const headingInfo = document.createElement('span');
     headingInfo.className = 'entry-size';
@@ -856,35 +863,37 @@
       main.append(icon, name);
       main.addEventListener('click', () => playFromQueue(items, index));
       row.append(main);
-      appendDateCell(row, item.added_at);
+      appendDateCell(row, Number(item.modified) || 0, true);
 
-      const itemInfo = document.createElement('span');
-      itemInfo.className = 'entry-size';
-      const itemCompleted = Number(item.duration_seconds) > 0 &&
-        Number(item.position_seconds) >= Number(item.duration_seconds) - 15;
-      const itemPosition = Number(item.position_seconds) || 0;
-      itemInfo.textContent = itemCompleted ? '✓'
-        : itemPosition > 0 ? formatTime(itemPosition) : '—';
-      itemInfo.title = itemCompleted ? 'Просмотрено'
-        : itemPosition > 0 ? 'Позиция просмотра: ' + formatTime(itemPosition)
-        : 'Просмотр ещё не начат';
-      itemInfo.setAttribute('aria-label', itemInfo.title);
-      row.append(itemInfo);
+      const itemSize = document.createElement('span');
+      itemSize.className = 'entry-size';
+      itemSize.textContent = item.size !== null && item.size !== undefined
+        ? formatBytes(item.size) : '—';
+      row.append(itemSize);
 
       const actions = document.createElement('div');
       actions.className = 'row-actions';
+      const up = document.createElement('button');
+      up.className = 'small-button'; up.type = 'button'; up.textContent = '↑'; up.title = 'Выше';
       if (index > 0) {
-        const up = document.createElement('button');
-        up.className = 'small-button'; up.type = 'button'; up.textContent = '↑'; up.title = 'Выше';
         up.addEventListener('click', () => reorderPlaylist(playlist, items, index, index - 1));
-        actions.append(up);
+      } else {
+        up.disabled = true;
+        up.style.visibility = 'hidden';
+        up.setAttribute('aria-hidden', 'true');
       }
+      actions.append(up);
+
+      const down = document.createElement('button');
+      down.className = 'small-button'; down.type = 'button'; down.textContent = '↓'; down.title = 'Ниже';
       if (index < items.length - 1) {
-        const down = document.createElement('button');
-        down.className = 'small-button'; down.type = 'button'; down.textContent = '↓'; down.title = 'Ниже';
         down.addEventListener('click', () => reorderPlaylist(playlist, items, index, index + 1));
-        actions.append(down);
+      } else {
+        down.disabled = true;
+        down.style.visibility = 'hidden';
+        down.setAttribute('aria-hidden', 'true');
       }
+      actions.append(down);
       const remove = document.createElement('button');
       remove.className = 'small-button'; remove.type = 'button'; remove.textContent = '×'; remove.title = 'Убрать из плейлиста';
       remove.addEventListener('click', () => removePlaylistItem(playlist.id, item.id));
