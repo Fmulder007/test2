@@ -9,6 +9,9 @@
 #define BAND_L        1500000        // начало диапазона
 #define BAND_H        8500000        // конец диапазона
 #define IF_FREQ       62496500       // частота ПЧ
+#define IF2_LSB_FREQ  2496500        // вторая ПЧ, LSB — 2496,5 кГц
+#define IF2_USB_FREQ  2500000        // вторая ПЧ, USB — 2500 кГц
+#define LSB_USB_PIN   A3             // выбор LSB/USB
 #define SW_STEP       A0             // выбор шага
 #define PIN_SM        A1             // вход S-метра
 #define PIN_RX_TX     A2             // RX/TX педаль
@@ -45,6 +48,7 @@ bool rx_tx_old;
 void setup() {
   pinMode(SW_STEP, INPUT_PULLUP);        // вход с инверсией (включается землей)
   pinMode(PIN_RX_TX, INPUT_PULLUP);      // вход с инверсией (включается землей)
+  pinMode(LSB_USB_PIN, INPUT_PULLUP);     // выбор LSB/USB с внутренней подтяжкой
   
   //pinMode(BAND1, OUTPUT);                // при управлении ДПФ напрямую, "1"-5В, "0"-земля, если закомментировать, выход будет с внутренним резистором
   //pinMode(BAND2, OUTPUT);                // при управлении ДПФ напрямую, "1"-5В, "0"-земля, если закомментировать, выход будет с внутренним резистором
@@ -61,7 +65,7 @@ void setup() {
   attachInterrupt(1, rotary_encoder, CHANGE);
 
   si5351.init(SI5351_CRYSTAL_LOAD_8PF, 0, 26430);           // crystal 25.000 MHz, последние цифры - коррекция частоты кварца
-  si5351.set_freq(2496500*SI5351_FREQ_MULT,SI5351_CLK0);   // частота на выходе 0
+  IF2_SET();                                             // установка второй ПЧ на выходе CLK0
   si5351.set_freq(60000000*SI5351_FREQ_MULT,SI5351_CLK1);  // частота на выходе 1
  
   //si5351.drive_strength(SI5351_CLK0,SI5351_DRIVE_4MA);    // регулировка выхода CLK0, регулируется током 2,4,6,8 МА ???
@@ -78,6 +82,15 @@ void setup() {
 
   enc_inc = ENC_INC_4;     // шаг при включении ???
   show_inc();            // убираем надпись шага с дисплея
+}
+//---------------------------------------------------------------------------------------------------------
+void IF2_SET() {
+  bool IF2_PIN_STATUS = digitalRead(LSB_USB_PIN);
+
+  if (IF2_PIN_STATUS)
+    si5351.set_freq(IF2_LSB_FREQ * SI5351_FREQ_MULT, SI5351_CLK0);
+  else
+    si5351.set_freq(IF2_USB_FREQ * SI5351_FREQ_MULT, SI5351_CLK0);
 }
 //---------------------------------------------------------------------------------------------------------
 void loop() {
