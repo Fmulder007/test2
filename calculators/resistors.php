@@ -91,20 +91,20 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
 
 .band-table { width:100%; min-width:0; table-layout:fixed; border-collapse:separate; border-spacing:3px 2px; margin-top:12px; }
 .band-table th, .band-table td { padding:0; text-align:center; vertical-align:middle; }
-.band-table th { background:#f7f9fa; border:1px solid var(--border); border-radius:5px; font-size:12px; font-weight:600; line-height:1.15; height:42px; padding:4px 2px; }
-.band-table td { height:31px; }
+.band-table th { background:#f7f9fa; border:1px solid var(--border); border-radius:5px; font-size:12px; font-weight:600; line-height:1.15; height:53px; padding:4px 2px; }
+.band-table td { height:39px; }
 .band-choice {
-    display:block; width:100%; min-width:0; height:31px; padding:3px 2px;
+    display:block; width:100%; min-width:0; height:39px; padding:3px 2px;
     border:2px solid transparent; border-radius:4px; cursor:pointer;
     font:600 11px/1.1 Arial,Helvetica,sans-serif; white-space:normal;
 }
 .band-choice:hover { filter:brightness(.92); }
-.band-choice.selected { border:3px solid #1268b3; box-shadow:0 0 0 1px #fff inset; }
+.band-choice.selected { border:6px solid #1268b3; box-shadow:0 0 0 1px #fff inset; }
 .band-choice:focus-visible { outline:2px solid var(--blue); outline-offset:1px; }
 @media (max-width:520px) {
     .band-table { border-spacing:2px 2px; }
-    .band-table th { font-size:10px; height:40px; }
-    .band-choice { height:30px; padding:2px 1px; font-size:9px; }
+    .band-table th { font-size:10px; height:50px; }
+    .band-choice { height:38px; padding:2px 1px; font-size:9px; }
 }
 .resistor-wrap {
     display: flex;
@@ -211,8 +211,17 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
                 </div>
                 <p class="small" id="encodeHint">Для 3 полос допуск не задаётся отдельно: принимается ±20%.</p>
             </div>
+            <div class="actions" id="decodeActions">
+                <button type="button" class="action-btn primary" id="resetBtn">Сбросить</button>
+            </div>
+            <div class="actions hidden" id="encodeActions">
+                <button type="button" class="action-btn primary" id="encodeBtn">Подобрать полосы</button>
+            </div>
+        </section>
 
-            <div class="resistor-wrap">
+        <section class="panel">
+            <h2>Результат</h2>
+            <div class="resistor-wrap hidden" id="resultResistor">
                 <svg class="resistor-svg" viewBox="0 0 500 150" role="img" aria-label="Резистор с цветными полосами">
                     <defs>
                         <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
@@ -231,16 +240,6 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
                     <g id="resistorBands"></g>
                 </svg>
             </div>
-            <div class="actions" id="decodeActions">
-                <button type="button" class="action-btn primary" id="resetBtn">Сбросить</button>
-            </div>
-            <div class="actions hidden" id="encodeActions">
-                <button type="button" class="action-btn primary" id="encodeBtn">Подобрать полосы</button>
-            </div>
-        </section>
-
-        <section class="panel">
-            <h2>Результат</h2>
             <div class="result" aria-live="polite">
                 <div class="small">Номинальное сопротивление</div>
                 <div class="result-value" id="resultValue">4,7 кОм</div>
@@ -347,7 +346,7 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
                     let label = '';
                     if (code !== undefined) {
                         if (i < digitCount) label = code + ' — ';
-                        else if (i === digitCount) label = '×' + String(code).replace('.', ',') + ' — ';
+                        else if (i === digitCount) label = code > 1000 ? '10^' + Math.round(Math.log10(code)) + ' — ' : '×' + String(code).replace('.', ',') + ' — ';
                         else if (i === digitCount + 1) label = '±' + String(code).replace('.', ',') + '% — ';
                         else label = code + ' ppm — ';
                     }
@@ -433,6 +432,7 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
         $('decodeActions').classList.toggle('hidden', mode !== 'decode');
         $('encodeActions').classList.toggle('hidden', mode !== 'encode');
         $('leftTitle').textContent = mode === 'decode' ? 'Цветовая маркировка' : 'Подбор цветовой маркировки';
+        $('resultResistor').classList.toggle('hidden', mode !== 'encode');
         if (mode === 'decode') update();
     }
     function encode() {
