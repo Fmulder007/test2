@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="260" viewBox="0 0 500 150" role="img" aria-labelledby="title desc">
+  <title id="title">Резистор с цветовой маркировкой</title>
+  <desc id="desc">Жёлтая, фиолетовая, зелёная и золотая полосы на корпусе резистора</desc>
+  <defs>
+    <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff5d9"/>
+      <stop offset=".48" stop-color="#e7d3a5"/>
+      <stop offset="1" stop-color="#cbb27c"/>
+    </linearGradient>
+    <linearGradient id="leadGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d9dde0"/>
+      <stop offset=".5" stop-color="#858e94"/>
+      <stop offset="1" stop-color="#e3e6e8"/>
+    </linearGradient>
+  </defs>
+  <path d="M10 75 H135 M365 75 H490" stroke="url(#leadGrad)" stroke-width="8" fill="none"/>
+  <rect x="125" y="36" width="250" height="78" rx="34" fill="url(#bodyGrad)" stroke="#b9a477" stroke-width="1.5"/>
+  <g stroke="#756b58" stroke-width=".7">
+    <rect x="165" y="37" width="16" height="76" rx="2" fill="#fdd835"/>
+    <rect x="215" y="37" width="16" height="76" rx="2" fill="#8e24aa"/>
+    <rect x="285" y="37" width="16" height="76" rx="2" fill="#43a047"/>
+    <rect x="335" y="37" width="16" height="76" rx="2" fill="#c9a227"/>
+  </g>
+</svg>
