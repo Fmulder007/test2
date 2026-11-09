@@ -434,6 +434,7 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
         $('leftTitle').textContent = mode === 'decode' ? 'Цветовая маркировка' : 'Подбор цветовой маркировки';
         $('resultResistor').classList.toggle('hidden', mode !== 'encode');
         if (mode === 'decode') update();
+        else encode();
     }
     function encode() {
         const count = Number($('bandCount').value);
