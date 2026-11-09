@@ -152,6 +152,7 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
 <main class="page">
     <h1><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></h1>
     <p class="subtitle">Расшифровка цветных полос и подбор маркировки по номиналу сопротивления.</p>
+    <p style="margin:0 0 18px"><a href="index.php">← К списку калькуляторов</a></p>
 
     <section class="panel">
         <div class="mode-row" role="group" aria-label="Режим калькулятора">
