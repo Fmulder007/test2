@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist xmlns="http://xspf.org/ns/0/" xmlns:vlc="http://www.videolan.org/vlc/playlist/ns/0/" version="1">
+	<title>Плейлист</title>
+	<trackList>
+		<track>
+			<location>file:///Z:/video/MusicVideo/80s</location>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>0</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Synthwave/Analog%20Soul%20FM</location>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>1</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Synthwave/Cassette%20Invaders</location>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>2</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Synthwave/MidnightDecay</location>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>3</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Synthwave/Ouroboros%20FM</location>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>4</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Synthwave/Synth%20Odyssey%20FM</location>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>5</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Synthwave/Synthetic%20Garden</location>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>6</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Synthwave/VHS%20FM%20Memory</location>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>7</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Synthwave/Zyykron%20Sound</location>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>8</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Synthwave/Zyynex</location>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>9</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/%28Concert-2006%29%20MYLENE%20FARMER%20-%20Avant%20que%20l%27ombre%20A%20Bercy%20%282006%29.mp4</location>
+			<duration>8182527</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>10</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/748440455808.mp4</location>
+			<duration>6956025</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>11</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/3217812097581.mp4</location>
+			<duration>178909</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>12</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/11457975290385.mp4</location>
+			<duration>4018779</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>13</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Abba%20-%20The%20Day%20Before%20You%20Came.mp4</location>
+			<duration>353083</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>14</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Malukah%20-%20Reignite%20-%20Mass%20EffectShepard%20Tribute%20Song.mp4</location>
+			<image>file:///C:/Users/fm/AppData/Roaming/vlc/art/arturl/1516461b7d4e42365aac24013c2dcc84/art.png</image>
+			<duration>204406</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>15</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Mass%20Effect%20A%20Good%20Ride2.mp4</location>
+			<image>file:///C:/Users/fm/AppData/Roaming/vlc/art/arturl/8bde09584060a2d5373d29970972b504/art.png</image>
+			<duration>316883</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>16</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Mass%20Effect%20Cake%20by%20the%20ocean%20%5BHumor%5D.mp4</location>
+			<image>file:///C:/Users/fm/AppData/Roaming/vlc/art/arturl/2fbb1b1b5a40697ca6e8d92ff1b46e47/art.png</image>
+			<duration>216573</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>17</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Mass%20Effect%20HUMOR%20Hey%20na%20na.mp4</location>
+			<image>file:///C:/Users/fm/AppData/Roaming/vlc/art/arturl/fe93d4e6b2c22ba27f641a9769aa97d0/art.jpg</image>
+			<duration>141898</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>18</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Mass%20Effect%20Tribute%20I%20Am%20Not%20Alone.mp4</location>
+			<image>file:///C:/Users/fm/AppData/Roaming/vlc/art/arturl/8a90438159b8d58c894ae1e8233fca54/art.png</image>
+			<duration>487411</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>19</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Miley%20Cyrus%20-%20The%20Backyard%20Sessions%20-%20Jolene%20%5Bget.gt%5D.mp4</location>
+			<duration>179815</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>20</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Miss%20Monique%20-%20MiMo%20Podcast%20042%20%5BMelodic%20Techno%20%26%20House%20DJ%20Mix%5D.mp4</location>
+			<title>Miss Monique - MiMo Podcast 042  [Melodic Techno &amp; House DJ Mix]</title>
+			<creator>Miss Monique</creator>
+			<annotation>https://www.youtube.com/watch?v=0AhFghYZQ74</annotation>
+			<image>file:///C:/Users/fm/AppData/Roaming/vlc/art/arturl/3c63841274bc00e330aa772230ab4215/art.jpg</image>
+			<duration>4235297</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>21</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Miss%20Monique%20-%20Special%20Bday%20Podcast%202024%20%5BMelodic%20TechnoProgressive%20House%20DJ%20Mix%5D.mp4</location>
+			<title>Miss Monique - Special B&#39;day Podcast 2024 [Melodic Techno/Progressive House DJ Mix]</title>
+			<creator>Miss Monique</creator>
+			<annotation>https://www.youtube.com/watch?v=tRcUjaI0M5k</annotation>
+			<image>file:///C:/Users/fm/AppData/Roaming/vlc/art/arturl/8c0e9881989dcb9cfda05b24b6209493/art.jpg</image>
+			<duration>5088514</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>22</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Miss%20Monique%20Bali%2C%20Indonesia%202024%20%5BMelodic%20Techno%20Progressive%20House%20DJ%20Mix%5D.mp4</location>
+			<title>Miss Monique @  Bali, Indonesia 2024 [Melodic Techno/ Progressive House DJ Mix]</title>
+			<creator>Miss Monique</creator>
+			<annotation>https://www.youtube.com/watch?v=kLeYYK0rnxI</annotation>
+			<image>file:///C:/Users/fm/AppData/Roaming/vlc/art/arturl/cfd931e53189115935e867a4841df9da/art.jpg</image>
+			<duration>5146727</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>23</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Miss%20Monique%2C%20P.O.U%2C%20Susie%20Ledge%20-%20Million%20Miles%20Away%20%5BSiona%20Records%5D.mp4</location>
+			<title>Miss Monique, P.O.U, Susie Ledge - Million Miles Away [Siona Records]</title>
+			<creator>Miss Monique</creator>
+			<annotation>https://www.youtube.com/watch?v=_OqlusWRYIw</annotation>
+			<image>file:///C:/Users/fm/AppData/Roaming/vlc/art/arturl/eb754d6c581b87ca9d1b98549a0c49d8/art.jpg</image>
+			<duration>247943</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>24</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Nightwish%20Concert%20At%20Arena%20Of%20Helsinki%20The%2021%20October%202005.mkv</location>
+			<duration>6183960</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>25</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/NOLWEN%20LEROY%20Dans%20les%20prisons%20de%20NantesLondres%20avec%20Louise%20Forestier%20et%20Mauvais%20Sort%20Brest.mp4</location>
+			<duration>495862</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>26</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Nolwenn%20Leroy%20-%20Histoires%20Naturelles%20Tour%20%28Olympia%202006%29.mp4</location>
+			<duration>6306058</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>27</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Nolwenn%20Leroy%20-%20Tri%20Martolod%20en%20duo%20avec%20Alan%20Stivell.mp4</location>
+			<duration>252331</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>28</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Nolwenn%20Leroy%20Andrea%20Corr%20Woman%20Of%20Ireland%20Live%20on%20Taratata%20Mai%202005%20%5Bget.gt%5D.mp4</location>
+			<duration>283329</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>29</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///Z:/video/MusicVideo/Nolwenn%20%C3%94%20Tour%20de%20l%27eau.mp4</location>
+			<duration>3255066</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>30</vlc:id>
+			</extension>
+		</track>
+	</trackList>
+	<extension application="http://www.videolan.org/vlc/playlist/0">
+		<vlc:node title="MusicVideo">
+			<vlc:item tid="0"/>
+			<vlc:node title="Synthwave">
+				<vlc:item tid="1"/>
+				<vlc:item tid="2"/>
+				<vlc:item tid="3"/>
+				<vlc:item tid="4"/>
+				<vlc:item tid="5"/>
+				<vlc:item tid="6"/>
+				<vlc:item tid="7"/>
+				<vlc:item tid="8"/>
+				<vlc:item tid="9"/>
+			</vlc:node>
+			<vlc:item tid="10"/>
+			<vlc:item tid="11"/>
+			<vlc:item tid="12"/>
+			<vlc:item tid="13"/>
+			<vlc:item tid="14"/>
+			<vlc:item tid="15"/>
+			<vlc:item tid="16"/>
+			<vlc:item tid="17"/>
+			<vlc:item tid="18"/>
+			<vlc:item tid="19"/>
+			<vlc:item tid="20"/>
+			<vlc:item tid="21"/>
+			<vlc:item tid="22"/>
+			<vlc:item tid="23"/>
+			<vlc:item tid="24"/>
+			<vlc:item tid="25"/>
+			<vlc:item tid="26"/>
+			<vlc:item tid="27"/>
+			<vlc:item tid="28"/>
+			<vlc:item tid="29"/>
+			<vlc:item tid="30"/>
+		</vlc:node>
+	</extension>
+</playlist>
