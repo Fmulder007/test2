@@ -492,9 +492,8 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
         }
         selected = indices;
         renderFields();
-        const colorText = indices.map(i => colors[i].name).join(' · ');
         $('resultValue').textContent = formatResistance(raw);
-        $('resultTolerance').textContent = 'Маркировка: ' + colorText;
+        $('resultTolerance').textContent = 'Цвета полос показаны в таблице.';
         $('resultDetails').innerHTML =
             '<div>Допуск: ±' + formatPercent(tolerance) + '</div>' +
             '<div>Минимум: ' + formatResistance(raw * (1 - tolerance / 100)) + '</div>' +
