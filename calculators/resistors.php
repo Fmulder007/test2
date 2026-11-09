@@ -89,33 +89,22 @@ select, input {
 }
 select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue); }
 
-.band-table { width:100%; table-layout:fixed; border-collapse:collapse; margin-top:12px; }
-.band-table th, .band-table td { border:1px solid var(--border); padding:9px 6px; text-align:center; vertical-align:middle; }
-.band-table th { background:#f7f9fa; font-size:13px; font-weight:600; }
-.band-table .swatch-cell { padding:8px 5px; }
-.band-select {
-    display:block;
-    width:100%;
-    min-width:0;
-    height:42px;
-    padding:4px;
-    border:1px solid #89949b;
-    border-radius:5px;
-    background:#fff;
-    cursor:pointer;
+.band-table { width:100%; min-width:0; table-layout:fixed; border-collapse:separate; border-spacing:3px 2px; margin-top:12px; }
+.band-table th, .band-table td { padding:0; text-align:center; vertical-align:middle; }
+.band-table th { background:#f7f9fa; border:1px solid var(--border); border-radius:5px; font-size:12px; font-weight:600; line-height:1.15; height:42px; padding:4px 2px; }
+.band-table td { height:31px; }
+.band-choice {
+    display:block; width:100%; min-width:0; height:31px; padding:3px 2px;
+    border:2px solid transparent; border-radius:4px; cursor:pointer;
+    font:600 11px/1.1 Arial,Helvetica,sans-serif; white-space:normal;
 }
-.band-select:focus { outline:2px solid #b8d9f5; outline-offset:1px; }
-.band-select option {
-    font-size:20px;
-    font-weight:700;
-    text-align:center;
-    color:#222;
-    background:#fff;
-}
+.band-choice:hover { filter:brightness(.92); }
+.band-choice.selected { border:3px solid #1268b3; box-shadow:0 0 0 1px #fff inset; }
+.band-choice:focus-visible { outline:2px solid var(--blue); outline-offset:1px; }
 @media (max-width:520px) {
-    .band-table th, .band-table td { padding:7px 3px; font-size:11px; }
-    .band-select { height:36px; padding:2px; }
-    .band-select option { font-size:18px; }
+    .band-table { border-spacing:2px 2px; }
+    .band-table th { font-size:10px; height:40px; }
+    .band-choice { height:30px; padding:2px 1px; font-size:9px; }
 }
 .resistor-wrap {
     display: flex;
@@ -186,11 +175,9 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
 
             <div id="decodeFields">
                 <div style="overflow-x:auto">
-                    <table class="band-table" aria-label="Цветовая маркировка резистора">
+                    <table class="band-table" id="bandTable" aria-label="Цветовая маркировка резистора">
                         <thead><tr id="bandHead"></tr></thead>
-                        <tbody>
-                            <tr id="bandColors"></tr>
-                        </tbody>
+                        <tbody id="bandChoices"></tbody>
                     </table>
                 </div>
             </div>
@@ -302,16 +289,12 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
     };
 
     function allowedForBand(pos, count) {
-        if (count === 3) return pos < 2 ? colors.slice(0,10) : colors;
-        if (count === 4) {
-            if (pos < 2) return colors.slice(0,10);
-            if (pos === 2) return colors;
-            return colors.filter(c => c.tolerance !== undefined);
-        }
-        if (pos < 3) return colors.slice(0,10);
-        if (pos === 3) return colors;
-        if (pos === 4) return colors.filter(c => c.tolerance !== undefined);
-        return colors.filter(c => c.tcr !== undefined);
+        const digitCount = count >= 5 ? 3 : 2;
+        if (pos < digitCount) return colors.filter(c => c.digit !== undefined);
+        if (pos === digitCount) return colors.filter(c => c.mult !== undefined);
+        if (pos === digitCount + 1 && count >= 4) return colors.filter(c => c.tolerance !== undefined);
+        if (pos === digitCount + 2 && count === 6) return colors.filter(c => c.tcr !== undefined);
+        return [];
     }
 
     function colorIndex(color) { return colors.indexOf(color); }
@@ -320,43 +303,67 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
         const count = Number($('bandCount').value);
         const roles = bandNames(count);
         const head = $('bandHead');
-        const colorsRow = $('bandColors');
+        const choicesBody = $('bandChoices');
         head.innerHTML = '';
-        colorsRow.innerHTML = '';
+        choicesBody.innerHTML = '';
+        $('bandTable').style.minWidth = (count * 78) + 'px';
 
         for (let i = 0; i < count; i++) {
             const choices = allowedForBand(i, count);
-            let current = choices.some(c => colorIndex(c) === selected[i]) ? selected[i] : colorIndex(choices[0]);
-            selected[i] = current;
-
+            if (!choices.some(c => colorIndex(c) === selected[i])) {
+                selected[i] = colorIndex(choices[0]);
+            }
             const th = document.createElement('th');
             th.scope = 'col';
-            th.textContent = roles[i];
+            th.innerHTML = roles[i].replace(' ', '<br>');
             head.appendChild(th);
-
-            const colorCell = document.createElement('td');
-            colorCell.className = 'swatch-cell';
-            const select = document.createElement('select');
-            select.id = 'band' + i;
-            select.className = 'band-select';
-            select.setAttribute('aria-label', 'Цвет ' + (i + 1) + '-й полосы');
-
-            choices.forEach(c => {
-                const idx = colorIndex(c);
-                const option = document.createElement('option');
-                option.value = idx;
-                option.textContent = '━━━━';
-                option.style.color = c.hex;
-                option.selected = idx === current;
-                select.appendChild(option);
-            });
-            select.addEventListener('change', () => {
-                selected[i] = Number(select.value);
-                update();
-            });
-            colorCell.appendChild(select);
-            colorsRow.appendChild(colorCell);
         }
+
+        colors.forEach((color, rowIndex) => {
+            const tr = document.createElement('tr');
+            for (let i = 0; i < count; i++) {
+                const td = document.createElement('td');
+                const idx = colorIndex(color);
+                const allowed = allowedForBand(i, count).some(c => colorIndex(c) === idx);
+                if (allowed) {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'band-choice' + (selected[i] === idx ? ' selected' : '');
+                    button.style.backgroundColor = color.hex;
+                    const hex = color.hex.replace('#', '');
+                    const red = parseInt(hex.slice(0, 2), 16);
+                    const green = parseInt(hex.slice(2, 4), 16);
+                    const blue = parseInt(hex.slice(4, 6), 16);
+                    const luminance = 0.299 * red + 0.587 * green + 0.114 * blue;
+                    button.style.color = luminance < 145 ? '#fff' : '#202124';
+                    button.style.borderColor = selected[i] === idx ? '#1268b3' : (rowIndex === 9 ? '#777' : 'transparent');
+
+                    const digitCount = count >= 5 ? 3 : 2;
+                    let code;
+                    if (i < digitCount) code = color.digit;
+                    else if (i === digitCount) code = color.mult;
+                    else if (i === digitCount + 1) code = color.tolerance;
+                    else code = color.tcr;
+                    let label = '';
+                    if (code !== undefined) {
+                        if (i < digitCount) label = code + ' — ';
+                        else if (i === digitCount) label = '×' + String(code).replace('.', ',') + ' — ';
+                        else if (i === digitCount + 1) label = '±' + String(code).replace('.', ',') + '% — ';
+                        else label = code + ' ppm — ';
+                    }
+                    button.textContent = label + color.name.toLowerCase();
+                    button.setAttribute('aria-label', 'Выбрать ' + color.name + ' для ' + roles[i]);
+                    button.setAttribute('aria-pressed', selected[i] === idx ? 'true' : 'false');
+                    button.addEventListener('click', () => {
+                        selected[i] = idx;
+                        renderFields();
+                    });
+                    td.appendChild(button);
+                }
+                tr.appendChild(td);
+            }
+            choicesBody.appendChild(tr);
+        });
         update();
     }
 
