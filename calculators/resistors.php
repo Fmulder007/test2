@@ -88,26 +88,18 @@ select, input {
     font: inherit;
 }
 select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue); }
-.band-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-}
-.band-field { min-width: 0; }
-.band-field label { font-size: 13px; }
-.band-select { padding-left: 36px; }
-.color-select-wrap { position: relative; }
-.color-dot {
-    position: absolute;
-    z-index: 1;
-    left: 11px;
-    top: 50%;
-    width: 15px;
-    height: 15px;
-    transform: translateY(-50%);
-    border: 1px solid #8b969d;
-    border-radius: 3px;
-    pointer-events: none;
+
+.band-table { width:100%; table-layout:fixed; border-collapse:collapse; margin-top:12px; }
+.band-table th, .band-table td { border:1px solid var(--border); padding:9px 6px; text-align:center; vertical-align:middle; }
+.band-table th { background:#f7f9fa; font-size:13px; font-weight:600; }
+.band-table .swatch-cell { padding:8px 5px; }
+.band-select { width:100%; min-width:0; padding:7px 4px; text-align:center; font-size:13px; }
+.band-color { display:block; width:100%; height:34px; border:1px solid #9aa4aa; border-radius:4px; margin-bottom:6px; }
+.band-value { font-weight:600; white-space:nowrap; }
+@media (max-width:520px) {
+    .band-table th, .band-table td { padding:7px 3px; font-size:11px; }
+    .band-select { font-size:11px; padding:6px 1px; }
+    .band-color { height:28px; }
 }
 .resistor-wrap {
     display: flex;
@@ -136,9 +128,6 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
 }
 .hidden { display: none !important; }
 .small { color: var(--muted); font-size: 13px; }
-.color-legend { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 7px; }
-.legend-item { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 12px; }
-.legend-swatch { width: 15px; height: 15px; flex: 0 0 15px; border: 1px solid #9aa4aa; border-radius: 3px; }
 .formula { color: var(--muted); font-size: 13px; }
 .actions { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 15px; }
 @media (max-width: 720px) {
@@ -146,7 +135,6 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
     h1 { font-size: 23px; }
     .panel { padding: 14px; }
     .layout { grid-template-columns: 1fr; }
-    .color-legend { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 @media print {
     body { background: #fff; padding: 0; }
@@ -181,7 +169,15 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
             </div>
 
             <div id="decodeFields">
-                <div class="band-grid" id="bandGrid"></div>
+                <div style="overflow-x:auto">
+                    <table class="band-table" aria-label="Цветовая маркировка резистора">
+                        <thead><tr id="bandHead"></tr></thead>
+                        <tbody>
+                            <tr id="bandColors"></tr>
+                            <tr id="bandValues"></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div id="encodeFields" class="hidden">
@@ -252,20 +248,10 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
                     <div>Максимум: 4,935 кОм</div>
                 </div>
             </div>
-            <div class="note" style="margin-top:14px" id="explanation">Первые две полосы задают значащие цифры, третья — множитель, четвёртая — допуск.</div>
-            <div style="margin-top:16px">
-                <h3>Цветовой код</h3>
-                <div class="color-legend" id="legend"></div>
-            </div>
+
         </section>
     </div>
 
-    <section class="panel">
-        <h2>Как читать маркировку</h2>
-        <p>У резисторов с 3 полосами первые две полосы обозначают цифры, третья — множитель. Допуск для такой маркировки обычно принимается равным ±20%.</p>
-        <p>У резисторов с 4 полосами первые две полосы — цифры, третья — множитель, четвёртая — допуск. В маркировке с 5 и 6 полосами используются три значащие цифры. Шестая полоса обозначает температурный коэффициент сопротивления.</p>
-        <p class="formula">Сопротивление = значащие цифры × множитель. Границы допуска: Rmin = R × (1 − допуск), Rmax = R × (1 + допуск).</p>
-    </section>
 </main>
 
 <script>
@@ -314,28 +300,37 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
     }
 
     function colorIndex(color) { return colors.indexOf(color); }
+
     function renderFields() {
         const count = Number($('bandCount').value);
-        const names = bandNames(count);
-        const grid = $('bandGrid');
-        grid.innerHTML = '';
+        const roles = bandNames(count);
+        const head = $('bandHead');
+        const colorsRow = $('bandColors');
+        const valuesRow = $('bandValues');
+        head.innerHTML = '';
+        colorsRow.innerHTML = '';
+        valuesRow.innerHTML = '';
+
         for (let i = 0; i < count; i++) {
             const choices = allowedForBand(i, count);
             let current = choices.some(c => colorIndex(c) === selected[i]) ? selected[i] : colorIndex(choices[0]);
             selected[i] = current;
-            const wrap = document.createElement('div');
-            wrap.className = 'band-field';
-            const label = document.createElement('label');
-            label.htmlFor = 'band' + i;
-            label.textContent = (i + 1) + '. ' + names[i];
-            const selectWrap = document.createElement('div');
-            selectWrap.className = 'color-select-wrap';
-            const dot = document.createElement('span');
-            dot.className = 'color-dot';
-            dot.style.background = colors[current].hex;
+
+            const th = document.createElement('th');
+            th.scope = 'col';
+            th.textContent = roles[i];
+            head.appendChild(th);
+
+            const colorCell = document.createElement('td');
+            colorCell.className = 'swatch-cell';
+            const swatch = document.createElement('span');
+            swatch.className = 'band-color';
+            swatch.style.background = colors[current].hex;
+
             const select = document.createElement('select');
             select.id = 'band' + i;
             select.className = 'band-select';
+            select.setAttribute('aria-label', 'Цвет полосы ' + (i + 1));
             choices.forEach(c => {
                 const option = document.createElement('option');
                 option.value = colorIndex(c);
@@ -345,14 +340,33 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
             });
             select.addEventListener('change', () => {
                 selected[i] = Number(select.value);
-                dot.style.background = colors[selected[i]].hex;
+                swatch.style.background = colors[selected[i]].hex;
                 update();
             });
-            selectWrap.append(dot, select);
-            wrap.append(label, selectWrap);
-            grid.appendChild(wrap);
+            colorCell.append(swatch, select);
+            colorsRow.appendChild(colorCell);
+
+            const valueCell = document.createElement('td');
+            valueCell.className = 'band-value';
+            valueCell.id = 'bandValue' + i;
+            valuesRow.appendChild(valueCell);
         }
         update();
+    }
+
+    function updateBandValues() {
+        const count = Number($('bandCount').value);
+        const digitsCount = count >= 5 ? 3 : 2;
+        for (let i = 0; i < count; i++) {
+            const c = colors[selected[i]];
+            let value = '';
+            if (i < digitsCount) value = String(c.digit);
+            else if (i === digitsCount) value = '×' + c.mult;
+            else if (i === digitsCount + 1) value = '±' + c.tolerance + '%';
+            else if (i === 5) value = c.tcr + ' ppm/°C';
+            const cell = $('bandValue' + i);
+            if (cell) cell.textContent = value;
+        }
     }
 
     function formatResistance(value) {
@@ -403,12 +417,12 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
             '<div>Минимум: ' + formatResistance(value * (1 - tolerance / 100)) + '</div>' +
             '<div>Максимум: ' + formatResistance(value * (1 + tolerance / 100)) + '</div>' +
             (tcr !== null ? '<div>Температурный коэффициент: ' + tcr + ' ppm/°C</div>' : '');
-        const explanation = cs.map((c, i) => (i + 1) + ' — ' + c.name).join('; ');
-        $('explanation').textContent = explanation + (count === 3 ? '. Допуск принят равным ±20%.' : '.');
+        updateBandValues();
         drawBands(selected.slice(0, count));
     }
     function update() {
         if (mode === 'decode') decode();
+        else updateBandValues();
         $('encodeHint').textContent = Number($('bandCount').value) === 3 ?
             'Для 3 полос допуск отдельно не кодируется: принимается ±20%.' :
             'Для выбранного количества полос будут подобраны ближайшие стандартные цвета.';
@@ -485,24 +499,8 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
             '<div>Допуск: ±' + formatPercent(tolerance) + '</div>' +
             '<div>Минимум: ' + formatResistance(raw * (1 - tolerance / 100)) + '</div>' +
             '<div>Максимум: ' + formatResistance(raw * (1 + tolerance / 100)) + '</div>';
-        $('explanation').textContent = 'Подобранная последовательность полос: ' + colorText + '.';
         drawBands(indices);
     }
-    function renderLegend() {
-        const legend = $('legend');
-        colors.forEach(c => {
-            const item = document.createElement('div');
-            item.className = 'legend-item';
-            const swatch = document.createElement('span');
-            swatch.className = 'legend-swatch';
-            swatch.style.background = c.hex;
-            const name = document.createElement('span');
-            name.textContent = c.name;
-            item.append(swatch, name);
-            legend.appendChild(item);
-        });
-    }
-
     $('decodeMode').addEventListener('click', () => setMode('decode'));
     $('encodeMode').addEventListener('click', () => setMode('encode'));
     $('bandCount').addEventListener('change', renderFields);
@@ -515,7 +513,6 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
     ['resistance', 'unit', 'tolerance'].forEach(id => $(id).addEventListener('change', () => {
         if (mode === 'encode') encode();
     }));
-    renderLegend();
     renderFields();
 })();
 </script>
