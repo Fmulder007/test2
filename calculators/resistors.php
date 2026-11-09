@@ -93,47 +93,29 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
 .band-table th, .band-table td { border:1px solid var(--border); padding:9px 6px; text-align:center; vertical-align:middle; }
 .band-table th { background:#f7f9fa; font-size:13px; font-weight:600; }
 .band-table .swatch-cell { padding:8px 5px; }
-.band-picker-wrap { position:relative; }
-.band-picker {
+.band-select {
     display:block;
     width:100%;
+    min-width:0;
     height:42px;
-    padding:0;
+    padding:4px;
     border:1px solid #89949b;
     border-radius:5px;
-    cursor:pointer;
-}
-.band-picker:focus { outline:2px solid #b8d9f5; outline-offset:2px; }
-.band-palette {
-    position:absolute;
-    z-index:20;
-    top:calc(100% + 5px);
-    left:50%;
-    transform:translateX(-50%);
-    display:grid;
-    grid-template-columns:repeat(4, 34px);
-    gap:5px;
-    padding:8px;
     background:#fff;
-    border:1px solid #cbd5dc;
-    border-radius:7px;
-    box-shadow:0 5px 18px rgba(0,0,0,.18);
-}
-.band-palette.hidden { display:none !important; }
-.palette-color {
-    width:34px;
-    height:34px;
-    padding:0;
-    border:1px solid #879198;
-    border-radius:4px;
     cursor:pointer;
 }
-.palette-color:hover, .palette-color:focus { outline:2px solid var(--blue); outline-offset:1px; }
+.band-select:focus { outline:2px solid #b8d9f5; outline-offset:1px; }
+.band-select option {
+    font-size:20px;
+    font-weight:700;
+    text-align:center;
+    color:#222;
+    background:#fff;
+}
 @media (max-width:520px) {
     .band-table th, .band-table td { padding:7px 3px; font-size:11px; }
-    .band-picker { height:36px; }
-    .band-palette { grid-template-columns:repeat(4, 30px); gap:4px; padding:6px; }
-    .palette-color { width:30px; height:30px; }
+    .band-select { height:36px; padding:2px; }
+    .band-select option { font-size:18px; }
 }
 .resistor-wrap {
     display: flex;
@@ -313,10 +295,10 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
 
     const bandNames = count => {
         const n = Number(count);
-        if (n === 3) return ['Первая цифра', 'Вторая цифра', 'Множитель'];
-        if (n === 4) return ['Первая цифра', 'Вторая цифра', 'Множитель', 'Допуск'];
-        if (n === 5) return ['Первая цифра', 'Вторая цифра', 'Третья цифра', 'Множитель', 'Допуск'];
-        return ['Первая цифра', 'Вторая цифра', 'Третья цифра', 'Множитель', 'Допуск', 'Температурный коэффициент'];
+        return Array.from({ length: n }, (_, i) => {
+            const labels = ['Первая полоса', 'Вторая полоса', 'Третья полоса', 'Четвёртая полоса', 'Пятая полоса', 'Шестая полоса'];
+            return labels[i];
+        });
     };
 
     function allowedForBand(pos, count) {
@@ -354,50 +336,25 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
 
             const colorCell = document.createElement('td');
             colorCell.className = 'swatch-cell';
-            const wrap = document.createElement('div');
-            wrap.className = 'band-picker-wrap';
-
-            const picker = document.createElement('button');
-            picker.type = 'button';
-            picker.className = 'band-picker';
-            picker.style.background = colors[current].hex;
-            picker.setAttribute('aria-label', 'Выбрать цвет полосы ' + (i + 1));
-            picker.setAttribute('aria-expanded', 'false');
-
-            const palette = document.createElement('div');
-            palette.className = 'band-palette hidden';
-            palette.setAttribute('role', 'group');
-            palette.setAttribute('aria-label', 'Доступные цвета для полосы ' + (i + 1));
+            const select = document.createElement('select');
+            select.id = 'band' + i;
+            select.className = 'band-select';
+            select.setAttribute('aria-label', 'Цвет ' + (i + 1) + '-й полосы');
 
             choices.forEach(c => {
                 const idx = colorIndex(c);
-                const option = document.createElement('button');
-                option.type = 'button';
-                option.className = 'palette-color';
-                option.style.background = c.hex;
-                option.setAttribute('aria-label', c.name);
-                option.addEventListener('click', () => {
-                    selected[i] = idx;
-                    picker.style.background = colors[idx].hex;
-                    palette.classList.add('hidden');
-                    picker.setAttribute('aria-expanded', 'false');
-                    update();
-                });
-                palette.appendChild(option);
+                const option = document.createElement('option');
+                option.value = idx;
+                option.textContent = '━━━━';
+                option.style.color = c.hex;
+                option.selected = idx === current;
+                select.appendChild(option);
             });
-
-            picker.addEventListener('click', () => {
-                const willOpen = palette.classList.contains('hidden');
-                document.querySelectorAll('.band-palette').forEach(p => p.classList.add('hidden'));
-                document.querySelectorAll('.band-picker').forEach(p => p.setAttribute('aria-expanded', 'false'));
-                if (willOpen) {
-                    palette.classList.remove('hidden');
-                    picker.setAttribute('aria-expanded', 'true');
-                }
+            select.addEventListener('change', () => {
+                selected[i] = Number(select.value);
+                update();
             });
-
-            wrap.append(picker, palette);
-            colorCell.appendChild(wrap);
+            colorCell.appendChild(select);
             colorsRow.appendChild(colorCell);
         }
         update();
