@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 const VIDEO_ROOT = '/data/video';
 const HTTP_BASE = 'http://192.168.2.221/video/';
+const XSPF_URL = 'http://192.168.2.221/video.xspf';
 const XSPF_FILE = '/usr/local/www/liara/video.xspf';
 const LOCK_FILE = '/var/run/liara-video-xspf.lock';
 const VLC_NAMESPACE = 'http://www.videolan.org/vlc/playlist/0';
@@ -237,7 +238,7 @@ if ($oldXspf === false || $oldXspf !== $xspf) {
 echo 'Готово: ' . count($tracks) . " медиафайлов.\n";
 echo 'Каталог: ' . VIDEO_ROOT . "\n";
 echo 'XSPF: ' . XSPF_FILE . "\n";
-echo 'HTTP: ' . HTTP_BASE . "\n";
+echo 'HTTP: ' . XSPF_URL . "\n";
 
 if ($skippedNames > 0) {
     echo 'Пропущено объектов с некорректными именами: ' . $skippedNames . "\n";
