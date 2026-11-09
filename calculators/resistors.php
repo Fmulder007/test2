@@ -376,7 +376,6 @@ select:focus, input:focus { outline: 2px solid #b8d9f5; border-color: var(--blue
                 option.className = 'palette-color';
                 option.style.background = c.hex;
                 option.setAttribute('aria-label', c.name);
-                option.setAttribute('title', c.name);
                 option.addEventListener('click', () => {
                     selected[i] = idx;
                     picker.style.background = colors[idx].hex;
