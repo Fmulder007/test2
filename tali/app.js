@@ -17,6 +17,14 @@
     download: $('downloadButton'),
     browseToolbar: $('browseToolbar'), breadcrumbs: $('breadcrumbs'), listHeader: $('listHeader'),
     list: $('itemList'), empty: $('emptyMessage'), loading: $('loadingMessage'),
+    broadcastPanel: $('broadcastPanel'), broadcastSummary: $('broadcastSummary'),
+    broadcastRefresh: $('broadcastRefresh'), broadcastStatusDot: $('broadcastStatusDot'),
+    broadcastState: $('broadcastState'), broadcastFlags: $('broadcastFlags'),
+    broadcastPlay: $('broadcastPlay'), broadcastPause: $('broadcastPause'),
+    broadcastStop: $('broadcastStop'), broadcastPrevious: $('broadcastPrevious'),
+    broadcastNext: $('broadcastNext'), broadcastLoop: $('broadcastLoop'),
+    broadcastEnable: $('broadcastEnable'), broadcastCount: $('broadcastCount'),
+    broadcastList: $('broadcastList'), broadcastRaw: $('broadcastRaw'),
     playlistDialog: $('playlistDialog'), playlistDialogForm: $('playlistDialogForm'),
     playlistDialogFile: $('playlistDialogFile'), playlistSelect: $('playlistSelect'),
     playlistDialogError: $('playlistDialogError'), closePlaylistDialog: $('closePlaylistDialog'),
@@ -48,6 +56,8 @@
     toastTimer: null,
     preferences: { sort_by: 'name', sort_direction: 'asc' },
     playlistSort: null,
+    broadcastInfo: null,
+    broadcastSelectedIndex: null,
     preferenceSaveChain: Promise.resolve()
   };
 
@@ -172,6 +182,15 @@
     el.navButtons.forEach((button) => button.classList.toggle('active', button.dataset.view === view));
     el.playerPanel.hidden = !state.currentItem;
     el.browseToolbar.hidden = view !== 'browse';
+    el.broadcastPanel.hidden = view !== 'broadcast';
+    el.listHeader.hidden = view === 'broadcast';
+    el.list.hidden = view === 'broadcast';
+    if (view === 'broadcast') {
+      el.empty.hidden = true;
+      el.loading.hidden = true;
+      loadBroadcast();
+      return;
+    }
     updateListHeader(view === 'browse' ? 'directory' : view);
     if (view === 'browse') {
       loadDirectory(state.path);
@@ -619,6 +638,9 @@
     state.view = 'browse';
     state.activePlaylist = null;
     el.navButtons.forEach((button) => button.classList.toggle('active', button.dataset.view === 'browse'));
+    el.broadcastPanel.hidden = true;
+    el.listHeader.hidden = false;
+    el.list.hidden = false;
     el.browseToolbar.hidden = false;
     updateListHeader('directory');
     setBreadcrumbs(path);
@@ -767,6 +789,9 @@
     sessionStorage.removeItem('tali_playlist');
     state.view = 'history';
     state.activePlaylist = null;
+    el.broadcastPanel.hidden = true;
+    el.listHeader.hidden = false;
+    el.list.hidden = false;
     el.browseToolbar.hidden = true;
     updateListHeader('history');
     setLoading(true);
@@ -795,6 +820,9 @@
     if (openId === null) sessionStorage.removeItem('tali_playlist');
     else sessionStorage.setItem('tali_playlist', String(openId));
     state.view = 'playlists';
+    el.broadcastPanel.hidden = true;
+    el.listHeader.hidden = false;
+    el.list.hidden = false;
     el.browseToolbar.hidden = true;
     updateListHeader('playlist-index');
     setLoading(true);
@@ -814,6 +842,181 @@
     } finally {
       el.loading.hidden = true;
     }
+  }
+
+
+  function broadcastDisplayName(value) {
+    let path = String(value || '');
+    path = path.replace(/^file:\/\//i, '');
+    try { path = decodeURIComponent(path); } catch (_) { /* оставляем исходное имя */ }
+    path = path.replace(/[?#].*$/, '');
+    const parts = path.split('/');
+    return parts[parts.length - 1] || path || 'Неизвестный файл';
+  }
+
+  function broadcastStateLabel(value) {
+    const labels = {
+      playing: 'Воспроизводится',
+      paused: 'Пауза',
+      stopped: 'Остановлено',
+      opening: 'Открывается',
+      error: 'Ошибка'
+    };
+    return labels[String(value || '').toLowerCase()] || 'Состояние VLC не определено';
+  }
+
+  function renderBroadcast(info) {
+    state.broadcastInfo = info || null;
+    const inputs = info && Array.isArray(info.inputs) ? info.inputs : [];
+    const current = Number(info && info.current_index) > 0
+      ? Number(info.current_index) : state.broadcastSelectedIndex;
+    if (current && current <= inputs.length) state.broadcastSelectedIndex = current;
+
+    const isPlaying = String(info && info.state || '').toLowerCase() === 'playing';
+    el.broadcastState.textContent = broadcastStateLabel(info && info.state);
+    el.broadcastStatusDot.classList.toggle('is-live', isPlaying);
+    el.broadcastStatusDot.classList.toggle('is-idle', !isPlaying);
+
+    const flags = [];
+    if (info && typeof info.enabled === 'boolean') {
+      flags.push(info.enabled ? 'Канал включён' : 'Канал выключен');
+    } else {
+      flags.push('Канал: состояние неизвестно');
+    }
+    if (info && typeof info.loop === 'boolean') {
+      flags.push(info.loop ? 'Повтор включён' : 'Повтор выключен');
+    } else {
+      flags.push('Повтор: состояние неизвестно');
+    }
+    el.broadcastFlags.textContent = flags.join(' · ');
+    el.broadcastLoop.textContent = info && info.loop === true
+      ? 'Повтор: ВКЛ' : info && info.loop === false ? 'Повтор: ВЫКЛ' : 'Повтор: —';
+    el.broadcastLoop.disabled = !(info && typeof info.loop === 'boolean');
+    el.broadcastEnable.textContent = info && info.enabled === true
+      ? 'Выключить эфир' : info && info.enabled === false ? 'Включить эфир' : 'Эфир: —';
+    el.broadcastEnable.disabled = !(info && typeof info.enabled === 'boolean');
+
+    el.broadcastCount.textContent = inputs.length ? String(inputs.length) + ' файлов' : '';
+    el.broadcastList.replaceChildren();
+    if (!inputs.length) {
+      const empty = document.createElement('div');
+      empty.className = 'empty-message';
+      empty.textContent = 'VLC не вернул список входных файлов. Ниже доступен исходный ответ show tali.';
+      el.broadcastList.append(empty);
+    } else {
+      inputs.forEach((input, index) => {
+        const number = index + 1;
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'broadcast-item';
+        const selected = Number(state.broadcastSelectedIndex || current) === number;
+        if (selected) row.classList.add('broadcast-item-current');
+
+        const numberEl = document.createElement('span');
+        numberEl.className = 'broadcast-item-number';
+        numberEl.textContent = String(number);
+
+        const textWrap = document.createElement('span');
+        textWrap.className = 'broadcast-item-text';
+        const name = document.createElement('strong');
+        name.className = 'broadcast-item-name';
+        name.textContent = broadcastDisplayName(input);
+        const path = document.createElement('span');
+        path.className = 'broadcast-item-path';
+        path.textContent = String(input);
+        textWrap.append(name, path);
+        const play = document.createElement('span');
+        play.className = 'broadcast-item-play';
+        play.textContent = '▶';
+        row.append(numberEl, textWrap, play);
+        row.addEventListener('click', () => {
+          state.broadcastSelectedIndex = number;
+          sendBroadcastCommand('play', number);
+        });
+        el.broadcastList.append(row);
+      });
+    }
+
+    el.broadcastRaw.textContent = info && info.raw ? info.raw : 'VLC не вернул текст ответа.';
+    el.broadcastSummary.textContent = 'Текущий канал VLC: tali · список читается непосредственно из VLM';
+    const hasInputs = inputs.length > 0;
+    el.broadcastPlay.disabled = !hasInputs;
+    el.broadcastPrevious.disabled = !hasInputs || Number(state.broadcastSelectedIndex || current || 1) <= 1;
+    el.broadcastNext.disabled = !hasInputs ||
+      Number(state.broadcastSelectedIndex || current || 1) >= inputs.length;
+  }
+
+  async function loadBroadcast() {
+    sessionStorage.setItem('tali_view', 'broadcast');
+    sessionStorage.removeItem('tali_playlist');
+    state.view = 'broadcast';
+    state.activePlaylist = null;
+    el.broadcastPanel.hidden = false;
+    el.browseToolbar.hidden = true;
+    el.listHeader.hidden = true;
+    el.list.hidden = true;
+    el.empty.hidden = true;
+    el.loading.hidden = true;
+    await refreshBroadcast();
+  }
+
+  async function refreshBroadcast() {
+    el.broadcastState.textContent = 'Запрашиваем show tali…';
+    el.broadcastStatusDot.classList.remove('is-live', 'is-idle');
+    try {
+      const result = await api('broadcast_status');
+      renderBroadcast(result.status);
+    } catch (error) {
+      el.broadcastState.textContent = 'Нет связи с VLC';
+      el.broadcastStatusDot.classList.remove('is-live');
+      el.broadcastStatusDot.classList.add('is-idle');
+      el.broadcastFlags.textContent = error.message;
+      el.broadcastList.replaceChildren();
+      const empty = document.createElement('div');
+      empty.className = 'empty-message';
+      empty.textContent = error.message;
+      el.broadcastList.append(empty);
+      el.broadcastRaw.textContent = '';
+      el.broadcastCount.textContent = '';
+      el.broadcastLoop.disabled = true;
+      el.broadcastEnable.disabled = true;
+      el.broadcastPlay.disabled = true;
+      el.broadcastPrevious.disabled = true;
+      el.broadcastNext.disabled = true;
+    }
+  }
+
+  async function sendBroadcastCommand(command, input = null) {
+    const data = { command };
+    if (input !== null) data.input = input;
+    try {
+      const result = await api('broadcast_command', data);
+      if (result.status) renderBroadcast(result.status);
+      else await refreshBroadcast();
+      const messages = {
+        play: 'Команда воспроизведения отправлена',
+        pause: 'Пауза отправлена',
+        stop: 'Остановка отправлена',
+        enable: 'Канал включён',
+        disable: 'Канал выключен',
+        loop_on: 'Повтор включён',
+        loop_off: 'Повтор выключен'
+      };
+      showToast(messages[command] || 'Команда отправлена');
+    } catch (error) {
+      showError(error.message);
+    }
+  }
+
+  function moveBroadcastSelection(delta) {
+    const info = state.broadcastInfo;
+    const count = info && Array.isArray(info.inputs) ? info.inputs.length : 0;
+    if (!count) return;
+    const current = Number(state.broadcastSelectedIndex || (info && info.current_index) || 1);
+    const next = Math.max(1, Math.min(count, current + delta));
+    if (next === current) return;
+    state.broadcastSelectedIndex = next;
+    sendBroadcastCommand('play', next);
   }
 
   function renderPlaylistIndex() {
@@ -1510,6 +1713,25 @@
       button.addEventListener('click', () => setView(button.dataset.view));
     });
 
+    el.broadcastRefresh.addEventListener('click', refreshBroadcast);
+    el.broadcastPlay.addEventListener('click', () => {
+      const index = Number(state.broadcastSelectedIndex ||
+        (state.broadcastInfo && state.broadcastInfo.current_index) || 1);
+      sendBroadcastCommand('play', index);
+    });
+    el.broadcastPause.addEventListener('click', () => sendBroadcastCommand('pause'));
+    el.broadcastStop.addEventListener('click', () => sendBroadcastCommand('stop'));
+    el.broadcastPrevious.addEventListener('click', () => moveBroadcastSelection(-1));
+    el.broadcastNext.addEventListener('click', () => moveBroadcastSelection(1));
+    el.broadcastLoop.addEventListener('click', () => {
+      if (!state.broadcastInfo || typeof state.broadcastInfo.loop !== 'boolean') return;
+      sendBroadcastCommand(state.broadcastInfo.loop ? 'loop_off' : 'loop_on');
+    });
+    el.broadcastEnable.addEventListener('click', () => {
+      if (!state.broadcastInfo || typeof state.broadcastInfo.enabled !== 'boolean') return;
+      sendBroadcastCommand(state.broadcastInfo.enabled ? 'disable' : 'enable');
+    });
+
     el.previous.addEventListener('click', () => {
       if (state.queueIndex > 0) {
         state.queueIndex -= 1;
@@ -1671,6 +1893,8 @@
     const savedView = sessionStorage.getItem('tali_view');
     if (savedView === 'history') {
       await loadHistory();
+    } else if (savedView === 'broadcast') {
+      await loadBroadcast();
     } else if (savedView === 'playlists') {
       const savedPlaylist = sessionStorage.getItem('tali_playlist');
       const playlistId = savedPlaylist && /^\d+$/.test(savedPlaylist)
