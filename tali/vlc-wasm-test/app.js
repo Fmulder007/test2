@@ -1,4 +1,4 @@
-import { createVLC } from 'https://cdn.jsdelivr.net/npm/libvlc-wasm@0.2.0/src/index.js';
+import { createVLC } from './vendor/libvlc-wasm/src/index.js';
 
 const $ = (id) => document.getElementById(id);
 const ui = {
@@ -45,7 +45,7 @@ function setControls(enabled) {
 
 ui.isolation.textContent = `secureContext: ${String(globalThis.isSecureContext)}; crossOriginIsolated: ${String(globalThis.crossOriginIsolated)}; SharedArrayBuffer: ${typeof SharedArrayBuffer}`;
 if (!globalThis.isSecureContext) {
-  ui.isolation.textContent += ' — НЕТ SECURE CONTEXT: HTTP по IP не подходит; нужен HTTPS или тестовый флаг браузера.';
+  ui.isolation.textContent += ' — НЕТ SECURE CONTEXT: HTTP по IP не подходит; нужен HTTPS или тестовая настройка браузера.';
   ui.open.disabled = true;
   log('Эта страница открыта в небезопасном контексте. SharedArrayBuffer недоступен даже при COOP/COEP.');
 } else if (!globalThis.crossOriginIsolated || typeof SharedArrayBuffer === 'undefined') {
@@ -59,10 +59,13 @@ if (!globalThis.isSecureContext) {
 
 async function startEngine() {
   if (vlc) return;
-  log('Загрузка libvlc-wasm 0.2.0 с CDN…');
+  const wasmUrl = new URL('./vendor/libvlc-wasm/wasm/libvlc.wasm', import.meta.url).href;
+  log('Загрузка libvlc-wasm 0.2.0 с локального сервера TALI…');
+  log(`WASM: ${wasmUrl}`);
   vlc = await createVLC({
     threads: 2,
     decoderThreads: 1,
+    wasmUrl,
     httpCache: 8 * 1024 * 1024,
     fonts: false,
     logLevel: 'warn'
@@ -151,5 +154,5 @@ ui.fullscreen.addEventListener('click', async () => {
 window.addEventListener('beforeunload', () => {
   if (timer) clearInterval(timer);
   player?.destroy();
-  vlc?.dispose();
+  vlc?.destroy();
 });
