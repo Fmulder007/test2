@@ -43,14 +43,18 @@ function setControls(enabled) {
   ui.volume.disabled = !enabled;
 }
 
-ui.isolation.textContent = `crossOriginIsolated: ${String(globalThis.crossOriginIsolated)}; SharedArrayBuffer: ${typeof SharedArrayBuffer}`;
-if (!globalThis.crossOriginIsolated || typeof SharedArrayBuffer === 'undefined') {
+ui.isolation.textContent = `secureContext: ${String(globalThis.isSecureContext)}; crossOriginIsolated: ${String(globalThis.crossOriginIsolated)}; SharedArrayBuffer: ${typeof SharedArrayBuffer}`;
+if (!globalThis.isSecureContext) {
+  ui.isolation.textContent += ' — НЕТ SECURE CONTEXT: HTTP по IP не подходит; нужен HTTPS или тестовый флаг браузера.';
+  ui.open.disabled = true;
+  log('Эта страница открыта в небезопасном контексте. SharedArrayBuffer недоступен даже при COOP/COEP.');
+} else if (!globalThis.crossOriginIsolated || typeof SharedArrayBuffer === 'undefined') {
   ui.isolation.textContent += ' — НЕТ ИЗОЛЯЦИИ: проверьте COOP/COEP в Nginx.';
   ui.open.disabled = true;
   log('Браузер не получил cross-origin isolation. VLC запускать нельзя.');
 } else {
-  ui.isolation.textContent += ' — изоляция включена.';
-  log('COOP/COEP подтверждены браузером.');
+  ui.isolation.textContent += ' — secure context и изоляция включены.';
+  log('Secure context, COOP/COEP и SharedArrayBuffer подтверждены браузером.');
 }
 
 async function startEngine() {
