@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f4f5f7">
   <title>Tali Video</title>
-  <link rel="stylesheet" href="/style.css?v=8">
-  <script src="/app.js?v=9" defer></script>
+  <link rel="stylesheet" href="/style.css?v=9">
+  <script src="/app.js?v=10" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -50,7 +50,7 @@
       <div class="main-grid">
         <aside class="sidebar" aria-label="Разделы">
           <button class="nav-button active" data-view="browse" type="button"><span class="nav-icon">▤</span> Каталоги</button>
-          <button class="nav-button" data-view="history" type="button"><span class="nav-icon">◷</span> История</button>
+          <button class="nav-button" data-view="broadcast" type="button"><span class="nav-icon">◉</span> В эфире</button>
           <button class="nav-button" data-view="playlists" type="button"><span class="nav-icon">☷</span> Плейлисты</button>
           <div class="sidebar-note">Домашняя видеотека</div>
         </aside>
@@ -93,6 +93,47 @@
           <div id="browseToolbar" class="browse-toolbar">
             <nav id="breadcrumbs" class="breadcrumbs" aria-label="Путь к каталогу"></nav>
           </div>
+
+          <section id="broadcastPanel" class="broadcast-panel" hidden>
+            <div class="broadcast-heading">
+              <div>
+                <h2>В эфире</h2>
+                <p id="broadcastSummary" class="muted small-text">Текущий канал VLC: tali</p>
+              </div>
+              <button id="broadcastRefresh" class="icon-button" type="button" title="Обновить состояние" aria-label="Обновить состояние">↻</button>
+            </div>
+
+            <div class="broadcast-status">
+              <div class="broadcast-status-main">
+                <span id="broadcastStatusDot" class="broadcast-status-dot"></span>
+                <strong id="broadcastState">Подключение к VLC…</strong>
+              </div>
+              <div id="broadcastFlags" class="broadcast-flags"></div>
+            </div>
+
+            <div class="broadcast-controls">
+              <button id="broadcastPlay" class="primary-button" type="button">▶ Пуск</button>
+              <button id="broadcastPause" class="secondary-button" type="button">Ⅱ Пауза</button>
+              <button id="broadcastStop" class="secondary-button" type="button">■ Стоп</button>
+              <button id="broadcastPrevious" class="secondary-button" type="button" title="Предыдущий файл">⏮</button>
+              <button id="broadcastNext" class="secondary-button" type="button" title="Следующий файл">⏭</button>
+              <button id="broadcastLoop" class="secondary-button" type="button" disabled>Повтор: —</button>
+              <button id="broadcastEnable" class="secondary-button" type="button" disabled>Эфир: —</button>
+            </div>
+
+            <div class="broadcast-list-heading">
+              <h2>Плейлист транслятора</h2>
+              <span id="broadcastCount" class="muted small-text"></span>
+            </div>
+            <div id="broadcastList" class="broadcast-list" aria-live="polite">
+              <div class="empty-message">Получаем список из VLC…</div>
+            </div>
+
+            <details class="broadcast-details">
+              <summary>Ответ VLC (show tali)</summary>
+              <pre id="broadcastRaw" class="broadcast-raw"></pre>
+            </details>
+          </section>
 
           <div id="listHeader" class="list-header list-header--directory" aria-label="Таблица видеотеки">
             <button class="sort-button" type="button" data-sort="name" aria-label="Сортировать по имени">
