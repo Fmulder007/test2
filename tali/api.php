@@ -714,6 +714,127 @@ function vlcCommand($socket, string $command): string
     return $response;
 }
 
+
+function vlcConnect(): mixed
+{
+    $configPath = '/usr/local/etc/tali-vlc/tali-api.php';
+    if (!is_file($configPath) || !is_readable($configPath)) {
+        throw new RuntimeException('Не найден конфиг управления VLC: ' . $configPath);
+    }
+
+    $config = require $configPath;
+    $password = is_array($config) ? ($config['password'] ?? '') : '';
+    if (!is_string($password) || $password === '') {
+        throw new RuntimeException('Не задан пароль VLC в tali-api.php');
+    }
+
+    $errno = 0;
+    $error = '';
+    $socket = @stream_socket_client(
+        'tcp://127.0.0.1:4212',
+        $errno,
+        $error,
+        5,
+        STREAM_CLIENT_CONNECT
+    );
+    if ($socket === false) {
+        throw new RuntimeException(
+            'Не удалось подключиться к VLC: ' . ($error !== '' ? $error : 'порт 4212 недоступен')
+        );
+    }
+
+    stream_set_timeout($socket, 8);
+    try {
+        vlcReadUntil($socket, 'Password:');
+        if (fwrite($socket, $password . "\r\n") === false) {
+            throw new RuntimeException('Не удалось передать пароль VLC');
+        }
+        $authResponse = vlcReadUntil($socket, '>');
+        if (stripos($authResponse, 'Wrong password') !== false) {
+            throw new RuntimeException('VLC не принял пароль из tali-api.php');
+        }
+    } catch (Throwable $e) {
+        fclose($socket);
+        throw $e;
+    }
+
+    return $socket;
+}
+
+function vlcParseFlag(string $response, string $field): ?bool
+{
+    $pattern = '/^\s*' . preg_quote($field, '/') .
+        '\s*:\s*(yes|no|true|false|1|0)\b/im';
+    if (!preg_match($pattern, $response, $match)) {
+        return null;
+    }
+
+    return in_array(strtolower($match[1]), ['yes', 'true', '1'], true);
+}
+
+function vlcBroadcastData(string $response): array
+{
+    $inputs = [];
+    if (preg_match_all('~(?:file|https?|rtsp)://[^\s\x60"\'<>]+~iu', $response, $matches)) {
+        foreach ($matches[0] as $uri) {
+            $uri = rtrim($uri, ",;)]}");
+            if ($uri !== '' && !in_array($uri, $inputs, true)) {
+                $inputs[] = $uri;
+            }
+        }
+    }
+
+    // Некоторые сборки VLC показывают входы отдельными строками без URI-схемы.
+    if (!$inputs) {
+        $insideInputs = false;
+        foreach (preg_split('/\r\n|\r|\n/', $response) as $line) {
+            if (preg_match('/^\s*inputs?\s*:/i', $line)) {
+                $insideInputs = true;
+                continue;
+            }
+            if ($insideInputs && preg_match('/^\s*(?:options|output|mux|instances|enabled|loop)\s*:/i', $line)) {
+                $insideInputs = false;
+            }
+            if (!$insideInputs) {
+                continue;
+            }
+
+            $value = trim($line, " \t\n\r\0\x0B{}[],\"" . chr(96) . "'");
+            $value = preg_replace('/^(?:input\s*)?\d+\s*[:.)]\s*/i', '', $value);
+            $value = preg_replace('/^input\s*[:=]\s*/i', '', $value);
+            $value = trim($value, " \t\n\r\0\x0B{}[],\"" . chr(96) . "'");
+            if ($value !== '' && (str_contains($value, '/data/video/') || str_starts_with($value, 'file:'))) {
+                $inputs[] = $value;
+            }
+        }
+    }
+
+    $state = null;
+    if (preg_match('/^\s*state\s*:\s*([a-z_-]+)/im', $response, $match)) {
+        $state = strtolower($match[1]);
+    }
+
+    $currentIndex = null;
+    if (preg_match('/^\s*(?:playlistindex|current[_ ]?input|input[_ ]?index)\s*:\s*(\d+)/im', $response, $match)) {
+        $currentIndex = (int)$match[1];
+    }
+
+    return [
+        'name' => 'tali',
+        'enabled' => vlcParseFlag($response, 'enabled'),
+        'loop' => vlcParseFlag($response, 'loop'),
+        'state' => $state,
+        'current_index' => $currentIndex,
+        'inputs' => array_values($inputs),
+        'raw' => trim(preg_replace('/\s*>\s*$/', '', $response)),
+    ];
+}
+
+function vlcBroadcastStatus($socket): array
+{
+    return vlcBroadcastData(vlcCommand($socket, 'show tali'));
+}
+
 function broadcastPlaylist(PDO $pdo, array $user, mixed $playlistId, mixed $orderedItemIds = null): array
 {
     $id = filter_var($playlistId, FILTER_VALIDATE_INT);
@@ -960,6 +1081,80 @@ try {
 
         case 'playlists':
             apiResponse(['ok' => true, 'items' => listPlaylists($pdo, $user)]);
+
+        case 'broadcast_status':
+            $socket = null;
+            try {
+                $socket = vlcConnect();
+                $status = vlcBroadcastStatus($socket);
+            } catch (Throwable $e) {
+                if (is_resource($socket)) {
+                    fclose($socket);
+                }
+                apiError('Не удалось получить состояние VLC: ' . $e->getMessage(), 503);
+            }
+            if (is_resource($socket)) {
+                fclose($socket);
+            }
+            apiResponse(['ok' => true, 'status' => $status]);
+
+        case 'broadcast_command':
+            $command = $input['command'] ?? '';
+            $inputIndex = filter_var($input['input'] ?? 1, FILTER_VALIDATE_INT);
+            if (!is_string($command)) {
+                apiError('Некорректная команда VLC');
+            }
+
+            $vlcCommandText = '';
+            switch ($command) {
+                case 'play':
+                    if ($inputIndex === false || $inputIndex < 1 || $inputIndex > 500) {
+                        apiError('Некорректный номер файла транслятора');
+                    }
+                    $vlcCommandText = 'control tali play ' . (int)$inputIndex;
+                    break;
+                case 'pause':
+                    $vlcCommandText = 'control tali pause';
+                    break;
+                case 'stop':
+                    $vlcCommandText = 'control tali stop';
+                    break;
+                case 'enable':
+                    $vlcCommandText = 'setup tali enabled';
+                    break;
+                case 'disable':
+                    $vlcCommandText = 'setup tali disabled';
+                    break;
+                case 'loop_on':
+                    $vlcCommandText = 'setup tali loop';
+                    break;
+                case 'loop_off':
+                    $vlcCommandText = 'setup tali unloop';
+                    break;
+                default:
+                    apiError('Неизвестная команда управления VLC');
+            }
+
+            $socket = null;
+            try {
+                $socket = vlcConnect();
+                $commandResponse = vlcCommand($socket, $vlcCommandText);
+                $status = vlcBroadcastStatus($socket);
+            } catch (Throwable $e) {
+                if (is_resource($socket)) {
+                    fclose($socket);
+                }
+                apiError('Команда VLC не выполнена: ' . $e->getMessage(), 503);
+            }
+            if (is_resource($socket)) {
+                fclose($socket);
+            }
+            apiResponse([
+                'ok' => true,
+                'command' => $command,
+                'response' => trim($commandResponse),
+                'status' => $status,
+            ]);
 
         case 'playlist_broadcast':
             apiResponse(['ok' => true, 'broadcast' => broadcastPlaylist(
