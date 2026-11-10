@@ -8,6 +8,7 @@ JAIL_ROOT="/jails/tali"
 TEST_DIR="${JAIL_ROOT}/usr/local/www/tali/vlc-wasm-test"
 VENDOR_DIR="${TEST_DIR}/vendor"
 PACKAGE_DIR="${VENDOR_DIR}/libvlc-wasm"
+RAW_BASE="https://raw.githubusercontent.com/Fmulder007/test2/main/tali/vlc-wasm-test"
 NPM_URL="https://registry.npmjs.org/libvlc-wasm/-/libvlc-wasm-0.2.0.tgz"
 
 if [ ! -d "${TEST_DIR}" ]; then
@@ -21,6 +22,10 @@ STAGE_DIR="${VENDOR_DIR}/.libvlc-wasm-stage"
 trap 'rm -rf "${TMP_DIR}" "${STAGE_DIR}"' EXIT HUP INT TERM
 
 mkdir -p "${VENDOR_DIR}"
+
+echo "Updating test page JavaScript to the local-library version…"
+fetch -q -o "${TMP_DIR}/app.js" "${RAW_BASE}/app.js"
+fetch -q -o "${TMP_DIR}/index.html" "${RAW_BASE}/index.html"
 
 ARCHIVE="/root/libvlc-wasm-0.2.0.tgz"
 if [ ! -s "${ARCHIVE}" ]; then
@@ -56,5 +61,9 @@ echo "Installed local libvlc-wasm 0.2.0:"
 du -sh "${PACKAGE_DIR}"
 ls -lh "${PACKAGE_DIR}/wasm/libvlc.js" "${PACKAGE_DIR}/wasm/libvlc.wasm"
 echo
+cp "${TMP_DIR}/app.js" "${TEST_DIR}/app.js"
+cp "${TMP_DIR}/index.html" "${TEST_DIR}/index.html"
+chmod 644 "${TEST_DIR}/app.js" "${TEST_DIR}/index.html"
+
 echo "The test page now loads JavaScript, Worker and WASM from TALI itself."
 echo "No nginx configuration changes or service reloads were made."
