@@ -22,6 +22,7 @@
 #define EEPROM_RECORD_SIZE    8      // ID + номер + частота(3) + шаг + CRC16(2)
 #define EEPROM_ROLLBACK_DEPTH 3      // сколько последних записей проверять, включая самую новую
 #define EEPROM_SAVE_DELAY     5000UL // сохранять после 5 секунд без изменений
+#define EEPROM_BLINK_DURATION 150UL  // длительность мигания частоты после записи
 
 #if EEPROM_ROLLBACK_DEPTH < 1
 #error EEPROM_ROLLBACK_DEPTH must be at least 1
@@ -65,6 +66,8 @@ uint16_t eeprom_next_slot = 0;
 uint8_t eeprom_next_sequence = 0;
 bool settings_dirty = false;
 uint32_t settings_change_time = 0;
+bool eeprom_blink_active = false;
+uint32_t eeprom_blink_started = 0;
 
 // Явные прототипы функций основного VFO.
 void rotary_encoder();
@@ -285,16 +288,16 @@ void eeprom_load_settings() {
   // Если подходящей записи нет, остаются значения по умолчанию из setup().
 }
 //---------------------------------------------------------------------------------------------------------
-void eeprom_save_settings() {
+bool eeprom_save_settings() {
   if (eeprom_slot_count == 0)
-    return;
+    return false;
 
   uint8_t data[EEPROM_RECORD_SIZE];
   uint32_t frequency = rx;
   uint8_t step_code = eeprom_step_to_code(enc_inc);
 
   if (step_code == 0xFF || frequency < BAND_L || frequency > BAND_H)
-    return;
+    return false;
 
   data[0] = EEPROM_RECORD_ID;
   data[1] = eeprom_next_sequence;
@@ -320,10 +323,48 @@ void eeprom_save_settings() {
   EEPROM.update(address + 6, data[6]);
   EEPROM.update(address + 7, data[7]);
 
+  // Перечитываем запись: подтверждаем ID, CRC и сами сохранённые настройки.
+  uint8_t verify_data[EEPROM_RECORD_SIZE];
+  uint32_t verify_frequency;
+  uint32_t verify_step;
+  eeprom_read_record(eeprom_next_slot, verify_data);
+
+  if (!eeprom_record_valid(verify_data, verify_frequency, verify_step) ||
+      verify_data[1] != eeprom_next_sequence ||
+      verify_frequency != frequency ||
+      verify_step != enc_inc)
+    return false;
+
   eeprom_next_slot++;
   if (eeprom_next_slot >= eeprom_slot_count)
     eeprom_next_slot = 0;
   eeprom_next_sequence++;
+
+  return true;
+}
+//---------------------------------------------------------------------------------------------------------
+// Гасим только строку частоты на время индикации успешной записи EEPROM.
+void eeprom_blink_start() {
+  eeprom_blink_active = true;
+  eeprom_blink_started = millis();
+
+  oled.setFont(lcdnums14x24);
+  oled.setCursor(1, 0);
+  oled.print("          ");
+}
+
+// Возвращаем актуальную частоту, не блокируя основной цикл.
+void eeprom_blink_service() {
+  if (eeprom_blink_active &&
+      (uint32_t)(millis() - eeprom_blink_started) >= EEPROM_BLINK_DURATION) {
+    eeprom_blink_active = false;
+    show_freq(rx);
+  }
+}
+
+void eeprom_blink_cancel() {
+  eeprom_blink_active = false;
+  show_freq(rx);
 }
 //---------------------------------------------------------------------------------------------------------
 void settings_mark_changed() {
@@ -333,8 +374,17 @@ void settings_mark_changed() {
 //---------------------------------------------------------------------------------------------------------
 void eeprom_save_if_idle() {
   if (settings_dirty && (uint32_t)(millis() - settings_change_time) >= EEPROM_SAVE_DELAY) {
-    eeprom_save_settings();
-    settings_dirty = false;
+    // Гасим частоту непосредственно перед записью.
+    eeprom_blink_start();
+
+    if (eeprom_save_settings()) {
+      settings_dirty = false;
+    }
+    else {
+      // При ошибке не показываем ложное подтверждение; повторяем попытку через 5 секунд.
+      settings_change_time = millis();
+      eeprom_blink_cancel();
+    }
   }
 }
 //---------------------------------------------------------------------------------------------------------
@@ -536,6 +586,7 @@ void loop() {
   }
 
   eeprom_save_if_idle();
+  eeprom_blink_service();
 }
 //---------------------------------------------------------------------------------------------------------
 void rotary_encoder() {              // rotary encoder events
@@ -592,6 +643,10 @@ void show_inc() {
 }
 //---------------------------------------------------------------------------------------------------------
 void show_freq(uint32_t sf_rx) {
+  // Не перерисовываем частоту, пока длится индикация сохранения.
+  if (eeprom_blink_active)
+    return;
+
   uint16_t fr;
 
   oled.setFont(lcdnums14x24);
