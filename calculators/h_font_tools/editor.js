@@ -392,7 +392,7 @@
             return printable(code) + " — " + code + " (0x" + hex(code) + ")";
         });
         if (codes.length > 12) shown.push("ещё " + (codes.length - 12));
-        elements.manualSummary.textContent = "Выбрано " + codes.length + " символов: " + shown.join("; ");
+        elements.manualSummary.textContent = "Количество выбранных символов: " + codes.length + ". Коды: " + shown.join("; ");
     }
 
     byId("hf-apply-manual").addEventListener("click", function () {
