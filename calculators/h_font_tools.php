@@ -13,8 +13,8 @@ function hf_page_escape(string $value): string
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Создатель и редактор шрифтов .h — радиолюбительские калькуляторы</title>
     <meta name="description" content="Пиксельный редактор символов и генератор заголовочных файлов C/C++ для LCD, OLED, Arduino, U8g2 и Adafruit GFX.">
-    <link rel="stylesheet" href="h_font_tools/editor.css?v=1">
-    <script src="h_font_tools/editor.js?v=1" defer></script>
+    <link rel="stylesheet" href="h_font_tools/editor.css?v=2">
+    <script src="h_font_tools/editor.js?v=2" defer></script>
 </head>
 <body>
 <main class="hf-main">
@@ -49,20 +49,42 @@ function hf_page_escape(string $value): string
             <label class="hf-field"><span>Имя шрифта / префикс</span><input type="text" id="hf-name" maxlength="32" value="my_font" autocomplete="off"></label>
         </div>
 
-        <div class="hf-range-row">
-            <label class="hf-field hf-range-preset"><span>Набор символов</span>
-                <select id="hf-preset">
-                    <option value="ascii">ASCII — 32…126</option>
-                    <option value="latin">Расширенная Latin — 32…255</option>
-                    <option value="cyrillic">Кириллица — U+0400…U+045F</option>
-                    <option value="custom">Свой диапазон</option>
-                </select>
-            </label>
-            <label class="hf-field"><span>Первый код</span><input type="number" id="hf-range-start" min="0" max="65535" value="32"></label>
-            <label class="hf-field"><span>Последний код</span><input type="number" id="hf-range-end" min="0" max="65535" value="126"></label>
-            <button type="button" class="hf-button hf-button-secondary hf-range-apply" id="hf-apply-range">Применить диапазон</button>
+        <div class="hf-selection-mode">
+            <span class="hf-selection-label">Состав набора</span>
+            <div class="hf-mode-tabs" role="group" aria-label="Способ выбора символов">
+                <button type="button" class="hf-mode-tab is-active" data-selection-mode="range" aria-pressed="true">Диапазон</button>
+                <button type="button" class="hf-mode-tab" data-selection-mode="manual" aria-pressed="false">Вручную</button>
+            </div>
         </div>
-        <p class="hf-help">Поддерживается до 512 символов в одном диапазоне Unicode BMP. Для кириллицы выбери соответствующий набор. Кодировки UTF-8 и таблицы символов контроллера — разные вещи: при выводе кириллицы прошивка должна передавать правильные Unicode-коды или выполнять преобразование.</p>
+
+        <div id="hf-range-controls">
+            <div class="hf-range-row">
+                <label class="hf-field hf-range-preset"><span>Набор символов</span>
+                    <select id="hf-preset">
+                        <option value="ascii">ASCII — 32…126</option>
+                        <option value="latin">Расширенная Latin — 32…255</option>
+                        <option value="cyrillic">Кириллица — U+0400…U+045F</option>
+                        <option value="custom">Свой диапазон</option>
+                    </select>
+                </label>
+                <label class="hf-field"><span>Первый код</span><input type="number" id="hf-range-start" min="0" max="65535" value="32"></label>
+                <label class="hf-field"><span>Последний код</span><input type="number" id="hf-range-end" min="0" max="65535" value="126"></label>
+                <button type="button" class="hf-button hf-button-secondary hf-range-apply" id="hf-apply-range">Применить диапазон</button>
+            </div>
+            <p class="hf-help">В диапазон попадут все символы между первым и последним кодом. Поддерживается до 512 позиций Unicode BMP.</p>
+        </div>
+
+        <div class="hf-manual-controls" id="hf-manual-controls" hidden>
+            <div class="hf-manual-row">
+                <label class="hf-field">
+                    <span>Нужные символы</span>
+                    <input type="text" id="hf-manual-chars" maxlength="512" placeholder="Например: UL или ABC123" autocomplete="off" spellcheck="false">
+                </label>
+                <button type="button" class="hf-button hf-button-secondary" id="hf-apply-manual">Применить символы</button>
+            </div>
+            <p class="hf-help">Просто введи знаки подряд — например <strong>UL</strong>. Коды определятся автоматически. Повторы будут убраны; пробел тоже считается символом. Поддерживаются символы Unicode BMP (до U+FFFF).</p>
+            <div class="hf-manual-summary" id="hf-manual-summary">Набор пока не изменён. Введи символы и нажми «Применить символы».</div>
+        </div>
     </section>
 
     <section class="hf-workspace">
@@ -176,8 +198,8 @@ function hf_page_escape(string $value): string
         <div class="hf-format-notes">
             <p><strong>Универсальный bitmap:</strong> подходит для собственных функций вывода. Байты хранят строки отдельно, ширина строки дополняется до целого числа байтов.</p>
             <p><strong>U8g2:</strong> экспортируются XBM-массивы с младшим битом слева и функция отрисовки отдельных символов через <code>drawXBMP()</code>.</p>
-            <p><strong>Adafruit GFX:</strong> создаётся структура <code>GFXfont</code>. Для кириллицы потребуется передавать Unicode-код символа в <code>drawChar()</code>; обычная UTF-8 строка не декодируется библиотекой автоматически.</p>
-            <p><strong>HD44780:</strong> контроллер принимает не более восьми пользовательских знаков одновременно. При экспорте берутся первые восемь непустых символов диапазона и масштабируются до 5×8.</p>
+            <p><strong>Adafruit GFX:</strong> для диапазона создаётся структура <code>GFXfont</code>, а для разрозненного ручного набора — компактные bitmap-массивы и функция <code>drawBitmap()</code>. UTF-8 строка автоматически не декодируется.</p>
+            <p><strong>HD44780:</strong> контроллер принимает не более восьми пользовательских знаков одновременно. При экспорте берутся первые восемь непустых символов выбранного набора и масштабируются до 5×8.</p>
         </div>
     </section>
 

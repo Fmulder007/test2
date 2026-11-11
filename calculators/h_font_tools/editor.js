@@ -8,6 +8,9 @@
         name: "my_font",
         first: 32,
         last: 126,
+        codes: Array.from({ length: 95 }, function (_, index) { return index + 32; }),
+        selectionMode: "range",
+        manualText: "",
         selected: 32,
         tool: "draw",
         format: "generic",
@@ -18,6 +21,9 @@
     var elements = {
         width: byId("hf-width"), height: byId("hf-height"), spacing: byId("hf-spacing"), name: byId("hf-name"),
         preset: byId("hf-preset"), rangeStart: byId("hf-range-start"), rangeEnd: byId("hf-range-end"),
+        rangeControls: byId("hf-range-controls"), manualControls: byId("hf-manual-controls"),
+        manualChars: byId("hf-manual-chars"), manualSummary: byId("hf-manual-summary"),
+        modeTabs: document.querySelectorAll("[data-selection-mode]"),
         grid: byId("hf-pixel-grid"), charMap: byId("hf-character-map"), charCode: byId("hf-char-code"),
         currentChar: byId("hf-current-char"), currentCode: byId("hf-current-code"),
         dimensions: byId("hf-grid-dimensions"), pixelCount: byId("hf-pixel-count"),
@@ -95,7 +101,7 @@
     function renderMap() {
         elements.charMap.innerHTML = "";
         var fragment = document.createDocumentFragment();
-        for (var code = state.first; code <= state.last; code += 1) {
+        rangeCodes().forEach(function (code) {
             var button = document.createElement("button");
             button.type = "button";
             button.className = "hf-character" + (code === state.selected ? " is-selected" : "");
@@ -110,9 +116,9 @@
             button.appendChild(symbol);
             button.appendChild(label);
             fragment.appendChild(button);
-        }
+        });
         elements.charMap.appendChild(fragment);
-        elements.charCount.textContent = (state.last - state.first + 1) + " символов";
+        elements.charCount.textContent = state.codes.length + " символов";
     }
 
     function renderPreview() {
@@ -153,8 +159,8 @@
 
     function selectCode(code) {
         code = Number(code);
-        if (!Number.isInteger(code) || code < state.first || code > state.last) {
-            setStatus("Код символа должен находиться внутри выбранного диапазона.", true);
+        if (!Number.isInteger(code) || state.codes.indexOf(code) === -1) {
+            setStatus("Этот символ не входит в текущий набор.", true);
             elements.charCode.value = String(state.selected);
             return;
         }
@@ -198,8 +204,14 @@
         var button = event.target.closest(".hf-character");
         if (button) selectCode(button.dataset.code);
     });
-    byId("hf-prev-char").addEventListener("click", function () { selectCode(Math.max(state.first, state.selected - 1)); });
-    byId("hf-next-char").addEventListener("click", function () { selectCode(Math.min(state.last, state.selected + 1)); });
+    byId("hf-prev-char").addEventListener("click", function () {
+        var index = state.codes.indexOf(state.selected);
+        if (index > 0) selectCode(state.codes[index - 1]);
+    });
+    byId("hf-next-char").addEventListener("click", function () {
+        var index = state.codes.indexOf(state.selected);
+        if (index >= 0 && index < state.codes.length - 1) selectCode(state.codes[index + 1]);
+    });
     elements.charCode.addEventListener("change", function () { selectCode(elements.charCode.value); });
 
     document.querySelectorAll("[data-tool]").forEach(function (button) {
@@ -305,6 +317,24 @@
         latin: [32, 255],
         cyrillic: [0x0400, 0x045F]
     };
+
+    function setSelectionView(mode) {
+        var manual = mode === "manual";
+        elements.rangeControls.hidden = manual;
+        elements.manualControls.hidden = !manual;
+        elements.modeTabs.forEach(function (button) {
+            var active = button.dataset.selectionMode === mode;
+            button.classList.toggle("is-active", active);
+            button.setAttribute("aria-pressed", active ? "true" : "false");
+        });
+    }
+
+    elements.modeTabs.forEach(function (button) {
+        button.addEventListener("click", function () {
+            setSelectionView(button.dataset.selectionMode);
+        });
+    });
+
     elements.preset.addEventListener("change", function () {
         if (presets[elements.preset.value]) {
             elements.rangeStart.value = String(presets[elements.preset.value][0]);
@@ -325,12 +355,65 @@
         }
         state.first = first;
         state.last = last;
-        if (state.selected < first || state.selected > last) state.selected = first;
+        state.codes = [];
+        for (var code = first; code <= last; code += 1) state.codes.push(code);
+        state.selectionMode = "range";
+        if (state.codes.indexOf(state.selected) === -1) state.selected = first;
         elements.preset.value = Object.keys(presets).find(function (key) {
             return presets[key][0] === first && presets[key][1] === last;
         }) || "custom";
+        setSelectionView("range");
         renderAll();
         setStatus("Диапазон символов установлен: " + first + "… " + last + ".");
+    });
+
+    function parseManualCharacters(rawText) {
+        var characters = Array.from(String(rawText || ""));
+        var codes = [];
+        var seen = Object.create(null);
+        characters.forEach(function (character) {
+            var code = character.codePointAt(0);
+            if (code > 0xFFFF) throw new Error("Символ «" + character + "» находится за пределами BMP (выше U+FFFF).");
+            if ((code >= 0xD800 && code <= 0xDFFF) || code < 32 || code === 127) {
+                throw new Error("Управляющие символы нельзя добавить в набор. Пробел разрешён.");
+            }
+            if (!seen[String(code)]) {
+                seen[String(code)] = true;
+                codes.push(code);
+            }
+        });
+        if (!codes.length) throw new Error("Введи хотя бы один символ.");
+        if (codes.length > 512) throw new Error("В одном наборе можно использовать не более 512 разных символов.");
+        return codes;
+    }
+
+    function updateManualSummary(codes) {
+        var shown = codes.slice(0, 12).map(function (code) {
+            return printable(code) + " — " + code + " (0x" + hex(code) + ")";
+        });
+        if (codes.length > 12) shown.push("ещё " + (codes.length - 12));
+        elements.manualSummary.textContent = "Выбрано " + codes.length + " символов: " + shown.join("; ");
+    }
+
+    byId("hf-apply-manual").addEventListener("click", function () {
+        try {
+            var codes = parseManualCharacters(elements.manualChars.value);
+            state.codes = codes;
+            state.selectionMode = "manual";
+            state.manualText = elements.manualChars.value;
+            state.first = Math.min.apply(null, codes);
+            state.last = Math.max.apply(null, codes);
+            elements.rangeStart.value = String(state.first);
+            elements.rangeEnd.value = String(state.last);
+            elements.preset.value = "custom";
+            state.selected = codes[0];
+            setSelectionView("manual");
+            updateManualSummary(codes);
+            renderAll();
+            setStatus("Создан точный набор из " + codes.length + " символов. Промежуточные коды не включены.");
+        } catch (error) {
+            setStatus(error.message, true);
+        }
     });
 
     elements.previewText.addEventListener("input", renderPreview);
@@ -341,9 +424,7 @@
     }
 
     function rangeCodes() {
-        var codes = [];
-        for (var code = state.first; code <= state.last; code += 1) codes.push(code);
-        return codes;
+        return state.codes.slice();
     }
 
     function packRows(glyph) {
@@ -408,6 +489,7 @@
         var bpr = Math.ceil(state.width / 8);
         var bytes = [];
         codes.forEach(function (code) { bytes = bytes.concat(packRows(getGlyph(code))); });
+        var codeValues = codes.map(function (code) { return "0x" + hex(code); });
         var lines = [];
         lines.push("#ifndef " + headerGuard(prefix));
         lines.push("#define " + headerGuard(prefix));
@@ -416,25 +498,24 @@
         lines.push("#if defined(ARDUINO)");
         lines.push("#include <Arduino.h>");
         lines.push("#define H_FONT_STORAGE PROGMEM");
-        lines.push("#if defined(pgm_read_byte)");
         lines.push("#define H_FONT_READ_BYTE(address) pgm_read_byte(address)");
-        lines.push("#else");
-        lines.push("#define H_FONT_READ_BYTE(address) (*(address))");
-        lines.push("#endif");
+        lines.push("#define H_FONT_READ_WORD(address) pgm_read_word(address)");
         lines.push("#else");
         lines.push("#define H_FONT_STORAGE");
         lines.push("#define H_FONT_READ_BYTE(address) (*(address))");
+        lines.push("#define H_FONT_READ_WORD(address) (*(address))");
         lines.push("#endif");
         lines.push("");
         lines.push("// Bitmap: строки сверху вниз, старший бит байта соответствует левому пикселю.");
         lines.push("#define " + prefix.toUpperCase() + "_WIDTH " + state.width);
         lines.push("#define " + prefix.toUpperCase() + "_HEIGHT " + state.height);
         lines.push("#define " + prefix.toUpperCase() + "_SPACING " + state.spacing);
-        lines.push("#define " + prefix.toUpperCase() + "_FIRST_CODE 0x" + hex(state.first));
-        lines.push("#define " + prefix.toUpperCase() + "_LAST_CODE 0x" + hex(state.last));
+        lines.push("#define " + prefix.toUpperCase() + "_FIRST_CODE 0x" + hex(Math.min.apply(null, codes)));
+        lines.push("#define " + prefix.toUpperCase() + "_LAST_CODE 0x" + hex(Math.max.apply(null, codes)));
         lines.push("#define " + prefix.toUpperCase() + "_BYTES_PER_ROW " + bpr);
         lines.push("#define " + prefix.toUpperCase() + "_GLYPH_COUNT " + codes.length);
         lines.push("");
+        lines.push("static const uint16_t " + prefix + "_codepoints[] H_FONT_STORAGE = { " + codeValues.join(", ") + " };");
         lines.push("static const uint8_t " + prefix + "_bitmap[] H_FONT_STORAGE = {");
         lines.push(formatBytes(bytes, "    "));
         lines.push("};");
@@ -442,21 +523,31 @@
         lines.push("typedef struct {");
         lines.push("    uint16_t firstCode;");
         lines.push("    uint16_t lastCode;");
+        lines.push("    uint16_t glyphCount;");
         lines.push("    uint8_t width;");
         lines.push("    uint8_t height;");
         lines.push("    uint8_t spacing;");
         lines.push("    uint8_t bytesPerRow;");
+        lines.push("    const uint16_t *codepoints;");
         lines.push("    const uint8_t *bitmap;");
         lines.push("} HFontBitmap;");
         lines.push("");
         lines.push("static const HFontBitmap " + prefix + " = {");
         lines.push("    " + prefix.toUpperCase() + "_FIRST_CODE, " + prefix.toUpperCase() + "_LAST_CODE,");
-        lines.push("    " + prefix.toUpperCase() + "_WIDTH, " + prefix.toUpperCase() + "_HEIGHT,");
-        lines.push("    " + prefix.toUpperCase() + "_SPACING, " + prefix.toUpperCase() + "_BYTES_PER_ROW,");
-        lines.push("    " + prefix + "_bitmap");
+        lines.push("    " + prefix.toUpperCase() + "_GLYPH_COUNT, " + prefix.toUpperCase() + "_WIDTH,");
+        lines.push("    " + prefix.toUpperCase() + "_HEIGHT, " + prefix.toUpperCase() + "_SPACING,");
+        lines.push("    " + prefix.toUpperCase() + "_BYTES_PER_ROW, " + prefix + "_codepoints, " + prefix + "_bitmap");
         lines.push("};");
         lines.push("");
-        lines.push("// Адрес байта символа: codeOffset * height * bytesPerRow + y * bytesPerRow + byteX.");
+        lines.push("static inline int16_t " + prefix + "_find_glyph(uint16_t code) {");
+        lines.push("    for (uint16_t i = 0; i < " + prefix.toUpperCase() + "_GLYPH_COUNT; ++i) {");
+        lines.push("        if (H_FONT_READ_WORD(" + prefix + ".codepoints + i) == code) return (int16_t)i;");
+        lines.push("    }");
+        lines.push("    return -1;");
+        lines.push("}");
+        lines.push("");
+        lines.push("// Для символа code найди индекс: int16_t g = " + prefix + "_find_glyph(code);");
+        lines.push("// Смещение байта: g * height * bytesPerRow + y * bytesPerRow + byteX.");
         lines.push("// Чтение: uint8_t value = H_FONT_READ_BYTE(" + prefix + ".bitmap + offset);");
         lines.push("");
         lines.push("#endif // " + headerGuard(prefix));
@@ -493,13 +584,6 @@
     }
 
     function generateAdafruit(prefix, codes) {
-        var bitmaps = [];
-        var glyphRows = [];
-        codes.forEach(function (code) {
-            var offset = bitmaps.length;
-            bitmaps = bitmaps.concat(packContinuous(getGlyph(code)));
-            glyphRows.push("    { " + offset + ", " + state.width + ", " + state.height + ", " + (state.width + state.spacing) + ", 0, -" + state.height + " } // U+" + hex(code));
-        });
         var lines = [];
         lines.push("#ifndef " + headerGuard(prefix));
         lines.push("#define " + headerGuard(prefix));
@@ -507,25 +591,55 @@
         lines.push("#include <Arduino.h>");
         lines.push("#include <Adafruit_GFX.h>");
         lines.push("");
-        lines.push("// GFXfont bitmap: непрерывная последовательность битов, старший бит первым.");
-        lines.push("static const uint8_t " + prefix + "Bitmaps[] PROGMEM = {");
-        lines.push(formatBytes(bitmaps, "    "));
-        lines.push("};");
-        lines.push("");
-        lines.push("static const GFXglyph " + prefix + "Glyphs[] PROGMEM = {");
-        lines.push(glyphRows.join(",\n"));
-        lines.push("};");
-        lines.push("");
-        lines.push("static const GFXfont " + prefix + " PROGMEM = {");
-        lines.push("    (uint8_t *)" + prefix + "Bitmaps,");
-        lines.push("    (GFXglyph *)" + prefix + "Glyphs,");
-        lines.push("    0x" + hex(state.first) + ", 0x" + hex(state.last) + ", " + (state.height + 1));
-        lines.push("};");
+
+        if (state.selectionMode === "manual") {
+            lines.push("// Разреженный набор символов: каждый код хранится отдельно.");
+            lines.push("// Для вывода используется стандартный метод Adafruit_GFX drawBitmap().");
+            codes.forEach(function (code) {
+                lines.push("static const uint8_t " + prefix + "_u" + hex(code) + "[] PROGMEM = {");
+                lines.push(formatBytes(packRows(getGlyph(code)), "    "));
+                lines.push("};");
+            });
+            lines.push("");
+            lines.push("static inline bool draw_" + prefix + "(Adafruit_GFX &display, int16_t x, int16_t y, uint16_t code, uint16_t color) {");
+            lines.push("    switch (code) {");
+            codes.forEach(function (code) {
+                lines.push("        case 0x" + hex(code) + ": display.drawBitmap(x, y, " + prefix + "_u" + hex(code) + ", " + state.width + ", " + state.height + ", color); return true;");
+            });
+            lines.push("        default: return false;");
+            lines.push("    }");
+            lines.push("}");
+            lines.push("");
+            lines.push("// Пример: draw_" + prefix + "(display, x, y, 'U', WHITE);");
+        } else {
+            var bitmaps = [];
+            var glyphRows = [];
+            codes.forEach(function (code) {
+                var offset = bitmaps.length;
+                bitmaps = bitmaps.concat(packContinuous(getGlyph(code)));
+                glyphRows.push("    { " + offset + ", " + state.width + ", " + state.height + ", " + (state.width + state.spacing) + ", 0, -" + state.height + " } // U+" + hex(code));
+            });
+            lines.push("// GFXfont bitmap: непрерывная последовательность битов, старший бит первым.");
+            lines.push("static const uint8_t " + prefix + "Bitmaps[] PROGMEM = {");
+            lines.push(formatBytes(bitmaps, "    "));
+            lines.push("};");
+            lines.push("");
+            lines.push("static const GFXglyph " + prefix + "Glyphs[] PROGMEM = {");
+            lines.push(glyphRows.join(",\n"));
+            lines.push("};");
+            lines.push("");
+            lines.push("static const GFXfont " + prefix + " PROGMEM = {");
+            lines.push("    (uint8_t *)" + prefix + "Bitmaps,");
+            lines.push("    (GFXglyph *)" + prefix + "Glyphs,");
+            lines.push("    0x" + hex(state.first) + ", 0x" + hex(state.last) + ", " + (state.height + 1));
+            lines.push("};");
+            lines.push("");
+            lines.push("// Использование: display.setFont(&" + prefix + ");");
+        }
         lines.push("");
         lines.push("#endif // " + headerGuard(prefix));
         lines.push("");
-        lines.push("// Для кириллицы передавай Unicode-код в display.drawChar(x, y, code, color, bg, sizeX, sizeY).");
-        lines.push("// Обычный print() в Adafruit_GFX не декодирует UTF-8 автоматически.");
+        lines.push("// Для кириллицы передавай Unicode-код отдельно; обычный print() не декодирует UTF-8 автоматически.");
         return lines.join("\n");
     }
 
@@ -575,11 +689,15 @@
             return generateU8g2(prefix, codes);
         }
         if (state.format === "adafruit") {
-            elements.note.textContent = "Создан объект GFXfont. Подключи Adafruit_GFX и используй setFont(&" + prefix + "). Высота шрифта " + (state.height + 1) + " px с учётом baseline.";
+            if (state.selectionMode === "manual") {
+                elements.note.textContent = "Для ручного набора создана компактная таблица отдельных символов и функция draw_" + prefix + "(display, x, y, code, color). Она использует стандартный метод Adafruit_GFX drawBitmap().";
+            } else {
+                elements.note.textContent = "Создан объект GFXfont. Подключи Adafruit_GFX и используй setFont(&" + prefix + "). Высота шрифта " + (state.height + 1) + " px с учётом baseline.";
+            }
             return generateAdafruit(prefix, codes);
         }
         if (state.format === "hd44780") {
-            elements.note.textContent = "Из диапазона выбраны первые восемь непустых символов. Они автоматически масштабируются до 5×8 и загружаются в CGRAM через load_" + prefix + "_cgram(lcd).";
+            elements.note.textContent = "Из выбранного набора берутся первые восемь непустых символов. Они автоматически масштабируются до 5×8 и загружаются в CGRAM через load_" + prefix + "_cgram(lcd).";
             return generateHd44780(prefix, codes);
         }
         elements.note.textContent = "Универсальный формат хранит биты построчно, старший бит — левый пиксель. Для чтения из PROGMEM используй макрос H_FONT_READ_BYTE.";
@@ -667,7 +785,7 @@
         setStatus("Создано " + codes.length + " символов из гарнитуры " + family + ". Их можно редактировать вручную.");
     }
     byId("hf-rasterize").addEventListener("click", function () {
-        if (!window.confirm("Заменить все символы текущего диапазона автоматически созданными?")) return;
+        if (!window.confirm("Заменить все символы текущего набора автоматически созданными?")) return;
         rasterizeAll();
     });
 
@@ -681,6 +799,9 @@
             name: state.name,
             first: state.first,
             last: state.last,
+            codes: state.codes,
+            selectionMode: state.selectionMode,
+            manualText: state.manualText,
             selected: state.selected,
             glyphs: state.glyphs
         };
@@ -714,13 +835,33 @@
                 var first = Number(data.first);
                 var last = Number(data.last);
                 if (!Number.isInteger(width) || width < 5 || width > 32 || !Number.isInteger(height) || height < 5 || height > 32) throw new Error("Некорректные размеры сетки.");
-                if (!Number.isInteger(first) || !Number.isInteger(last) || first < 0 || last > 65535 || last < first || last - first > 511) throw new Error("Некорректный диапазон символов.");
+                if (!Number.isInteger(first) || !Number.isInteger(last) || first < 0 || last > 65535 || last < first) throw new Error("Некорректные границы набора.");
+                var selectionMode = data.selectionMode === "manual" && Array.isArray(data.codes) ? "manual" : "range";
+                var codes = [];
+                if (selectionMode === "manual") {
+                    var seenCodes = Object.create(null);
+                    data.codes.forEach(function (code) {
+                        if (!Number.isInteger(code) || code < 0 || code > 65535 || (code >= 0xD800 && code <= 0xDFFF)) throw new Error("В проекте найден некорректный код символа.");
+                        if (!seenCodes[String(code)]) {
+                            seenCodes[String(code)] = true;
+                            codes.push(code);
+                        }
+                    });
+                    if (!codes.length || codes.length > 512) throw new Error("Ручной набор должен содержать от 1 до 512 символов.");
+                    first = Math.min.apply(null, codes);
+                    last = Math.max.apply(null, codes);
+                } else {
+                    if (last - first > 511 || (first <= 0xDFFF && last >= 0xD800)) throw new Error("Некорректный диапазон символов.");
+                    for (var code = first; code <= last; code += 1) codes.push(code);
+                }
+                var validCodes = Object.create(null);
+                codes.forEach(function (code) { validCodes[String(code)] = true; });
                 var glyphs = Object.create(null);
                 if (data.glyphs && typeof data.glyphs === "object") {
                     Object.keys(data.glyphs).forEach(function (key) {
                         var code = Number(key);
                         var glyph = data.glyphs[key];
-                        if (Number.isInteger(code) && code >= first && code <= last && Array.isArray(glyph) && glyph.length === width * height) {
+                        if (validCodes[String(code)] && Array.isArray(glyph) && glyph.length === width * height) {
                             glyphs[key] = glyph.map(function (bit) { return bit ? 1 : 0; });
                         }
                     });
@@ -731,7 +872,10 @@
                 state.name = sanitizePrefix(data.name);
                 state.first = first;
                 state.last = last;
-                state.selected = Math.max(first, Math.min(last, Number(data.selected) || first));
+                state.codes = codes;
+                state.selectionMode = selectionMode;
+                state.manualText = typeof data.manualText === "string" ? data.manualText : "";
+                state.selected = codes.indexOf(Number(data.selected)) !== -1 ? Number(data.selected) : codes[0];
                 state.glyphs = glyphs;
                 elements.width.value = String(width);
                 elements.height.value = String(height);
@@ -739,9 +883,13 @@
                 elements.name.value = state.name;
                 elements.rangeStart.value = String(first);
                 elements.rangeEnd.value = String(last);
+                elements.manualChars.value = state.manualText;
                 elements.preset.value = Object.keys(presets).find(function (key) {
                     return presets[key][0] === first && presets[key][1] === last;
                 }) || "custom";
+                setSelectionView(selectionMode);
+                if (selectionMode === "manual") updateManualSummary(codes);
+                else elements.manualSummary.textContent = "Набор пока не изменён. Введи символы и нажми «Применить символы».";
                 renderAll();
                 elements.code.value = generateCode();
                 setStatus("Проект " + file.name + " загружен.");
@@ -757,10 +905,13 @@
     byId("hf-new-project").addEventListener("click", function () {
         if (!window.confirm("Создать новый пустой проект? Несохранённые изменения будут потеряны.")) return;
         state.width = 8; state.height = 8; state.spacing = 1; state.name = "my_font";
-        state.first = 32; state.last = 126; state.selected = 32; state.glyphs = Object.create(null);
+        state.first = 32; state.last = 126; state.codes = Array.from({ length: 95 }, function (_, index) { return index + 32; });
+        state.selectionMode = "range"; state.manualText = ""; state.selected = 32; state.glyphs = Object.create(null);
         elements.width.value = "8"; elements.height.value = "8"; elements.spacing.value = "1";
         elements.name.value = "my_font"; elements.rangeStart.value = "32"; elements.rangeEnd.value = "126";
-        elements.preset.value = "ascii"; elements.code.value = "";
+        elements.manualChars.value = ""; elements.preset.value = "ascii"; elements.code.value = "";
+        setSelectionView("range");
+        elements.manualSummary.textContent = "Набор пока не изменён. Введи символы и нажми «Применить символы».";
         renderAll();
         setStatus("Создан новый пустой проект.");
     });

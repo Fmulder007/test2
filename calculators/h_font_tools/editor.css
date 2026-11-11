@@ -113,3 +113,22 @@ p { line-height: 1.5; }
     .hf-code-field { max-width: none; }
     .hf-export-buttons .hf-button { flex: 1 1 100%; }
 }
+
+/* Выбор набора символов: компактное продолжение существующей панели настроек. */
+.hf-selection-mode { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }
+.hf-selection-label { color: #3c4043; font-size: .9rem; font-weight: 700; }
+.hf-mode-tabs { display: inline-flex; gap: 3px; padding: 3px; border: 1px solid #d1d9df; border-radius: 8px; background: #f2f5f7; }
+.hf-mode-tab { min-height: 32px; padding: 6px 14px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: #52616d; font-size: .86rem; font-weight: 700; cursor: pointer; }
+.hf-mode-tab:hover { color: #244f76; background: #eaf2f8; }
+.hf-mode-tab.is-active { border-color: #b8c7d4; background: #fff; color: #244f76; box-shadow: 0 1px 2px rgba(20, 45, 65, .06); }
+.hf-manual-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px; margin-top: 14px; }
+.hf-manual-row .hf-field { max-width: 560px; }
+.hf-manual-summary { margin-top: 10px; padding: 9px 11px; border: 1px solid #d7e1e8; border-radius: 6px; background: #f7fafc; color: #41586b; font-size: .84rem; line-height: 1.45; overflow-wrap: anywhere; }
+@media (max-width: 680px) {
+    .hf-selection-mode { align-items: flex-start; flex-direction: column; gap: 8px; }
+    .hf-mode-tabs { width: 100%; }
+    .hf-mode-tab { flex: 1; }
+    .hf-manual-row { grid-template-columns: minmax(0, 1fr); }
+    .hf-manual-row .hf-field { max-width: none; }
+    .hf-manual-row .hf-button { width: 100%; }
+}
