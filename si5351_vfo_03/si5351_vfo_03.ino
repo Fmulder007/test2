@@ -8,7 +8,7 @@
 #define DEFAULT_RX    4000000        // частота при включении
 #define BAND_L        1500000        // начало диапазона
 #define BAND_H        8500000        // конец диапазона
-#define IF_FREQ       62496500       // частота ПЧ
+#define IF_FREQ       62500000       // частота ПЧ
 #define IF2_LSB_FREQ  2496500        // вторая ПЧ, LSB — 2496,5 кГц
 #define IF2_USB_FREQ  2500000        // вторая ПЧ, USB — 2500 кГц
 #define LSB_USB_PIN   A3             // пин выбора LSB/USB
@@ -44,6 +44,7 @@ uint16_t val_sm = 0;
 uint16_t val_sm_old = 1;
 bool rx_tx;
 bool rx_tx_old;
+bool IF2_PIN_STATUS;
 bool IF2_PIN_PREV;						// статус предыдущего состояния LSB/USB пина
 uint32_t IF2_TIMER = 0;             // таймер опроса LSB/USB
 //---------------------------------------------------------------------------------------------------------
@@ -89,7 +90,7 @@ void setup() {
 //---------------------------------------------------------------------------------------------------------
 void IF2_SET() {
   if (millis() - IF2_TIMER >= 100) {
-    bool IF2_PIN_STATUS = digitalRead(LSB_USB_PIN);
+    IF2_PIN_STATUS = digitalRead(LSB_USB_PIN);
 
     if (IF2_PIN_STATUS != IF2_PIN_PREV) {
       if (IF2_PIN_STATUS) {
@@ -120,7 +121,15 @@ void loop() {
     enc_dir = 0;
     rx = constrain(rx, BAND_L, BAND_H);
     //si5351_set_freq(rx - IF_FREQ);      // неверно !!!???                           // 
-    si5351_set_freq(rx + IF_FREQ);      // гетеродин "вверх"                          // частота гетеродина на выходе si5351
+	// частота гетеродина на выходе si5351
+    if (IF2_PIN_STATUS) 
+	{
+		si5351_set_freq(rx + IF_FREQ + IF2_LSB_FREQ);      // гетеродин "вверх" для LSB                         
+	}
+	else 
+	{
+		si5351_set_freq(rx + IF_FREQ + IF2_USB_FREQ);		// гетеродин "вверх" для USB 
+	}
     //si5351_set_freq(IF_FREQ - rx);      // гетеродин "вниз" если Fin ниже IF ???    // 
     
   //if ((rx >1500000) & (rx < 3000000))   // при управлении ДПФ напрямую
