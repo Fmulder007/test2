@@ -98,6 +98,7 @@ void IF2_SET() {
         oled.setFont(labels_UL);
         oled.setCursor(18, 3);
         oled.print('L');
+        oled.print('U');
 		ch_flag = true;
       }
       else {
@@ -105,6 +106,7 @@ void IF2_SET() {
         oled.setFont(labels_UL);
         oled.setCursor(18, 3);
         oled.print('U');
+        oled.print('L');
 		ch_flag = true;
       }
     }
