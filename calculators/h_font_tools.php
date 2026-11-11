@@ -92,7 +92,6 @@ function hf_page_escape(string $value): string
             <div class="hf-section-title">
                 <div>
                     <h2>Редактор символа</h2>
-                    <p class="hf-subtle">Нажимай на клетки или веди по ним мышью / пальцем.</p>
                 </div>
                 <div class="hf-current-code"><span id="hf-current-char">Пробел</span><small id="hf-current-code">Код: 32 (0x0020)</small></div>
             </div>
@@ -120,6 +119,11 @@ function hf_page_escape(string $value): string
                 <button type="button" class="hf-button hf-button-light" id="hf-invert">Инвертировать</button>
                 <button type="button" class="hf-button hf-button-light" id="hf-mirror-h">Отразить ↔</button>
                 <button type="button" class="hf-button hf-button-light" id="hf-mirror-v">Отразить ↕</button>
+                <span class="hf-tool-divider"></span>
+                <button type="button" class="hf-button hf-button-light" id="hf-shift-up" title="Сдвинуть на один пиксель вверх">↑ Вверх</button>
+                <button type="button" class="hf-button hf-button-light" id="hf-shift-down" title="Сдвинуть на один пиксель вниз">↓ Вниз</button>
+                <button type="button" class="hf-button hf-button-light" id="hf-shift-left" title="Сдвинуть на один пиксель влево">← Влево</button>
+                <button type="button" class="hf-button hf-button-light" id="hf-shift-right" title="Сдвинуть на один пиксель вправо">→ Вправо</button>
             </div>
         </div>
 
@@ -149,9 +153,13 @@ function hf_page_escape(string $value): string
                         <option value="serif">Serif</option>
                     </select>
                 </label>
-                <button type="button" class="hf-button hf-button-secondary" id="hf-rasterize">Создать весь набор</button>
+                <div class="hf-raster-actions">
+                    <button type="button" class="hf-button hf-button-secondary" id="hf-rasterize">Создать весь набор</button>
+                    <button type="button" class="hf-button hf-button-light" id="hf-rasterize-selected" disabled>Создать отмеченные символы</button>
+                    <span class="hf-raster-selection-count" id="hf-raster-selection-count">Отмечено: 0</span>
+                </div>
             </div>
-            <p class="hf-help">Генерация заменит символы текущего диапазона. После неё любой знак можно вручную поправить в редакторе.</p>
+            <p class="hf-help">Для выборочного создания отметь нужные знаки галочкой в таблице символов. Будут перерисованы только отмеченные знаки, остальные останутся без изменений.</p>
         </div>
     </section>
 

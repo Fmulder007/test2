@@ -132,3 +132,22 @@ p { line-height: 1.5; }
     .hf-manual-row .hf-field { max-width: none; }
     .hf-manual-row .hf-button { width: 100%; }
 }
+
+/* Отметки символов для выборочного автосоздания. */
+.hf-character-item { position: relative; min-width: 0; }
+.hf-character-item .hf-character { width: 100%; min-height: 49px; padding: 4px 3px 3px; }
+.hf-character-mark {
+    position: absolute; top: 3px; right: 3px; display: inline-flex; align-items: center; justify-content: center;
+    width: 17px; height: 17px; padding: 0; border: 1px solid #c4cdd5; border-radius: 5px;
+    background: #fff; color: #75818b; font-size: 11px; font-weight: 700; line-height: 1; cursor: pointer;
+}
+.hf-character-mark:hover { border-color: #245c88; color: #245c88; background: #eef5fa; }
+.hf-character-mark.is-marked { border-color: #245c88; background: #245c88; color: #fff; }
+.hf-raster-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; }
+.hf-raster-actions .hf-button { white-space: nowrap; }
+.hf-raster-actions .hf-button:disabled { opacity: .45; cursor: not-allowed; }
+.hf-raster-selection-count { color: #687078; font-size: .8rem; white-space: nowrap; }
+@media (max-width: 680px) {
+    .hf-raster-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
+    .hf-raster-actions .hf-button { width: 100%; }
+}

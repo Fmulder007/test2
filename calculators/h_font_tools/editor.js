@@ -11,6 +11,7 @@
         codes: Array.from({ length: 95 }, function (_, index) { return index + 32; }),
         selectionMode: "range",
         manualText: "",
+        rasterSelection: [],
         selected: 32,
         tool: "draw",
         format: "generic",
@@ -24,6 +25,8 @@
         rangeControls: byId("hf-range-controls"), manualControls: byId("hf-manual-controls"),
         manualChars: byId("hf-manual-chars"), manualSummary: byId("hf-manual-summary"),
         modeTabs: document.querySelectorAll("[data-selection-mode]"),
+        rasterSelectionCount: byId("hf-raster-selection-count"),
+        rasterizeSelected: byId("hf-rasterize-selected"),
         grid: byId("hf-pixel-grid"), charMap: byId("hf-character-map"), charCode: byId("hf-char-code"),
         currentChar: byId("hf-current-char"), currentCode: byId("hf-current-code"),
         dimensions: byId("hf-grid-dimensions"), pixelCount: byId("hf-pixel-count"),
@@ -98,15 +101,24 @@
         elements.charCode.value = String(state.selected);
     }
 
+    function renderRasterSelectionStatus() {
+        var count = state.rasterSelection.length;
+        elements.rasterSelectionCount.textContent = "Отмечено: " + count;
+        elements.rasterizeSelected.disabled = count === 0;
+    }
+
     function renderMap() {
         elements.charMap.innerHTML = "";
         var fragment = document.createDocumentFragment();
         rangeCodes().forEach(function (code) {
+            var item = document.createElement("div");
+            item.className = "hf-character-item";
+
             var button = document.createElement("button");
             button.type = "button";
             button.className = "hf-character" + (code === state.selected ? " is-selected" : "");
             button.dataset.code = String(code);
-            button.title = "Символ " + charName(code) + ", код " + code + " (0x" + hex(code) + ")";
+            button.title = "Открыть символ " + charName(code) + ", код " + code + " (0x" + hex(code) + ")";
             var symbol = document.createElement("span");
             symbol.className = "hf-character-symbol";
             symbol.textContent = printable(code);
@@ -115,10 +127,24 @@
             label.textContent = hex(code, 2);
             button.appendChild(symbol);
             button.appendChild(label);
-            fragment.appendChild(button);
+
+            var mark = document.createElement("button");
+            var marked = state.rasterSelection.indexOf(code) !== -1;
+            mark.type = "button";
+            mark.className = "hf-character-mark" + (marked ? " is-marked" : "");
+            mark.dataset.code = String(code);
+            mark.setAttribute("aria-pressed", marked ? "true" : "false");
+            mark.setAttribute("aria-label", (marked ? "Убрать " : "Отметить ") + "символ " + charName(code) + " для автосоздания");
+            mark.title = marked ? "Убрать из выборочного автосоздания" : "Отметить для выборочного автосоздания";
+            mark.textContent = marked ? "✓" : "+";
+
+            item.appendChild(button);
+            item.appendChild(mark);
+            fragment.appendChild(item);
         });
         elements.charMap.appendChild(fragment);
         elements.charCount.textContent = state.codes.length + " символов";
+        renderRasterSelectionStatus();
     }
 
     function renderPreview() {
@@ -201,6 +227,15 @@
     elements.grid.addEventListener("contextmenu", function (event) { event.preventDefault(); });
 
     elements.charMap.addEventListener("click", function (event) {
+        var mark = event.target.closest(".hf-character-mark");
+        if (mark) {
+            var code = Number(mark.dataset.code);
+            var index = state.rasterSelection.indexOf(code);
+            if (index === -1) state.rasterSelection.push(code);
+            else state.rasterSelection.splice(index, 1);
+            renderMap();
+            return;
+        }
         var button = event.target.closest(".hf-character");
         if (button) selectCode(button.dataset.code);
     });
@@ -259,6 +294,26 @@
             return result;
         });
     });
+
+    function shiftCurrentGlyph(dx, dy) {
+        replaceCurrentGlyph(function (glyph) {
+            var result = blankGlyph();
+            for (var y = 0; y < state.height; y += 1) {
+                for (var x = 0; x < state.width; x += 1) {
+                    var sourceX = x - dx;
+                    var sourceY = y - dy;
+                    if (sourceX >= 0 && sourceX < state.width && sourceY >= 0 && sourceY < state.height) {
+                        result[y * state.width + x] = glyph[sourceY * state.width + sourceX];
+                    }
+                }
+            }
+            return result;
+        });
+    }
+    byId("hf-shift-up").addEventListener("click", function () { shiftCurrentGlyph(0, -1); });
+    byId("hf-shift-down").addEventListener("click", function () { shiftCurrentGlyph(0, 1); });
+    byId("hf-shift-left").addEventListener("click", function () { shiftCurrentGlyph(-1, 0); });
+    byId("hf-shift-right").addEventListener("click", function () { shiftCurrentGlyph(1, 0); });
 
     function resizeAllGlyphs(newWidth, newHeight) {
         var oldWidth = state.width;
@@ -357,6 +412,7 @@
         state.last = last;
         state.codes = [];
         for (var code = first; code <= last; code += 1) state.codes.push(code);
+        state.rasterSelection = state.rasterSelection.filter(function (code) { return state.codes.indexOf(code) !== -1; });
         state.selectionMode = "range";
         if (state.codes.indexOf(state.selected) === -1) state.selected = first;
         elements.preset.value = Object.keys(presets).find(function (key) {
@@ -399,6 +455,7 @@
         try {
             var codes = parseManualCharacters(elements.manualChars.value);
             state.codes = codes;
+            state.rasterSelection = state.rasterSelection.filter(function (code) { return codes.indexOf(code) !== -1; });
             state.selectionMode = "manual";
             state.manualText = elements.manualChars.value;
             state.first = Math.min.apply(null, codes);
@@ -751,7 +808,7 @@
         }
     });
 
-    function rasterizeAll() {
+    function rasterizeCodes(codes, successPrefix) {
         var canvas = document.createElement("canvas");
         canvas.width = state.width;
         canvas.height = state.height;
@@ -763,7 +820,6 @@
         var family = elements.sourceFont.value;
         var fontSize = Math.max(5, Math.floor(state.height * 0.88));
         var font = fontSize + "px " + family;
-        var codes = rangeCodes();
         codes.forEach(function (code) {
             var character = String.fromCharCode(code);
             var glyph = blankGlyph();
@@ -782,11 +838,21 @@
             state.glyphs[String(code)] = glyph;
         });
         renderAll();
-        setStatus("Создано " + codes.length + " символов из гарнитуры " + family + ". Их можно редактировать вручную.");
+        setStatus(successPrefix + codes.length + " символов из гарнитуры " + family + ". Их можно редактировать вручную.");
     }
     byId("hf-rasterize").addEventListener("click", function () {
-        if (!window.confirm("Заменить все символы текущего набора автоматически созданными?")) return;
-        rasterizeAll();
+        var codes = rangeCodes();
+        if (!window.confirm("Автоматически создать все " + codes.length + " символов текущего набора?")) return;
+        rasterizeCodes(codes, "Создано ");
+    });
+    byId("hf-rasterize-selected").addEventListener("click", function () {
+        var codes = state.codes.filter(function (code) { return state.rasterSelection.indexOf(code) !== -1; });
+        if (!codes.length) {
+            setStatus("Сначала отметь нужные символы галочкой в таблице.", true);
+            return;
+        }
+        if (!window.confirm("Автоматически создать только отмеченные символы (" + codes.length + " шт.)? Остальные рисунки останутся без изменений.")) return;
+        rasterizeCodes(codes, "Создано отмеченных: ");
     });
 
     function projectData() {
@@ -802,6 +868,7 @@
             codes: state.codes,
             selectionMode: state.selectionMode,
             manualText: state.manualText,
+            rasterSelection: state.rasterSelection,
             selected: state.selected,
             glyphs: state.glyphs
         };
@@ -875,6 +942,9 @@
                 state.codes = codes;
                 state.selectionMode = selectionMode;
                 state.manualText = typeof data.manualText === "string" ? data.manualText : "";
+                state.rasterSelection = Array.isArray(data.rasterSelection) ? data.rasterSelection.filter(function (code, index, array) {
+                    return Number.isInteger(code) && codes.indexOf(code) !== -1 && array.indexOf(code) === index;
+                }) : [];
                 state.selected = codes.indexOf(Number(data.selected)) !== -1 ? Number(data.selected) : codes[0];
                 state.glyphs = glyphs;
                 elements.width.value = String(width);
@@ -906,7 +976,7 @@
         if (!window.confirm("Создать новый пустой проект? Несохранённые изменения будут потеряны.")) return;
         state.width = 8; state.height = 8; state.spacing = 1; state.name = "my_font";
         state.first = 32; state.last = 126; state.codes = Array.from({ length: 95 }, function (_, index) { return index + 32; });
-        state.selectionMode = "range"; state.manualText = ""; state.selected = 32; state.glyphs = Object.create(null);
+        state.selectionMode = "range"; state.manualText = ""; state.rasterSelection = []; state.selected = 32; state.glyphs = Object.create(null);
         elements.width.value = "8"; elements.height.value = "8"; elements.spacing.value = "1";
         elements.name.value = "my_font"; elements.rangeStart.value = "32"; elements.rangeEnd.value = "126";
         elements.manualChars.value = ""; elements.preset.value = "ascii"; elements.code.value = "";
