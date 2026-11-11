@@ -96,14 +96,14 @@ void IF2_SET() {
       if (IF2_PIN_STATUS) {
         si5351.set_freq(IF2_LSB_FREQ * SI5351_FREQ_MULT, SI5351_CLK0);
         oled.setFont(labels_UL);
-        oled.setCursor(20, 3);
+        oled.setCursor(18, 3);
         oled.print('L');
 		ch_flag = true;
       }
       else {
         si5351.set_freq(IF2_USB_FREQ * SI5351_FREQ_MULT, SI5351_CLK0);
         oled.setFont(labels_UL);
-        oled.setCursor(20, 3);
+        oled.setCursor(18, 3);
         oled.print('U');
 		ch_flag = true;
       }
