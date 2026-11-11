@@ -19,7 +19,7 @@ function parseHex(text){
  const data=new Uint8Array(EEPROM_SIZE);data.fill(255);const seen=new Uint8Array(EEPROM_SIZE);let upper=0,eof=false,countData=0;
  const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/);
  for(let li=0;li<lines.length;li++){const line=lines[li].trim();if(!line)continue;if(eof)throw Error(`Строка ${li+1}: данные после EOF`);if(line[0]!==':'||line.length<11||(line.length-1)%2)throw Error(`Строка ${li+1}: неверный формат Intel HEX`);
-  const b=[];for(let i=1;i<line.length;i+=2){const n=parseInt(line.slice(i,i+2),16);if(!Number.isFinite(n))throw Error(`Строка ${li+1}: неверная HEX-цифра`);b.push(n);}
+  const b=[];for(let i=1;i<line.length;i+=2){const pair=line.slice(i,i+2);if(!/^[0-9a-fA-F]{2}$/.test(pair))throw Error(`Строка ${li+1}: неверная HEX-цифра`);b.push(parseInt(pair,16));}
   const n=b[0],addr=(b[1]<<8)|b[2],type=b[3];if(b.length!==n+5)throw Error(`Строка ${li+1}: неверная длина записи`);if(b.reduce((s,x)=>s+x,0)&255)throw Error(`Строка ${li+1}: ошибка контрольной суммы`);const payload=b.slice(4,4+n);
   if(type===0){const start=upper+addr;if(start+n>EEPROM_SIZE)throw Error(`Строка ${li+1}: адрес за пределами EEPROM 1024 байта`);for(let j=0;j<n;j++){const p=start+j;if(seen[p]&&data[p]!==payload[j])throw Error(`Строка ${li+1}: конфликт данных по адресу ${p}`);data[p]=payload[j];seen[p]=1;}countData++;}
   else if(type===1){if(n!==0)throw Error('Неверная запись EOF');eof=true;}
