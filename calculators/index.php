@@ -110,6 +110,13 @@ $calculators = [
         'file' => 'ohms_law.php',
     ],
     [
+        'title' => 'Создатель / редактор шрифтов .h',
+        'description' => 'Пиксельное рисование символов, наборы ASCII и кириллицы, предпросмотр и экспорт готовых заголовков C/C++ для универсального bitmap, U8g2, Adafruit GFX и HD44780 CGRAM.',
+        'image' => 'images/lc-circuit.svg',
+        'alt' => 'Схема LC-контура — иллюстрация карточки редактора шрифтов',
+        'file' => 'h_font_tools.php',
+    ],
+    [
         'title' => 'Цветовая маркировка резисторов',
         'description' => 'Расшифровка цветных полос и подбор маркировки по номиналу сопротивления.',
         'image' => 'images/resistor-color-code.svg',
