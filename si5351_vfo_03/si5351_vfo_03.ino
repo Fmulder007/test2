@@ -348,9 +348,9 @@ void eeprom_blink_start() {
   eeprom_blink_active = true;
   eeprom_blink_started = millis();
 
-  oled.setFont(lcdnums14x24);
-  oled.setCursor(1, 0);
-  oled.print("          ");
+  // Шрифт lcdnums14x24 не содержит пробела, поэтому стираем область напрямую.
+  // Частота занимает верхние 24 пикселя; нижнюю строку дисплея не затрагиваем.
+  oled.clear(1, 127, 0, 2);
 }
 
 // Возвращаем актуальную частоту, не блокируя основной цикл.
