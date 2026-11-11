@@ -75,7 +75,7 @@ void setup() {
   
   IF2_PIN_PREV = !digitalRead(LSB_USB_PIN);               // гарантируем первую настройку CLK0
   
-  si5351.set_freq(60000000*SI5351_FREQ_MULT,SI5351_CLK1);  // частота на выходе 1
+  si5351.set_freq(IF_FREQ*SI5351_FREQ_MULT,SI5351_CLK1);  // частота на выходе 1
   oled.begin(&Adafruit128x32, OLED_I2C_ADDR);
 
   rx = DEFAULT_RX;
@@ -98,12 +98,14 @@ void IF2_SET() {
         oled.setFont(labels_UL);
         oled.setCursor(20, 3);
         oled.print('L');
+		ch_flag = true;
       }
       else {
         si5351.set_freq(IF2_USB_FREQ * SI5351_FREQ_MULT, SI5351_CLK0);
         oled.setFont(labels_UL);
         oled.setCursor(20, 3);
         oled.print('U');
+		ch_flag = true;
       }
     }
 
