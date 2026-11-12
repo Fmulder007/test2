@@ -376,7 +376,7 @@ unset($firmware);
             </div>
         </div>
 
-        <p class="hint">Допустимые частоты: от 8 000 Гц до 160 000 000 Гц включительно. Для FM6 проверяются нижняя и верхняя границы диапазона. Частоты в EEPROM записываются целым числом герц.</p>
+        <p class="hint">Допустимые частоты: от 8 000 Гц до 200 000 000 Гц включительно. Для FM6 проверяются нижняя и верхняя границы диапазона. Частоты в EEPROM записываются целым числом герц.</p>
 
         <div class="form-actions">
             <button type="button" class="action-button" id="generate">Сформировать eeprom.hex</button>
@@ -446,7 +446,7 @@ unset($firmware);
 
     const $ = id => document.getElementById(id);
     const MIN_HZ = 8000;
-    const MAX_HZ = 160000000;
+    const MAX_HZ = 200000000;
     let generatedUrl = null;
 
     const modelDescriptions = {
@@ -539,7 +539,7 @@ unset($firmware);
         // Для отдельных частот действует диапазон Si5351. Для BW проверяются
         // не сама ширина, а фактические нижняя и верхняя частоты диапазона ниже.
         if (checkFrequencyLimits && (hz < MIN_HZ || hz > MAX_HZ)) {
-            throw new Error(description + ': допустимо от 8 000 Гц до 160 000 000 Гц включительно.');
+            throw new Error(description + ': допустимо от 8 000 Гц до 200 000 000 Гц включительно.');
         }
         return hz;
     }
@@ -608,7 +608,7 @@ unset($firmware);
                 const low = fr - Math.floor(bw / 2);
                 const high = low + bw;
                 if (low < MIN_HZ || high > MAX_HZ) {
-                    throw new Error('Диапазон FM6 выходит за пределы 8 000–160 000 000 Гц. Нижняя граница: ' + formatHz(low) + ', верхняя: ' + formatHz(high) + '.');
+                    throw new Error('Диапазон FM6 выходит за пределы 8 000–200 000 000 Гц. Нижняя граница: ' + formatHz(low) + ', верхняя: ' + formatHz(high) + '.');
                 }
                 values = { fr, bw, st };
                 summary = 'FR = ' + formatHz(fr) + '\nBW = ' + formatHz(bw) + '\nST = ' + st + (st === 0 ? ' (1024 шага)' : ' шагов') + '\nДиапазон: ' + formatHz(low) + ' — ' + formatHz(high);
