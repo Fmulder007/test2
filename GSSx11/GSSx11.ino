@@ -85,7 +85,7 @@ static uint8_t engineeringActiveItem = 0;
 // Флаг фиксирует именно вращение энкодера, а не изменение значений настроек.
 static bool encoderTouched = false;
 static bool saveTimerActive = false;
-static bool suppressFrequencyInvert = false;
+static bool suppressFrequencyInvert = true;
 static uint32_t lastEncoderActivityMillis = 0;
 
 static long previousEncoderPosition = 0;
@@ -285,11 +285,28 @@ static void renderDisplay() {
 
   display.clear();
 
-  display.setScale(2);
-  display.setCursorXY(10, 0);
-  display.invertText(activeField == FIELD_FREQUENCY && !suppressFrequencyInvert);
-  display.print(frequencyText);
-  display.invertText(false);
+display.setScale(2);
+display.invertText(activeField == FIELD_FREQUENCY && !suppressFrequencyInvert);
+
+// МГц
+display.setCursorXY(4, 0);
+display.print(frequencyText[0]);
+display.print(frequencyText[1]);
+display.print(frequencyText[2]);
+
+// кГц
+display.setCursorXY(46, 0);
+display.print(frequencyText[3]);
+display.print(frequencyText[4]);
+display.print(frequencyText[5]);
+
+// Гц
+display.setCursorXY(87, 0);
+display.print(frequencyText[6]);
+display.print(frequencyText[7]);
+display.print(frequencyText[8]);
+
+display.invertText(false);
 
   display.setScale(1);
   display.setCursorXY(0, 24);
