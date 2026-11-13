@@ -380,6 +380,8 @@ static void serviceEncoder() {
 
       if ((uint8_t)nextIndex != settings.outputIndex) {
         settings.outputIndex = (uint8_t)nextIndex;
+        // Сначала гасим прежний CLK, затем включаем новый: break-before-make.
+        si.set_freq(0, 0, 0);
         applyCurrentOutput();
         updateUnsavedState();
         redraw = true;
