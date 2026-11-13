@@ -191,16 +191,23 @@ static bool settingsAreValid(const GeneratorSettings &value) {
          value.outputIndex < 3;
 }
 
+static uint8_t engineeringSettingsCRCUpdate(uint8_t crc, uint8_t value) {
+  crc ^= value;
+
+  for (uint8_t bit = 0; bit < 8; ++bit) {
+    crc = (crc & 0x80U)
+            ? (uint8_t)((crc << 1) ^ 0xE7U)
+            : (uint8_t)(crc << 1);
+  }
+
+  return crc;
+}
+
 static uint8_t engineeringSettingsCRC(const uint8_t *data, uint8_t length) {
   uint8_t crc = 0;
 
   for (uint8_t i = 0; i < length; ++i) {
-    crc ^= data[i];
-    for (uint8_t bit = 0; bit < 8; ++bit) {
-      crc = (crc & 0x80U)
-              ? (uint8_t)((crc << 1) ^ 0xE7U)
-              : (uint8_t)(crc << 1);
-    }
+    crc = engineeringSettingsCRCUpdate(crc, data[i]);
   }
 
   return crc;
@@ -215,20 +222,18 @@ static void saveEngineeringSettings() {
 }
 
 static void loadEngineeringSettings() {
-  uint8_t data[sizeof(EngineeringSettings)];
+  uint8_t crc = 0;
 
-  // Читаем байты только для проверки CRC. В структуру их пока не загружаем.
+  // CRC накапливается сразу при чтении каждого байта EEPROM.
   for (uint8_t i = 0; i < sizeof(EngineeringSettings); ++i) {
-    data[i] = EEPROM.read(i);
+    crc = engineeringSettingsCRCUpdate(crc, EEPROM.read(i));
   }
 
   const uint8_t storedCRC = EEPROM.read(sizeof(EngineeringSettings));
-  const uint8_t calculatedCRC =
-      engineeringSettingsCRC(data, (uint8_t)sizeof(EngineeringSettings));
 
-  if (storedCRC == calculatedCRC) {
-    // Только после успешной CRC копируем данные в рабочую структуру.
-    memcpy(&engineeringSettings, data, sizeof(EngineeringSettings));
+  if (storedCRC == crc) {
+    // Структуру читаем целиком только после успешной проверки CRC.
+    EEPROM.get(0, engineeringSettings);
   } else {
     // Повреждённая или ещё не инициализированная запись: значения по умолчанию.
     engineeringSettings = EngineeringSettings();
