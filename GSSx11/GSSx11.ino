@@ -143,12 +143,6 @@ void setup() {
   i2c_init(100000UL);
 
   si.setup(0, 0, 0); // 2 мА, как в GSSx10
-  // В GSSx10 верхняя граница PLL была 750 МГц. Для 200 МГц нужен делитель 4
-  // и PLL 800 МГц. Меняем только публичные параметры экземпляра библиотеки,
-  // сами файлы si5351a.cpp/.h остаются неизменными.
-  Si5351::VCOFreq_Max = 900000000UL;
-  Si5351::VCOFreq_Mid = 800000000UL;
-
   si.cload(SI5351_CRYSTAL_LOAD_10PF);
   si.set_xtal_freq(XTAL_FREQUENCY_HZ);
   si.update_freq(0);
