@@ -300,7 +300,6 @@ uint8_t BlockRingEEPROM::initCommon(uint8_t device, const uint8_t *signature,
         _softI2C = 0;
         Wire.begin();
         Wire.setClock(BLOCK_RING_EEPROM_I2C_CLOCK);
-        Wire.setWireTimeout((uint32_t)BLOCK_RING_EEPROM_I2C_TIMEOUT_MS * 1000UL, true);
         Wire.beginTransmission((uint8_t)BLOCK_RING_EEPROM_I2C_ADDRESS);
         const uint8_t wireStatus = Wire.endTransmission();
         if (wireStatus != 0) return mapWireError(wireStatus);
@@ -745,12 +744,7 @@ uint8_t BlockRingEEPROM::readPhysical(uint16_t address, uint8_t *destination, ui
         Wire.write((uint8_t)(address + done));
         const uint8_t txStatus = Wire.endTransmission(false);
         if (txStatus != 0) return mapWireError(txStatus);
-        Wire.clearWireTimeoutFlag();
         const uint8_t received = (uint8_t)Wire.requestFrom((uint8_t)BLOCK_RING_EEPROM_I2C_ADDRESS, (uint8_t)chunk);
-        if (Wire.getWireTimeoutFlag()) {
-            while (Wire.available()) (void)Wire.read();
-            return BLOCK_ERR_I2C_TIMEOUT;
-        }
         if (received != chunk) {
             while (Wire.available()) (void)Wire.read();
             return BLOCK_ERR_I2C_NO_RESPONSE;
