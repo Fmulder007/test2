@@ -7,12 +7,19 @@
 
 #include <Arduino.h>
 #include <Encoder.h>
+#include <EEPROM.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "i2c.h"
 #include "si5351a.h"
 #include "GyverOLED.h"
 #include "Block_Ring_EEPROM.h"
+
+// --------------------------- Пользовательские параметры --------------------
+
+#define SAVE_DELAY 5000UL
+#define ENGINEERING_MENU 1000UL
 
 // --------------------------- Аппаратная конфигурация -----------------------
 
@@ -24,9 +31,11 @@ static const uint8_t ENCODER_COUNTS_PER_STEP = 4;
 static const uint32_t MIN_FREQUENCY_HZ = 1000000UL;
 static const uint32_t MAX_FREQUENCY_HZ = 200000000UL;
 static const uint32_t DEFAULT_FREQUENCY_HZ = 7100000UL;
-static const uint32_t XTAL_FREQUENCY_HZ = 32000000UL; // как начальное значение в GSSx10
 
-static const uint32_t SAVE_DELAY_MS = 5000UL;
+static const uint16_t ENGINEERING_EEPROM_RESERVED = 16;
+static const uint16_t ENGINEERING_EEPROM_SETTINGS_ADDRESS = 4;
+static const uint32_t ENGINEERING_EEPROM_MAGIC = 0x47535331UL;
+
 static const uint16_t BUTTON_DEBOUNCE_MS = 25;
 
 // Сигнатура отдельная для GSSx11, не пересекается с другими проектами.
@@ -40,8 +49,15 @@ struct GeneratorSettings {
   uint8_t outputIndex;
 };
 
+struct EngineeringSettings {
+  bool reverseEncoder = false;
+  uint32_t xtalFrequency = 32000000UL;
+  uint8_t power = 0;
+};
+
 // Для целевой AVR-платформы структура занимает ровно 6 байт.
 static_assert(sizeof(GeneratorSettings) == 6, "Unexpected GeneratorSettings layout");
+static_assert(sizeof(EngineeringSettings) == 6, "Unexpected EngineeringSettings layout");
 
 static const uint32_t STEP_VALUES_HZ[8] = {
   1UL, 10UL, 100UL, 1000UL, 10000UL, 100000UL, 1000000UL, 10000000UL
@@ -59,18 +75,27 @@ enum UiField : uint8_t {
 };
 
 static GeneratorSettings settings;
-static GeneratorSettings savedSettings;
+static EngineeringSettings engineeringSettings;
 
 static UiField activeField = FIELD_FREQUENCY;
 static uint8_t stepIndexAtEntry = 0;
 
-static bool hasUnsavedChanges = false;
-static uint32_t lastActivityMillis = 0;
+static bool encoderReverse = false;
+static bool engineeringMenuActive = false;
+static uint8_t engineeringActiveItem = 0;
+
+// Флаг фиксирует именно вращение энкодера, а не изменение значений настроек.
+static bool encoderTouched = false;
+static bool saveTimerActive = false;
+static bool suppressFrequencyInvert = false;
+static uint32_t lastEncoderActivityMillis = 0;
 
 static long previousEncoderPosition = 0;
 
 static bool buttonRawState = HIGH;
 static bool buttonStableState = HIGH;
+static bool buttonLongHandled = false;
+static uint32_t buttonPressMillis = 0;
 static uint32_t buttonDebounceMillis = 0;
 
 Si5351 si;
@@ -82,14 +107,17 @@ GyverOLED<SSD1306_128x32, OLED_BUFFER> display;
 static void fatalMemoryError(uint8_t errorCode);
 static void loadDefaultSettings();
 static bool settingsAreValid(const GeneratorSettings &value);
-static bool settingsEqual(const GeneratorSettings &left, const GeneratorSettings &right);
-static void copySettings(GeneratorSettings &destination, const GeneratorSettings &source);
-static void updateUnsavedState();
+static void loadEngineeringSettings();
+static void saveEngineeringSettings();
+static bool engineeringSettingsAreValid(const EngineeringSettings &value);
+static void markEncoderTouched();
 static void renderDisplay();
+static void renderEngineeringMenu();
 static void formatFrequency(uint32_t frequency, char *buffer);
 static void applyCurrentOutput();
 static void showSaveFeedback();
-static void handleButtonPress();
+static void handleShortButtonPress();
+static void toggleEngineeringMenu();
 static void serviceEncoder();
 static void serviceButton();
 static void serviceSave();
@@ -107,44 +135,69 @@ void setup() {
   buttonStableState = buttonRawState;
   buttonDebounceMillis = millis();
 
-  // 1. Проверяем доступность внутренней EEPROM и читаем последнюю запись.
-  uint8_t memoryStatus = Block_Ring_EEPROM.init(BLOCK_INTERNAL, EEPROM_SIGNATURE);
-  if (memoryStatus != BLOCK_RING_OK) {
-    fatalMemoryError(memoryStatus);
+  // Инженерные настройки находятся в зарезервированной начальной области EEPROM.
+  loadEngineeringSettings();
+  encoderReverse = engineeringSettings.reverseEncoder;
+
+  // Если инженерная область ещё не инициализирована, сначала читаем старую
+  // кольцевую раскладку. После чтения переключаем библиотеку на новый диапазон.
+  uint8_t memoryStatus;
+  if (EEPROM.get(0, *(uint32_t *)0), false) {
+    // Недостижимая ветка — EEPROM читается ниже через loadEngineeringSettings().
   }
 
-  memoryStatus = Block_Ring_EEPROM.read(settings);
+  uint32_t engineeringMagic = 0;
+  EEPROM.get(0, engineeringMagic);
+  const bool engineeringLayoutExists = (engineeringMagic == ENGINEERING_EEPROM_MAGIC);
 
-  if (memoryStatus == BLOCK_ERR_READ_NO_RECORD) {
-    // Первый запуск: пустая EEPROM — штатная ситуация.
-    loadDefaultSettings();
+  if (engineeringLayoutExists) {
+    memoryStatus = Block_Ring_EEPROM.init(
+      BLOCK_INTERNAL, EEPROM_SIGNATURE,
+      ENGINEERING_EEPROM_RESERVED, E2END
+    );
+    if (memoryStatus != BLOCK_RING_OK) fatalMemoryError(memoryStatus);
 
-    memoryStatus = Block_Ring_EEPROM.write(settings);
-    if (memoryStatus != BLOCK_RING_OK) {
+    memoryStatus = Block_Ring_EEPROM.read(settings);
+  } else {
+    // Однократное чтение прежней раскладки, чтобы не потерять текущие настройки.
+    memoryStatus = Block_Ring_EEPROM.init(BLOCK_INTERNAL, EEPROM_SIGNATURE);
+    if (memoryStatus != BLOCK_RING_OK) fatalMemoryError(memoryStatus);
+
+    memoryStatus = Block_Ring_EEPROM.read(settings);
+    if (memoryStatus == BLOCK_ERR_READ_NO_RECORD) {
+      loadDefaultSettings();
+    } else if (memoryStatus != BLOCK_RING_OK) {
       fatalMemoryError(memoryStatus);
     }
 
-    copySettings(savedSettings, settings);
-    showSaveFeedback();
-  } else if (memoryStatus != BLOCK_RING_OK) {
-    fatalMemoryError(memoryStatus);
+    memoryStatus = Block_Ring_EEPROM.init(
+      BLOCK_INTERNAL, EEPROM_SIGNATURE,
+      ENGINEERING_EEPROM_RESERVED, E2END
+    );
   }
 
-  // CRC записи уже проверена библиотекой; дополнительно проверяем диапазоны полей.
+  if (memoryStatus != BLOCK_RING_OK) fatalMemoryError(memoryStatus);
+
+  if (engineeringLayoutExists) {
+    memoryStatus = Block_Ring_EEPROM.read(settings);
+    if (memoryStatus == BLOCK_ERR_READ_NO_RECORD) {
+      loadDefaultSettings();
+    } else if (memoryStatus != BLOCK_RING_OK) {
+      fatalMemoryError(memoryStatus);
+    }
+  }
+
   if (!settingsAreValid(settings)) {
     fatalMemoryError(BLOCK_ERR_INVALID_ARGUMENT);
   }
 
-  copySettings(savedSettings, settings);
-  hasUnsavedChanges = false;
-
-  // 2. Инициализируем I2C-драйвер Si5351 и сам синтезатор.
-  // OLED уже поднял Wire; инициализируем низкоуровневый TWI перед доступом к Si5351.
+  // Инициализируем I2C-драйвер Si5351 и сам синтезатор.
   i2c_init(400000UL);
 
-  si.setup(0, 0, 0); // 2 мА, как в GSSx10
+  si.setup(0, 0, 0);
   si.cload(SI5351_CRYSTAL_LOAD_10PF);
-  si.set_xtal_freq(XTAL_FREQUENCY_HZ);
+  si.set_xtal_freq(engineeringSettings.xtalFrequency);
+  si.set_power(settings.outputIndex, engineeringSettings.power);
   si.update_freq(0);
   si.update_freq(1);
 
@@ -152,8 +205,6 @@ void setup() {
 
   previousEncoderPosition = myEnc.read() / ENCODER_COUNTS_PER_STEP;
   activeField = FIELD_FREQUENCY;
-  lastActivityMillis = millis();
-
   renderDisplay();
 }
 
@@ -169,7 +220,7 @@ void loop() {
 
 static void loadDefaultSettings() {
   settings.frequency = DEFAULT_FREQUENCY_HZ;
-  settings.stepIndex = 3;  // 1 кГц
+  settings.stepIndex = 3;   // 1 кГц
   settings.outputIndex = 0; // CLK0
 }
 
@@ -180,34 +231,48 @@ static bool settingsAreValid(const GeneratorSettings &value) {
          value.outputIndex < 3;
 }
 
-static bool settingsEqual(const GeneratorSettings &left, const GeneratorSettings &right) {
-  return left.frequency == right.frequency &&
-         left.stepIndex == right.stepIndex &&
-         left.outputIndex == right.outputIndex;
+static bool engineeringSettingsAreValid(const EngineeringSettings &value) {
+  return value.xtalFrequency != 0 && value.power < 4;
 }
 
-static void copySettings(GeneratorSettings &destination, const GeneratorSettings &source) {
-  destination.frequency = source.frequency;
-  destination.stepIndex = source.stepIndex;
-  destination.outputIndex = source.outputIndex;
+static void loadEngineeringSettings() {
+  uint32_t magic = 0;
+  EEPROM.get(0, magic);
+
+  if (magic != ENGINEERING_EEPROM_MAGIC) {
+    engineeringSettings = EngineeringSettings();
+    return;
+  }
+
+  EEPROM.get(ENGINEERING_EEPROM_SETTINGS_ADDRESS, engineeringSettings);
+  if (!engineeringSettingsAreValid(engineeringSettings)) {
+    engineeringSettings = EngineeringSettings();
+  }
 }
 
-static void updateUnsavedState() {
-  hasUnsavedChanges = !settingsEqual(settings, savedSettings);
+static void saveEngineeringSettings() {
+  // Маркер записывается последним: незавершённая запись не считается корректной.
+  EEPROM.put(0, (uint32_t)0);
+  EEPROM.put(ENGINEERING_EEPROM_SETTINGS_ADDRESS, engineeringSettings);
+  EEPROM.put(0, ENGINEERING_EEPROM_MAGIC);
 }
 
 static void serviceSave() {
-  if (!hasUnsavedChanges) return;
-  if ((uint32_t)(millis() - lastActivityMillis) < SAVE_DELAY_MS) return;
+  if (!encoderTouched || !saveTimerActive || engineeringMenuActive) return;
+  if ((uint32_t)(millis() - lastEncoderActivityMillis) < SAVE_DELAY) return;
 
+  // Сохраняем оба набора настроек одной операцией обслуживания.
   const uint8_t memoryStatus = Block_Ring_EEPROM.write(settings);
-  if (memoryStatus != BLOCK_RING_OK) {
-    fatalMemoryError(memoryStatus);
-  }
+  if (memoryStatus != BLOCK_RING_OK) fatalMemoryError(memoryStatus);
 
-  copySettings(savedSettings, settings);
-  hasUnsavedChanges = false;
+  saveEngineeringSettings();
+
+  encoderTouched = false;
+  saveTimerActive = false;
+  suppressFrequencyInvert = true;
+
   showSaveFeedback();
+  renderDisplay();
 }
 
 // ------------------------------ Выходы Si5351 ------------------------------
@@ -248,14 +313,12 @@ static void renderDisplay() {
 
   display.clear();
 
-  // Верхняя строка: девять цифр герц, крупный шрифт, по центру.
   display.setScale(2);
   display.setCursorXY(10, 0);
-  display.invertText(activeField == FIELD_FREQUENCY);
+  display.invertText(activeField == FIELD_FREQUENCY && !suppressFrequencyInvert);
   display.print(frequencyText);
   display.invertText(false);
 
-  // Нижняя строка: CLK слева, шаг справа.
   display.setScale(1);
   display.setCursorXY(0, 24);
   display.invertText(activeField == FIELD_OUTPUT);
@@ -268,6 +331,33 @@ static void renderDisplay() {
   display.setCursorXY(stepLabelX, 24);
   display.invertText(activeField == FIELD_STEP);
   display.print(stepLabel);
+  display.invertText(false);
+
+  display.update();
+}
+
+static void renderEngineeringMenu() {
+  char line[20];
+
+  display.clear();
+  display.setScale(1);
+
+  display.setCursorXY(0, 0);
+  display.invertText(engineeringActiveItem == 0);
+  display.print("REV_ENC=");
+  display.print(engineeringSettings.reverseEncoder ? "YES" : "NO");
+  display.invertText(false);
+
+  display.setCursorXY(0, 8);
+  display.invertText(engineeringActiveItem == 1);
+  snprintf(line, sizeof(line), "XTL=%lu", (unsigned long)engineeringSettings.xtalFrequency);
+  display.print(line);
+  display.invertText(false);
+
+  display.setCursorXY(0, 16);
+  display.invertText(engineeringActiveItem == 2);
+  snprintf(line, sizeof(line), "PWR=%u", (unsigned int)engineeringSettings.power);
+  display.print(line);
   display.invertText(false);
 
   display.update();
@@ -290,16 +380,27 @@ static void fatalMemoryError(uint8_t errorCode) {
   display.print("]");
   display.update();
 
-  // Фатальная ошибка: оставляем сообщение на экране до перезапуска.
-  while (true) {
-    delay(1000);
-  }
+  while (true) delay(1000);
 }
 
 // ---------------------------- Энкодер и кнопка -----------------------------
 
-static void handleButtonPress() {
-  lastActivityMillis = millis();
+static void markEncoderTouched() {
+  encoderTouched = true;
+  if (!engineeringMenuActive) {
+    lastEncoderActivityMillis = millis();
+    saveTimerActive = true;
+  }
+  suppressFrequencyInvert = false;
+}
+
+static void handleShortButtonPress() {
+  if (engineeringMenuActive) {
+    engineeringActiveItem++;
+    if (engineeringActiveItem >= 3) engineeringActiveItem = 0;
+    renderEngineeringMenu();
+    return;
+  }
 
   switch (activeField) {
     case FIELD_FREQUENCY:
@@ -308,8 +409,6 @@ static void handleButtonPress() {
       break;
 
     case FIELD_STEP:
-      // Если итоговый шаг отличается от шага при входе в поле — сразу к частоте.
-      // Если не отличается — переходим к выбору выхода.
       activeField = (settings.stepIndex != stepIndexAtEntry)
                     ? FIELD_FREQUENCY
                     : FIELD_OUTPUT;
@@ -324,13 +423,82 @@ static void handleButtonPress() {
   renderDisplay();
 }
 
+static void toggleEngineeringMenu() {
+  if (!engineeringMenuActive) {
+    engineeringMenuActive = true;
+    saveTimerActive = false;
+    engineeringActiveItem = 0;
+    renderEngineeringMenu();
+    return;
+  }
+
+  engineeringMenuActive = false;
+  activeField = FIELD_FREQUENCY;
+  previousEncoderPosition = myEnc.read() / ENCODER_COUNTS_PER_STEP;
+
+  // Если энкодер вращали в инженерном меню, отсчёт начинается после выхода.
+  if (encoderTouched) {
+    lastEncoderActivityMillis = millis();
+    saveTimerActive = true;
+  } else {
+    saveTimerActive = false;
+  }
+
+  suppressFrequencyInvert = false;
+  renderDisplay();
+}
+
 static void serviceEncoder() {
   const long currentPosition = myEnc.read() / ENCODER_COUNTS_PER_STEP;
-  const long delta = currentPosition - previousEncoderPosition;
+  long delta = currentPosition - previousEncoderPosition;
   if (delta == 0) return;
 
   previousEncoderPosition = currentPosition;
-  lastActivityMillis = millis();
+  if (encoderReverse) delta = -delta;
+
+  markEncoderTouched();
+
+  if (engineeringMenuActive) {
+    switch (engineeringActiveItem) {
+      case 0:
+        if ((delta % 2L) != 0) {
+          engineeringSettings.reverseEncoder = !engineeringSettings.reverseEncoder;
+        }
+        break;
+
+      case 1: {
+        int64_t nextValue = (int64_t)engineeringSettings.xtalFrequency +
+                            ((int64_t)delta * (int64_t)STEP_VALUES_HZ[settings.stepIndex]);
+        if (nextValue < 1) nextValue = 1;
+        if (nextValue > 0xFFFFFFFFLL) nextValue = 0xFFFFFFFFLL;
+
+        if ((uint32_t)nextValue != engineeringSettings.xtalFrequency) {
+          engineeringSettings.xtalFrequency = (uint32_t)nextValue;
+          si.set_xtal_freq(engineeringSettings.xtalFrequency);
+          // Пересчитываем текущий выход с новой опорной частотой.
+          si.set_freq(0, 0, 0);
+          applyCurrentOutput();
+        }
+        break;
+      }
+
+      case 2: {
+        int16_t nextPower = (int16_t)engineeringSettings.power + (int16_t)(delta % 4L);
+        while (nextPower < 0) nextPower += 4;
+        while (nextPower >= 4) nextPower -= 4;
+
+        if ((uint8_t)nextPower != engineeringSettings.power) {
+          engineeringSettings.power = (uint8_t)nextPower;
+          si.set_power(settings.outputIndex, engineeringSettings.power);
+          applyCurrentOutput();
+        }
+        break;
+      }
+    }
+
+    renderEngineeringMenu();
+    return;
+  }
 
   bool redraw = false;
 
@@ -348,7 +516,6 @@ static void serviceEncoder() {
       if ((uint32_t)nextFrequency != settings.frequency) {
         settings.frequency = (uint32_t)nextFrequency;
         applyCurrentOutput();
-        updateUnsavedState();
         redraw = true;
       }
       break;
@@ -361,7 +528,6 @@ static void serviceEncoder() {
 
       if ((uint8_t)nextIndex != settings.stepIndex) {
         settings.stepIndex = (uint8_t)nextIndex;
-        updateUnsavedState();
         redraw = true;
       }
       break;
@@ -374,10 +540,9 @@ static void serviceEncoder() {
 
       if ((uint8_t)nextIndex != settings.outputIndex) {
         settings.outputIndex = (uint8_t)nextIndex;
-        // Сначала гасим прежний CLK, затем включаем новый: break-before-make.
         si.set_freq(0, 0, 0);
+        si.set_power(settings.outputIndex, engineeringSettings.power);
         applyCurrentOutput();
-        updateUnsavedState();
         redraw = true;
       }
       break;
@@ -399,8 +564,18 @@ static void serviceButton() {
   if ((uint32_t)(now - buttonDebounceMillis) >= BUTTON_DEBOUNCE_MS &&
       reading != buttonStableState) {
     buttonStableState = reading;
+
     if (buttonStableState == LOW) {
-      handleButtonPress();
+      buttonPressMillis = now;
+      buttonLongHandled = false;
+    } else if (!buttonLongHandled) {
+      handleShortButtonPress();
     }
+  }
+
+  if (buttonStableState == LOW && !buttonLongHandled &&
+      (uint32_t)(now - buttonPressMillis) >= ENGINEERING_MENU) {
+    buttonLongHandled = true;
+    toggleEngineeringMenu();
   }
 }
