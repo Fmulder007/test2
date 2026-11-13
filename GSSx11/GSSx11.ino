@@ -128,7 +128,7 @@ void setup() {
   buttonStableState = buttonRawState;
   buttonDebounceMillis = millis();
 
-  // Сначала проверяем CRC инженерных настроек в начале EEPROM.
+  // Сначала проверяем контрольную сумму инженерных настроек в начале EEPROM.
   // При несовпадении записываются значения по умолчанию.
   loadEngineeringSettings();
   encoderReverse = engineeringSettings.reverseEncoder;
