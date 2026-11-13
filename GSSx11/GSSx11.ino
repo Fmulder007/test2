@@ -33,8 +33,6 @@ static const uint32_t MAX_FREQUENCY_HZ = 200000000UL;
 static const uint32_t DEFAULT_FREQUENCY_HZ = 7100000UL;
 
 static const uint16_t ENGINEERING_EEPROM_RESERVED = 16;
-static const uint16_t ENGINEERING_EEPROM_SETTINGS_ADDRESS = 4;
-static const uint32_t ENGINEERING_EEPROM_MAGIC = 0x47535331UL;
 
 static const uint16_t BUTTON_DEBOUNCE_MS = 25;
 
@@ -54,10 +52,6 @@ struct EngineeringSettings {
   uint32_t xtalFrequency = 32000000UL;
   uint8_t power = 0;
 };
-
-// Для целевой AVR-платформы структура занимает ровно 6 байт.
-static_assert(sizeof(GeneratorSettings) == 6, "Unexpected GeneratorSettings layout");
-static_assert(sizeof(EngineeringSettings) == 6, "Unexpected EngineeringSettings layout");
 
 static const uint32_t STEP_VALUES_HZ[8] = {
   1UL, 10UL, 100UL, 1000UL, 10000UL, 100000UL, 1000000UL, 10000000UL
@@ -109,7 +103,6 @@ static void loadDefaultSettings();
 static bool settingsAreValid(const GeneratorSettings &value);
 static void loadEngineeringSettings();
 static void saveEngineeringSettings();
-static bool engineeringSettingsAreValid(const EngineeringSettings &value);
 static void markEncoderTouched();
 static void renderDisplay();
 static void renderEngineeringMenu();
@@ -135,51 +128,23 @@ void setup() {
   buttonStableState = buttonRawState;
   buttonDebounceMillis = millis();
 
-  // Инженерные настройки находятся в зарезервированной начальной области EEPROM.
+  // Сначала проверяем CRC инженерных настроек в начале EEPROM.
+  // При несовпадении записываются значения по умолчанию.
   loadEngineeringSettings();
   encoderReverse = engineeringSettings.reverseEncoder;
 
-  // Если инженерная область ещё не инициализирована, сначала читаем старую
-  // кольцевую раскладку. После чтения переключаем библиотеку на новый диапазон.
-  uint8_t memoryStatus;
-  uint32_t engineeringMagic = 0;
-  EEPROM.get(0, engineeringMagic);
-  const bool engineeringLayoutExists = (engineeringMagic == ENGINEERING_EEPROM_MAGIC);
-
-  if (engineeringLayoutExists) {
-    memoryStatus = Block_Ring_EEPROM.init(
-      BLOCK_INTERNAL, EEPROM_SIGNATURE,
-      ENGINEERING_EEPROM_RESERVED, E2END
-    );
-    if (memoryStatus != BLOCK_RING_OK) fatalMemoryError(memoryStatus);
-
-  } else {
-    // Однократное чтение прежней раскладки, чтобы не потерять текущие настройки.
-    memoryStatus = Block_Ring_EEPROM.init(BLOCK_INTERNAL, EEPROM_SIGNATURE);
-    if (memoryStatus != BLOCK_RING_OK) fatalMemoryError(memoryStatus);
-
-    memoryStatus = Block_Ring_EEPROM.read(settings);
-    if (memoryStatus == BLOCK_ERR_READ_NO_RECORD) {
-      loadDefaultSettings();
-    } else if (memoryStatus != BLOCK_RING_OK) {
-      fatalMemoryError(memoryStatus);
-    }
-
-    memoryStatus = Block_Ring_EEPROM.init(
-      BLOCK_INTERNAL, EEPROM_SIGNATURE,
-      ENGINEERING_EEPROM_RESERVED, E2END
-    );
-  }
-
+  // Кольцевая память использует только область после инженерных настроек.
+  uint8_t memoryStatus = Block_Ring_EEPROM.init(
+    BLOCK_INTERNAL, EEPROM_SIGNATURE,
+    ENGINEERING_EEPROM_RESERVED, E2END
+  );
   if (memoryStatus != BLOCK_RING_OK) fatalMemoryError(memoryStatus);
 
-  if (engineeringLayoutExists) {
-    memoryStatus = Block_Ring_EEPROM.read(settings);
-    if (memoryStatus == BLOCK_ERR_READ_NO_RECORD) {
-      loadDefaultSettings();
-    } else if (memoryStatus != BLOCK_RING_OK) {
-      fatalMemoryError(memoryStatus);
-    }
+  memoryStatus = Block_Ring_EEPROM.read(settings);
+  if (memoryStatus == BLOCK_ERR_READ_NO_RECORD) {
+    loadDefaultSettings();
+  } else if (memoryStatus != BLOCK_RING_OK) {
+    fatalMemoryError(memoryStatus);
   }
 
   if (!settingsAreValid(settings)) {
@@ -226,30 +191,49 @@ static bool settingsAreValid(const GeneratorSettings &value) {
          value.outputIndex < 3;
 }
 
-static bool engineeringSettingsAreValid(const EngineeringSettings &value) {
-  return value.xtalFrequency != 0 && value.power < 4;
-}
+static uint8_t engineeringSettingsCRC(const uint8_t *data, uint8_t length) {
+  uint8_t crc = 0;
 
-static void loadEngineeringSettings() {
-  uint32_t magic = 0;
-  EEPROM.get(0, magic);
-
-  if (magic != ENGINEERING_EEPROM_MAGIC) {
-    engineeringSettings = EngineeringSettings();
-    return;
+  for (uint8_t i = 0; i < length; ++i) {
+    crc ^= data[i];
+    for (uint8_t bit = 0; bit < 8; ++bit) {
+      crc = (crc & 0x80U)
+              ? (uint8_t)((crc << 1) ^ 0xE7U)
+              : (uint8_t)(crc << 1);
+    }
   }
 
-  EEPROM.get(ENGINEERING_EEPROM_SETTINGS_ADDRESS, engineeringSettings);
-  if (!engineeringSettingsAreValid(engineeringSettings)) {
-    engineeringSettings = EngineeringSettings();
-  }
+  return crc;
 }
 
 static void saveEngineeringSettings() {
-  // Маркер записывается последним: незавершённая запись не считается корректной.
-  EEPROM.put(0, (uint32_t)0);
-  EEPROM.put(ENGINEERING_EEPROM_SETTINGS_ADDRESS, engineeringSettings);
-  EEPROM.put(0, ENGINEERING_EEPROM_MAGIC);
+  const uint8_t *data = reinterpret_cast<const uint8_t *>(&engineeringSettings);
+  const uint8_t crc = engineeringSettingsCRC(data, (uint8_t)sizeof(EngineeringSettings));
+
+  EEPROM.put(0, engineeringSettings);
+  EEPROM.update((int)sizeof(EngineeringSettings), crc);
+}
+
+static void loadEngineeringSettings() {
+  uint8_t data[sizeof(EngineeringSettings)];
+
+  // Читаем байты только для проверки CRC. В структуру их пока не загружаем.
+  for (uint8_t i = 0; i < sizeof(EngineeringSettings); ++i) {
+    data[i] = EEPROM.read(i);
+  }
+
+  const uint8_t storedCRC = EEPROM.read(sizeof(EngineeringSettings));
+  const uint8_t calculatedCRC =
+      engineeringSettingsCRC(data, (uint8_t)sizeof(EngineeringSettings));
+
+  if (storedCRC == calculatedCRC) {
+    // Только после успешной CRC копируем данные в рабочую структуру.
+    memcpy(&engineeringSettings, data, sizeof(EngineeringSettings));
+  } else {
+    // Повреждённая или ещё не инициализированная запись: значения по умолчанию.
+    engineeringSettings = EngineeringSettings();
+    saveEngineeringSettings();
+  }
 }
 
 static void serviceSave() {
