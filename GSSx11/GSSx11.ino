@@ -38,8 +38,6 @@ static const uint32_t DEFAULT_FREQUENCY_HZ = 7100000UL;
 
 static const uint16_t ENGINEERING_EEPROM_RESERVED = 16;
 
-static const uint16_t BUTTON_DEBOUNCE_MS = 25;
-
 // Сигнатура отдельная для GSSx11, не пересекается с другими проектами.
 static const char EEPROM_SIGNATURE[] = "GSSx11";
 
@@ -90,10 +88,8 @@ static uint32_t lastEncoderActivityMillis = 0;
 
 static long previousEncoderPosition = 0;
 
-static bool buttonRawState = HIGH;
-static bool buttonStableState = HIGH;
-static uint32_t buttonPressMillis = 0;
-static uint32_t buttonDebounceMillis = 0;
+static bool knobup = true;
+static uint32_t knobMillis = 0;
 
 Si5351 si;
 Encoder myEnc(ENCODER_A_PIN, ENCODER_B_PIN);
@@ -124,10 +120,6 @@ static void serviceSave();
 
 void setup() {
   pinMode(ENCODER_BUTTON_PIN, INPUT_PULLUP);
-
-  buttonRawState = digitalRead(ENCODER_BUTTON_PIN);
-  buttonStableState = buttonRawState;
-  buttonDebounceMillis = millis();
 
   // Сначала проверяем контрольную сумму инженерных настроек в начале EEPROM.
   // При несовпадении записываются значения по умолчанию.
@@ -571,31 +563,24 @@ static void serviceEncoder() {
 }
 
 static void serviceButton() {
-  const uint32_t now = millis();
-  const bool reading = digitalRead(ENCODER_BUTTON_PIN);
+  const bool knobdown = digitalRead(ENCODER_BUTTON_PIN);
 
-  if (reading != buttonRawState) {
-    buttonRawState = reading;
-    buttonDebounceMillis = now;
+  if (!knobdown && knobup) {
+    knobup = false;
+    knobMillis = millis();
   }
 
-  if ((uint32_t)(now - buttonDebounceMillis) >= BUTTON_DEBOUNCE_MS &&
-      reading != buttonStableState) {
-    buttonStableState = reading;
+  if (knobdown && !knobup) {
+    knobup = true;
+    const uint32_t knobupMillis = millis();
+    const uint32_t pressDuration = (uint32_t)(knobupMillis - knobMillis);
 
-    if (buttonStableState == LOW) {
-      // Начало отсчёта после подтверждённого нажатия с учётом антидребезга.
-      buttonPressMillis = now;
-    } else {
-      // Длительность измеряется до подтверждённого отпускания кнопки.
-      const uint32_t pressDuration = (uint32_t)(now - buttonPressMillis);
-
-      if (pressDuration >= ENGINEERING_MENU) {
-        toggleEngineeringMenu();
-      } else {
-        handleShortButtonPress();
-      }
-      syncEncoderPosition();
+    if (pressDuration >= ENGINEERING_MENU) {
+      toggleEngineeringMenu();
+    } else if (pressDuration > 100UL) {
+      handleShortButtonPress();
     }
+
+    syncEncoderPosition();
   }
 }
