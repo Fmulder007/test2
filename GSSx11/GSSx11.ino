@@ -162,10 +162,10 @@ void setup() {
 
   previousEncoderPosition = myEnc.read() / ENCODER_COUNTS_PER_STEP;
   activeField = FIELD_FREQUENCY;
+  delay(100);
   display.init();
   display.clear();
   display.update();
-
   renderDisplay();
 }
 
