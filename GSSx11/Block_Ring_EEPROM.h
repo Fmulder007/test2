@@ -118,6 +118,9 @@ public:
         return initScalar(device, reinterpret_cast<const uint8_t *>(&signature), sizeof(T), false, 0, 0);
     }
 
+    /* Вариант с явным диапазоном EEPROM (адреса включительно).
+       Позволяет зарезервировать начало памяти под данные приложения,
+       передав кольцевому буферу только оставшуюся область. */
     template <typename T>
     uint8_t init(uint8_t device, const T &signature,
                  uint16_t startAddress, uint16_t endAddress) {
