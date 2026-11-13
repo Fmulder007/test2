@@ -191,51 +191,33 @@ static bool settingsAreValid(const GeneratorSettings &value) {
          value.outputIndex < 3;
 }
 
-static uint8_t engineeringSettingsCRCUpdate(uint8_t crc, uint8_t value) {
-  crc ^= value;
-
-  for (uint8_t bit = 0; bit < 8; ++bit) {
-    crc = (crc & 0x80U)
-            ? (uint8_t)((crc << 1) ^ 0xE7U)
-            : (uint8_t)(crc << 1);
-  }
-
-  return crc;
-}
-
-static uint8_t engineeringSettingsCRC(const uint8_t *data, uint8_t length) {
-  uint8_t crc = 0;
-
-  for (uint8_t i = 0; i < length; ++i) {
-    crc = engineeringSettingsCRCUpdate(crc, data[i]);
-  }
-
-  return crc;
-}
-
 static void saveEngineeringSettings() {
+  uint16_t checksum = 0;
   const uint8_t *data = reinterpret_cast<const uint8_t *>(&engineeringSettings);
-  const uint8_t crc = engineeringSettingsCRC(data, (uint8_t)sizeof(EngineeringSettings));
 
-  EEPROM.put(0, engineeringSettings);
-  EEPROM.update((int)sizeof(EngineeringSettings), crc);
+  for (uint8_t i = 0; i < sizeof(EngineeringSettings); ++i) {
+    checksum += data[i];
+  }
+
+  EEPROM.put(2, engineeringSettings);
+  EEPROM.put(0, checksum);
 }
 
 static void loadEngineeringSettings() {
-  uint8_t crc = 0;
+  uint16_t storedChecksum = 0;
+  uint16_t calculatedChecksum = 0;
 
-  // CRC накапливается сразу при чтении каждого байта EEPROM.
+  EEPROM.get(0, storedChecksum);
+
+  // Контрольная сумма вычисляется непосредственно при чтении EEPROM.
   for (uint8_t i = 0; i < sizeof(EngineeringSettings); ++i) {
-    crc = engineeringSettingsCRCUpdate(crc, EEPROM.read(i));
+    calculatedChecksum += EEPROM.read(2 + i);
   }
 
-  const uint8_t storedCRC = EEPROM.read(sizeof(EngineeringSettings));
-
-  if (storedCRC == crc) {
-    // Структуру читаем целиком только после успешной проверки CRC.
-    EEPROM.get(0, engineeringSettings);
+  if (storedChecksum == calculatedChecksum) {
+    EEPROM.get(2, engineeringSettings);
   } else {
-    // Повреждённая или ещё не инициализированная запись: значения по умолчанию.
+    // При первой записи или повреждении данных используем значения по умолчанию.
     engineeringSettings = EngineeringSettings();
     saveEngineeringSettings();
   }
