@@ -142,10 +142,6 @@ void setup() {
   // Если инженерная область ещё не инициализирована, сначала читаем старую
   // кольцевую раскладку. После чтения переключаем библиотеку на новый диапазон.
   uint8_t memoryStatus;
-  if (EEPROM.get(0, *(uint32_t *)0), false) {
-    // Недостижимая ветка — EEPROM читается ниже через loadEngineeringSettings().
-  }
-
   uint32_t engineeringMagic = 0;
   EEPROM.get(0, engineeringMagic);
   const bool engineeringLayoutExists = (engineeringMagic == ENGINEERING_EEPROM_MAGIC);
