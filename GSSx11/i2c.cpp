@@ -92,15 +92,49 @@ bool i2c_device_found(uint8_t addr)
     return false;
 }
 
-// Init TWI (I2C)
+// Init TWI (I2C).
+// Select the fastest hardware configuration that does not exceed i2c_freq.
+// TWBR is kept in the datasheet-recommended master range (10..255).
 void i2c_init(uint32_t i2c_freq)
 {
+  static const uint8_t prescalerValues[4] = {1, 4, 16, 64};
+  static const uint8_t prescalerBits[4] = {0, 1, 2, 3};
+
   pinMode(SCL, INPUT);
   pinMode(SDA, INPUT);
 
-  if (i2c_freq < 100000) i2c_freq = 100000;
-  TWBR = ((F_CPU / i2c_freq) - 16) / 2;
-  TWSR = 0;
+  if (i2c_freq == 0) i2c_freq = 100000UL;
+
+  uint8_t bestTwbr = 10;
+  uint8_t bestPrescalerBits = 0;
+  uint32_t bestFrequency = 0;
+  bool foundNotFaster = false;
+
+  for (uint8_t p = 0; p < 4; ++p) {
+    for (uint16_t twbr = 10; twbr <= 255; ++twbr) {
+      const uint32_t divisor = 16UL + 2UL * twbr * prescalerValues[p];
+      const uint32_t actualFrequency = (uint32_t)F_CPU / divisor;
+
+      if (actualFrequency <= i2c_freq) {
+        if (!foundNotFaster || actualFrequency > bestFrequency) {
+          foundNotFaster = true;
+          bestFrequency = actualFrequency;
+          bestTwbr = (uint8_t)twbr;
+          bestPrescalerBits = prescalerBits[p];
+        }
+      } else if (!foundNotFaster &&
+                 (bestFrequency == 0 || actualFrequency < bestFrequency)) {
+        // If the requested rate is below the hardware minimum, use
+        // the slowest available configuration rather than overflow.
+        bestFrequency = actualFrequency;
+        bestTwbr = (uint8_t)twbr;
+        bestPrescalerBits = prescalerBits[p];
+      }
+    }
+  }
+
+  TWBR = bestTwbr;
+  TWSR = bestPrescalerBits;
   TWDR = 0xFF;
   PRR = 0;
 }
