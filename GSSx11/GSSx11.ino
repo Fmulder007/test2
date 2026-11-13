@@ -120,7 +120,6 @@ static void serviceSave();
 void setup() {
   pinMode(ENCODER_BUTTON_PIN, INPUT_PULLUP);
 
-  
   buttonRawState = digitalRead(ENCODER_BUTTON_PIN);
   buttonStableState = buttonRawState;
   buttonDebounceMillis = millis();
