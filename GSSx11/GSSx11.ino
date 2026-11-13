@@ -120,10 +120,7 @@ static void serviceSave();
 void setup() {
   pinMode(ENCODER_BUTTON_PIN, INPUT_PULLUP);
 
-  display.init();
-  display.clear();
-  display.update();
-
+  
   buttonRawState = digitalRead(ENCODER_BUTTON_PIN);
   buttonStableState = buttonRawState;
   buttonDebounceMillis = millis();
@@ -165,6 +162,10 @@ void setup() {
 
   previousEncoderPosition = myEnc.read() / ENCODER_COUNTS_PER_STEP;
   activeField = FIELD_FREQUENCY;
+  display.init();
+  display.clear();
+  display.update();
+
   renderDisplay();
 }
 
