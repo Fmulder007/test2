@@ -452,6 +452,7 @@ static void serviceEncoder() {
   previousEncoderPosition = currentPosition;
   if (encoderReverse) delta = -delta;
 
+  const bool restoreHighlight = suppressFrequencyInvert;
   markEncoderTouched();
 
   if (engineeringMenuActive) {
@@ -496,7 +497,7 @@ static void serviceEncoder() {
     return;
   }
 
-  bool redraw = false;
+  bool redraw = restoreHighlight;
 
   switch (activeField) {
     case FIELD_FREQUENCY: {
