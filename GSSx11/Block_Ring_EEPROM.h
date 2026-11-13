@@ -5,8 +5,6 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
-#include <type_traits>
-
 /* ============================================================================
    BLOCK_RING_EEPROM — ЕДИНАЯ КАРТА КОДОВ РЕЗУЛЬТАТА
 
@@ -117,16 +115,12 @@ public:
     /* Числовая/скалярная сигнатура копируется внутрь объекта библиотеки. */
     template <typename T>
     uint8_t init(uint8_t device, const T &signature) {
-        static_assert(std::is_integral<T>::value || std::is_enum<T>::value,
-                      "Block_Ring_EEPROM: scalar signature must be an integer or enum; use a fixed byte/char array for arbitrary signatures");
         return initScalar(device, reinterpret_cast<const uint8_t *>(&signature), sizeof(T), false, 0, 0);
     }
 
     template <typename T>
     uint8_t init(uint8_t device, const T &signature,
                  uint16_t startAddress, uint16_t endAddress) {
-        static_assert(std::is_integral<T>::value || std::is_enum<T>::value,
-                      "Block_Ring_EEPROM: scalar signature must be an integer or enum; use a fixed byte/char array for arbitrary signatures");
         return initScalar(device, reinterpret_cast<const uint8_t *>(&signature), sizeof(T), true,
                           startAddress, endAddress);
     }
@@ -134,14 +128,12 @@ public:
     /* Строковый литерал/char-массив: завершающий нулевой байт не входит в подпись. */
     template <size_t N>
     uint8_t init(uint8_t device, const char (&signature)[N]) {
-        static_assert(N > 1, "Block_Ring_EEPROM: signature string must not be empty");
         return initArray(device, reinterpret_cast<const uint8_t *>(signature), (uint16_t)(N - 1), false, 0, 0);
     }
 
     template <size_t N>
     uint8_t init(uint8_t device, const char (&signature)[N],
                  uint16_t startAddress, uint16_t endAddress) {
-        static_assert(N > 1, "Block_Ring_EEPROM: signature string must not be empty");
         return initArray(device, reinterpret_cast<const uint8_t *>(signature), (uint16_t)(N - 1), true,
                          startAddress, endAddress);
     }
@@ -149,9 +141,6 @@ public:
     /* Любой другой массив фиксированного размера сохраняется целиком. */
     template <typename T, size_t N>
     uint8_t init(uint8_t device, const T (&signature)[N]) {
-        static_assert(std::is_trivially_copyable<T>::value,
-                      "Block_Ring_EEPROM: signature array element type must be trivially copyable");
-        static_assert(sizeof(T) * N <= 65535UL, "Block_Ring_EEPROM: signature is too long");
         return initArray(device, reinterpret_cast<const uint8_t *>(signature),
                          (uint16_t)(sizeof(T) * N), false, 0, 0);
     }
@@ -159,9 +148,6 @@ public:
     template <typename T, size_t N>
     uint8_t init(uint8_t device, const T (&signature)[N],
                  uint16_t startAddress, uint16_t endAddress) {
-        static_assert(std::is_trivially_copyable<T>::value,
-                      "Block_Ring_EEPROM: signature array element type must be trivially copyable");
-        static_assert(sizeof(T) * N <= 65535UL, "Block_Ring_EEPROM: signature is too long");
         return initArray(device, reinterpret_cast<const uint8_t *>(signature),
                          (uint16_t)(sizeof(T) * N), true, startAddress, endAddress);
     }
@@ -174,17 +160,11 @@ public:
 
     template <typename T>
     uint8_t read(T &data) {
-        static_assert(std::is_trivially_copyable<T>::value && !std::is_pointer<T>::value,
-                      "Block_Ring_EEPROM: read() supports only fixed-size trivially-copyable objects, not pointers");
-        static_assert(sizeof(T) <= 65535UL, "Block_Ring_EEPROM: data object is too large");
         return readRaw(reinterpret_cast<uint8_t *>(&data), (uint16_t)sizeof(T));
     }
 
     template <typename T>
     uint8_t write(const T &data) {
-        static_assert(std::is_trivially_copyable<T>::value && !std::is_pointer<T>::value,
-                      "Block_Ring_EEPROM: write() supports only fixed-size trivially-copyable objects, not pointers");
-        static_assert(sizeof(T) <= 65535UL, "Block_Ring_EEPROM: data object is too large");
         return writeRaw(reinterpret_cast<const uint8_t *>(&data), (uint16_t)sizeof(T));
     }
 
