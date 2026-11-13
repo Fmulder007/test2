@@ -153,7 +153,6 @@ void setup() {
     );
     if (memoryStatus != BLOCK_RING_OK) fatalMemoryError(memoryStatus);
 
-    memoryStatus = Block_Ring_EEPROM.read(settings);
   } else {
     // Однократное чтение прежней раскладки, чтобы не потерять текущие настройки.
     memoryStatus = Block_Ring_EEPROM.init(BLOCK_INTERNAL, EEPROM_SIGNATURE);
@@ -265,6 +264,7 @@ static void serviceSave() {
 
   encoderTouched = false;
   saveTimerActive = false;
+  activeField = FIELD_FREQUENCY;
   suppressFrequencyInvert = true;
 
   showSaveFeedback();
