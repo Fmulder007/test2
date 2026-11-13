@@ -21,12 +21,16 @@
 #define SAVE_DELAY 5000UL
 #define ENGINEERING_MENU 1000UL
 
+// Делитель энкодера для частоты и инженерной настройки кварца.
+#define ENCODER_COUNTS_PER_STEP 4
+// Отдельный делитель для шага, выхода, реверса и мощности.
+#define ENCODER_MENU_COUNTS_PER_STEP 4
+
 // --------------------------- Аппаратная конфигурация -----------------------
 
 static const uint8_t ENCODER_A_PIN = 2;
 static const uint8_t ENCODER_B_PIN = 3;
 static const uint8_t ENCODER_BUTTON_PIN = 4;
-static const uint8_t ENCODER_COUNTS_PER_STEP = 4;
 
 static const uint32_t MIN_FREQUENCY_HZ = 1000000UL;
 static const uint32_t MAX_FREQUENCY_HZ = 200000000UL;
@@ -88,7 +92,6 @@ static long previousEncoderPosition = 0;
 
 static bool buttonRawState = HIGH;
 static bool buttonStableState = HIGH;
-static bool buttonLongHandled = false;
 static uint32_t buttonPressMillis = 0;
 static uint32_t buttonDebounceMillis = 0;
 
@@ -111,6 +114,8 @@ static void applyCurrentOutput();
 static void showSaveFeedback();
 static void handleShortButtonPress();
 static void toggleEngineeringMenu();
+static uint8_t encoderCountsPerStep();
+static void syncEncoderPosition();
 static void serviceEncoder();
 static void serviceButton();
 static void serviceSave();
@@ -159,8 +164,8 @@ void setup() {
 
   applyCurrentOutput();
 
-  previousEncoderPosition = myEnc.read() / ENCODER_COUNTS_PER_STEP;
   activeField = FIELD_FREQUENCY;
+  syncEncoderPosition();
   delay(100);
   display.init();
   display.clear();
@@ -365,6 +370,7 @@ static void handleShortButtonPress() {
   if (engineeringMenuActive) {
     engineeringActiveItem++;
     if (engineeringActiveItem >= 3) engineeringActiveItem = 0;
+    syncEncoderPosition();
     renderEngineeringMenu();
     return;
   }
@@ -387,6 +393,7 @@ static void handleShortButtonPress() {
       break;
   }
 
+  syncEncoderPosition();
   renderDisplay();
 }
 
@@ -395,13 +402,14 @@ static void toggleEngineeringMenu() {
     engineeringMenuActive = true;
     saveTimerActive = false;
     engineeringActiveItem = 0;
+    syncEncoderPosition();
     renderEngineeringMenu();
     return;
   }
 
   engineeringMenuActive = false;
   activeField = FIELD_FREQUENCY;
-  previousEncoderPosition = myEnc.read() / ENCODER_COUNTS_PER_STEP;
+  syncEncoderPosition();
 
   // Если энкодер вращали в инженерном меню, отсчёт начинается после выхода.
   if (encoderTouched) {
@@ -415,8 +423,24 @@ static void toggleEngineeringMenu() {
   renderDisplay();
 }
 
+static uint8_t encoderCountsPerStep() {
+  if (engineeringMenuActive) {
+    return engineeringActiveItem == 1
+           ? ENCODER_COUNTS_PER_STEP
+           : ENCODER_MENU_COUNTS_PER_STEP;
+  }
+
+  return activeField == FIELD_FREQUENCY
+         ? ENCODER_COUNTS_PER_STEP
+         : ENCODER_MENU_COUNTS_PER_STEP;
+}
+
+static void syncEncoderPosition() {
+  previousEncoderPosition = myEnc.read() / encoderCountsPerStep();
+}
+
 static void serviceEncoder() {
-  const long currentPosition = myEnc.read() / ENCODER_COUNTS_PER_STEP;
+  const long currentPosition = myEnc.read() / encoderCountsPerStep();
   long delta = currentPosition - previousEncoderPosition;
   if (delta == 0) return;
 
@@ -472,12 +496,21 @@ static void serviceEncoder() {
 
   switch (activeField) {
     case FIELD_FREQUENCY: {
-      int64_t nextFrequency = (int64_t)settings.frequency +
-                              ((int64_t)delta * (int64_t)STEP_VALUES_HZ[settings.stepIndex]);
+      const int64_t step = STEP_VALUES_HZ[settings.stepIndex];
+      int64_t nextFrequency = settings.frequency;
+      const int64_t remainder = nextFrequency % step;
 
-      if (nextFrequency < (int64_t)MIN_FREQUENCY_HZ) {
+      // Сначала доводим частоту до границы шага в сторону вращения.
+      // Если частота уже кратна шагу, выполняем полный шаг.
+      if (delta > 0) {
+        nextFrequency += remainder ? (step - remainder) : step;
+      } else {
+        nextFrequency -= remainder ? remainder : step;
+      }
+
+      if (nextFrequency < MIN_FREQUENCY_HZ) {
         nextFrequency = MIN_FREQUENCY_HZ;
-      } else if (nextFrequency > (int64_t)MAX_FREQUENCY_HZ) {
+      } else if (nextFrequency > MAX_FREQUENCY_HZ) {
         nextFrequency = MAX_FREQUENCY_HZ;
       }
 
@@ -534,16 +567,18 @@ static void serviceButton() {
     buttonStableState = reading;
 
     if (buttonStableState == LOW) {
+      // Начало отсчёта после подтверждённого нажатия с учётом антидребезга.
       buttonPressMillis = now;
-      buttonLongHandled = false;
-    } else if (!buttonLongHandled) {
-      handleShortButtonPress();
-    }
-  }
+    } else {
+      // Длительность измеряется до подтверждённого отпускания кнопки.
+      const uint32_t pressDuration = (uint32_t)(now - buttonPressMillis);
 
-  if (buttonStableState == LOW && !buttonLongHandled &&
-      (uint32_t)(now - buttonPressMillis) >= ENGINEERING_MENU) {
-    buttonLongHandled = true;
-    toggleEngineeringMenu();
+      if (pressDuration >= ENGINEERING_MENU) {
+        toggleEngineeringMenu();
+      } else {
+        handleShortButtonPress();
+      }
+      syncEncoderPosition();
+    }
   }
 }
